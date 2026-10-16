@@ -1,0 +1,513 @@
+.github/workflows/portable.yml
+  s_e3121fbece1af6::t_bb49e3837243dd 1-45,47-61
+  s_e3121fbece1af6::t_14bcd76703e616 46
+plugins/10x-swe/skills/code-search/SKILL.md
+  s_e3121fbece1af6::t_5903e426327f55 3-7,10,12-13,15-20,22-25,27-28
+plugins/knowledge/tests/test_intake.py
+  s_e3121fbece1af6::t_5903e426327f55 1-68
+plugins/knowledge/intake.py
+  s_e3121fbece1af6::t_ab0bf4914853bc 193-195
+  s_e3121fbece1af6::t_306e2f5f805ed4 8-11,21-25,38,55-66,78-80,88,99-103,129-130,160-191,196-198,203,208,212-217,223,227-231
+  s_e3121fbece1af6::t_76e9fde1db346f 192
+  s_e3121fbece1af6::t_b2eefb746c9116 1-7,12-20,26-37,39-54,67-77,81-87,89-98,104-128,131-159,199-202,204-207,209-211,218-222,224-226
+plugins/knowledge/skills/skill-graph/SKILL.md
+  s_e3121fbece1af6::t_ab0bf4914853bc 1-32
+plugins/knowledge/skills/skill-graph/scripts/graph.py
+  s_e3121fbece1af6::t_aea141e3a46adf 1-42,55-247,251-408,410-414,417-439,442-512
+  s_e3121fbece1af6::t_fd5681e883fd84 43-54,248-250
+  s_e3121fbece1af6::t_76e9fde1db346f 409,415-416
+  s_e3121fbece1af6::t_5903e426327f55 440-441
+tests/acceptance.py
+  s_e3121fbece1af6::t_ab0bf4914853bc 98
+  s_e3121fbece1af6::t_16055ffbba9875 1-97,99-105,113,117,123-127,129-130
+  s_e3121fbece1af6::t_6292ca75a2a932 106-112,114-116,118-122,128
+plugins/knowledge/launch.py
+  s_e3121fbece1af6::t_4b4093e7fe3bd4 1-16,18-28
+  s_e3121fbece1af6::t_3f1408b8794891 17
+plugins/knowledge/tools/insights/main.go
+  s_e3121fbece1af6::t_7c8e812bcd244d 1-333
+plugins/knowledge/tools/distiller/src/cover.rs
+  s_e3121fbece1af6::t_fd5681e883fd84 1-586
+plugins/knowledge/distribution.json
+  s_e3121fbece1af6::t_46e547afbe2493 1-17
+THIRD_PARTY.md
+  s_e3121fbece1af6::t_46e547afbe2493 1-26
+plugins/knowledge/.claude-plugin/plugin.json
+  s_e3121fbece1af6::t_ae749673d45efd 1-7
+plugins/knowledge/skills/source-insights/SKILL.md
+  s_e3121fbece1af6::t_ae749673d45efd 1-35
+.gitignore
+  s_e3121fbece1af6::t_2dde3a69ee8a46 2-6
+docs/plans/knowledge-ecosystem.md
+  s_e3121fbece1af6::t_b2450b7ccdfaf3 1-13
+  s_e3121fbece1af6::t_5e908ced8260e3 14-21
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_4b4093e7fe3bd4 26,28
+  s_e3121fbece1af6::t_3e6ff11511e130 36-38,58-60
+  s_e3121fbece1af6::t_b2450b7ccdfaf3 1-25,27,29-35,39-57
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/records.rs
+  s_e3121fbece1af6::t_3f1408b8794891 1-89
+LICENSE
+  s_e3121fbece1af6::t_46e547afbe2493 1-21
+plugins/knowledge/tools/bkd/src/state.rs
+  s_e3121fbece1af6::t_c131ad0333b9eb 1-211
+  s_e3121fbece1af6::t_c0b228f122d5f9 212-217
+knowledge
+  s_e3121fbece1af6::t_4b4093e7fe3bd4 1-4
+plugins/knowledge/skills/skill-graph/scripts/concepts.py
+  s_e3121fbece1af6::t_7c8e812bcd244d 1-74,76-282
+  s_e3121fbece1af6::t_3f1408b8794891 75
+plugins/knowledge/skills/source-insights/references/search.md
+  s_e3121fbece1af6::t_76e9fde1db346f 1-76
+tests/test_bootstrap.py
+  s_e3121fbece1af6::t_76e9fde1db346f 1-46
+AGENTS.md
+  s_e3121fbece1af6::t_3e6ff11511e130 3-18
+plugins/knowledge/lib/local_embeddings.py
+  s_e3121fbece1af6::t_7e6100e8dbf9e1 1-49
+plugins/knowledge/skills/source-insights/scripts/sources.py
+  s_e3121fbece1af6::t_7c8e812bcd244d 1-887
+plugins/knowledge/README.md
+  s_e3121fbece1af6::t_ae749673d45efd 1-41
+plugins/knowledge/skills/source-insights/scripts/search_index.py
+  s_e3121fbece1af6::t_7c8e812bcd244d 1-34,36-39,46-64,67-110,113-188
+  s_e3121fbece1af6::t_6d57ec02ac7808 35,40-45,65-66,111-112
+tests/check_concurrent_graph.py
+  s_e3121fbece1af6::t_6292ca75a2a932 1-18
+plugins/knowledge/tools/distiller/ARCHITECTURE.md
+  s_e3121fbece1af6::t_ae749673d45efd 1-244
+docs/reports/acceptance.md
+  s_e3121fbece1af6::t_5e908ced8260e3 1-107
+plugins/knowledge/tools/distiller/README.md
+  s_e3121fbece1af6::t_7e6100e8dbf9e1 1-250
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/main.rs
+  s_e3121fbece1af6::t_7c8e812bcd244d 1-271,275-286,290-314,319-379,389-397,402-523,525-539,541-544,546-550,554-637
+  s_e3121fbece1af6::t_254a0f0e42341c 272-274,287-289,315-318,380-388,398-401,524,540,545,551,553
+  s_e3121fbece1af6::t_c131ad0333b9eb 552
+README.md
+  s_e3121fbece1af6::t_ae749673d45efd 1-63,65-96
+  s_e3121fbece1af6::t_ab0bf4914853bc 64
+plugins/knowledge/bootstrap.py
+  s_e3121fbece1af6::t_fd5681e883fd84 106-107,109,115-116
+  s_e3121fbece1af6::t_76e9fde1db346f 108,125-126,198-200
+  s_e3121fbece1af6::t_46e547afbe2493 186-187
+  s_e3121fbece1af6::t_4b4093e7fe3bd4 1-54,56-105,110-113,117-124,127-144,146-174,176-185,188-197,201-217
+  s_e3121fbece1af6::t_ab0bf4914853bc 114
+  s_e3121fbece1af6::t_3f1408b8794891 55,145,175
+tests/check_distribution.py
+  s_e3121fbece1af6::t_14bcd76703e616 1-34
+.claude-plugin/marketplace.json
+  s_e3121fbece1af6::t_ae749673d45efd 11-16
+plugins/knowledge/skills/distiller/SKILL.md
+  s_e3121fbece1af6::t_ab0bf4914853bc 1-25
+docs/reports/10x-swe-refresh.json
+  s_e3121fbece1af6::t_10f58b21ec2ea5 1-41
+plugins/10x-swe/README.md
+  s_e3121fbece1af6::t_a262eca1bb21b0 3,113-123
+plugins/10x-swe/skills/code-research/SKILL.md
+  s_e3121fbece1af6::t_e1bfdf54f6b993 3-9,12-37
+plugins/10x-swe/skills/create-agent-skills/SKILL.md
+  s_e3121fbece1af6::t_d53525e2cc2688 3,6-46
+plugins/10x-swe/skills/create-agent-skills/references/api-security.md
+  s_e3121fbece1af6::t_e5b11bf8372a0c 1-23
+plugins/10x-swe/skills/create-agent-skills/references/executable-code.md
+  s_e3121fbece1af6::t_4aa8cc9dd81909 1-20
+plugins/10x-swe/skills/create-agent-skills/references/recommended-structure.md
+  s_e3121fbece1af6::t_1a5d4f3d8febde 1,3-4,6-9,11-15
+plugins/10x-swe/skills/create-agent-skills/references/skill-structure.md
+  s_e3121fbece1af6::t_01175ee55198c8 1,3-5,7-10,12-15,17-18
+plugins/10x-swe/skills/create-agent-skills/references/use-xml-tags.md
+  s_e3121fbece1af6::t_a8dea8368d37c9 1,3-6,8-10
+plugins/10x-swe/skills/create-agent-skills/workflows/add-reference.md
+  s_e3121fbece1af6::t_65ee9d69de6371 13,21-22
+plugins/10x-swe/skills/create-agent-skills/workflows/add-script.md
+  s_e3121fbece1af6::t_2e4268714e834b 27,61
+plugins/10x-swe/skills/create-agent-skills/workflows/add-template.md
+  s_e3121fbece1af6::t_ced0c1a23db896 27
+plugins/10x-swe/skills/create-agent-skills/workflows/add-workflow.md
+  s_e3121fbece1af6::t_acc7caa78ba215 15,24-25
+plugins/10x-swe/skills/create-agent-skills/workflows/audit-skill.md
+  s_e3121fbece1af6::t_27abfdefe594bf 1-20
+plugins/10x-swe/skills/create-agent-skills/workflows/create-domain-expertise-skill.md
+  s_e3121fbece1af6::t_395157e2826ed5 55,64,502-504,511,516,576
+plugins/10x-swe/skills/create-agent-skills/workflows/create-new-skill.md
+  s_e3121fbece1af6::t_c0aeda2ef20ba9 1-29
+plugins/10x-swe/skills/create-agent-skills/workflows/upgrade-to-router.md
+  s_e3121fbece1af6::t_eb6deb0eda31cf 13,22-23,68-69
+plugins/10x-swe/skills/create-agent-skills/workflows/verify-skill.md
+  s_e3121fbece1af6::t_e9d333aa28aebc 18,27-29
+plugins/10x-swe/skills/diagnose/SKILL.md
+  s_e3121fbece1af6::t_65f1c697737533 3-8,13-36
+plugins/10x-swe/skills/dispatching-parallel-agents/SKILL.md
+  s_e3121fbece1af6::t_caf46070d12546 3-9,12-33
+plugins/10x-swe/skills/parallel-debugging/SKILL.md
+  s_e3121fbece1af6::t_723c1ce09d27b7 3-9,12,14-16,18-22,24-26,28-32
+plugins/10x-swe/skills/refactor/SKILL.md
+  s_e3121fbece1af6::t_829ef60156616a 3-38
+plugins/knowledge/provenance.json
+  s_e3121fbece1af6::t_495e9a4df5e44a 1-231
+plugins/knowledge/requirements.lock
+  s_e3121fbece1af6::t_9bde14a6af1137 1-165
+plugins/knowledge/skills/bkd/SKILL.md
+  s_e3121fbece1af6::t_03b1dacacf5050 1-23
+plugins/knowledge/skills/knowledge-setup/SKILL.md
+  s_e3121fbece1af6::t_ebe98b4d6ce826 1-25
+plugins/knowledge/skills/knowledge-setup/references/safe-construction.md
+  s_e3121fbece1af6::t_449b29e02ac902 1-41
+plugins/knowledge/skills/session-search/ARCHITECTURE.md
+  s_e3121fbece1af6::t_42fe8c31a15058 1-82
+plugins/knowledge/skills/session-search/SKILL.md
+  s_e3121fbece1af6::t_f1bf486f392131 1-31
+plugins/knowledge/skills/session-search/scripts/session-search
+  s_e3121fbece1af6::t_bb9af6175de1dd 1-9
+plugins/knowledge/skills/session-search/scripts/session_search/__init__.py
+  s_e3121fbece1af6::t_c45b0c83a77574 1
+plugins/knowledge/skills/session-search/scripts/session_search/__main__.py
+  s_e3121fbece1af6::t_0f96af7bebf738 1-3
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/__init__.py
+  s_e3121fbece1af6::t_d63d515ac2f233 1-66
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/agy.py
+  s_e3121fbece1af6::t_6a583fd9e98600 1-111
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/amp.py
+  s_e3121fbece1af6::t_83652c6769a944 1-159
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/base.py
+  s_e3121fbece1af6::t_f6488d1236efbd 1-37
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/claude.py
+  s_e3121fbece1af6::t_0ff2928ce90e68 1-62
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/codex.py
+  s_e3121fbece1af6::t_5ae4a6a06db40c 1-113
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/copilot.py
+  s_e3121fbece1af6::t_a13860a5d28631 1-48
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/cursor.py
+  s_e3121fbece1af6::t_c575efb173a84b 1-50
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/grok.py
+  s_e3121fbece1af6::t_72f15cb95cc2e9 1-69
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/jsonl_agent.py
+  s_e3121fbece1af6::t_5667a6af975c4a 1-64
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/omp.py
+  s_e3121fbece1af6::t_2a78d0cdeee81d 1-59
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/opencode.py
+  s_e3121fbece1af6::t_e03db5bd0a4105 1-67
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/pi.py
+  s_e3121fbece1af6::t_6dd51c766fe271 1-9
+plugins/knowledge/skills/session-search/scripts/session_search/adapters/prime.py
+  s_e3121fbece1af6::t_13c188d66ca136 1-9
+plugins/knowledge/skills/session-search/scripts/session_search/cli.py
+  s_e3121fbece1af6::t_77af56a4654afa 1-285
+plugins/knowledge/skills/session-search/scripts/session_search/embedder.py
+  s_e3121fbece1af6::t_13f528c608d346 1-69
+plugins/knowledge/skills/session-search/scripts/session_search/insights.py
+  s_e3121fbece1af6::t_fce6c00f223674 1-77
+plugins/knowledge/skills/session-search/scripts/session_search/models.py
+  s_e3121fbece1af6::t_4bef5b1f5628cf 1-83
+plugins/knowledge/skills/session-search/scripts/session_search/records.py
+  s_e3121fbece1af6::t_00b976f55cdbc2 1-34
+plugins/knowledge/skills/session-search/scripts/session_search/store.py
+  s_e3121fbece1af6::t_5b54c8dad5c517 1-479
+plugins/knowledge/skills/session-search/scripts/session_search/strategies/__init__.py
+  s_e3121fbece1af6::t_f7fdf8fc352e31 1-33
+plugins/knowledge/skills/session-search/scripts/session_search/strategies/auto.py
+  s_e3121fbece1af6::t_227e53342865c7 1-69
+plugins/knowledge/skills/session-search/scripts/session_search/strategies/naive.py
+  s_e3121fbece1af6::t_457cf525a73eb5 1-35
+plugins/knowledge/skills/session-search/scripts/session_search/strategies/onto.py
+  s_e3121fbece1af6::t_bef5cfa8a75b15 1-32
+plugins/knowledge/skills/session-search/scripts/session_search/strategies/semantic.py
+  s_e3121fbece1af6::t_0ae4848477ca2d 1-32
+plugins/knowledge/skills/session-search/scripts/session_search/textutil.py
+  s_e3121fbece1af6::t_4d1f3ca7d47448 1-153
+plugins/knowledge/skills/session-search/scripts/session_search/turns.py
+  s_e3121fbece1af6::t_d371008d2579f0 1-119
+plugins/knowledge/skills/session-search/tests/check.py
+  s_e3121fbece1af6::t_2771330550ac3f 1-78
+plugins/knowledge/skills/skill-graph/ARCHITECTURE.md
+  s_e3121fbece1af6::t_5a2395ef7ed67c 1-62
+plugins/knowledge/skills/skill-graph/references/knowledge-maintenance.md
+  s_e3121fbece1af6::t_16963d3e6b41ac 1-63
+plugins/knowledge/skills/skill-graph/references/maintenance.md
+  s_e3121fbece1af6::t_4e394933b74dec 1-50
+plugins/knowledge/skills/skill-graph/references/remote-loading.md
+  s_e3121fbece1af6::t_b4b818b75b1ac0 1-17
+plugins/knowledge/skills/skill-graph/references/route-planning.md
+  s_e3121fbece1af6::t_ca7c2b400bd812 1-18
+plugins/knowledge/skills/skill-graph/references/terminal-graph.md
+  s_e3121fbece1af6::t_4e958ef2968850 1-35
+plugins/knowledge/skills/skill-graph/requirements.txt
+  s_e3121fbece1af6::t_f210587c25012a 1-2
+plugins/knowledge/skills/skill-graph/scripts/search-core/ARCHITECTURE.md
+  s_e3121fbece1af6::t_1aaf736f8c56b4 1-72
+plugins/knowledge/skills/skill-graph/scripts/search-core/Cargo.lock
+  s_e3121fbece1af6::t_af4d9fb6b57631 1-2461
+plugins/knowledge/skills/skill-graph/scripts/search-core/Cargo.toml
+  s_e3121fbece1af6::t_950d61fc5f2e31 1-24
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/bundle.rs
+  s_e3121fbece1af6::t_2f42bbec9e17e8 1-438
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/catalog.rs
+  s_e3121fbece1af6::t_0ced88b7fb4e93 1-454
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/graph_view.rs
+  s_e3121fbece1af6::t_a2ea65802335b3 1-1531
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/jev.rs
+  s_e3121fbece1af6::t_79ef0c975a2a0b 1-509
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/promotion.rs
+  s_e3121fbece1af6::t_d10f2b4278a524 1-192
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/registry.rs
+  s_e3121fbece1af6::t_b6351db50a8ae3 1-809
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/scanner.rs
+  s_e3121fbece1af6::t_b52e64e16893b8 1-237
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/topics.rs
+  s_e3121fbece1af6::t_160876dad6f5a3 1-458
+plugins/knowledge/skills/skill-graph/scripts/test_concepts.py
+  s_e3121fbece1af6::t_2f255ddda05f3a 1-72
+plugins/knowledge/skills/skill-graph/scripts/test_graph.py
+  s_e3121fbece1af6::t_f7292ea37618e2 1-142
+plugins/knowledge/skills/skill-graph/scripts/test_refresh.py
+  s_e3121fbece1af6::t_a09b0c3cbe190a 1-41
+plugins/knowledge/skills/source-insights/ARCHITECTURE.md
+  s_e3121fbece1af6::t_00dd7175e3f736 1-149
+plugins/knowledge/skills/source-insights/references/analysis-format.md
+  s_e3121fbece1af6::t_05afa2d822d53e 1-78
+plugins/knowledge/skills/source-insights/references/composable-workflow.md
+  s_e3121fbece1af6::t_ba29da9826b8d2 1-116
+plugins/knowledge/skills/source-insights/references/documents.md
+  s_e3121fbece1af6::t_96b991c105eb12 1-114
+plugins/knowledge/skills/source-insights/references/sessions.md
+  s_e3121fbece1af6::t_7382ffa1a26161 1-101
+plugins/knowledge/skills/source-insights/references/video.md
+  s_e3121fbece1af6::t_1d8509aeed9def 1-95
+plugins/knowledge/skills/source-insights/scripts/check.py
+  s_e3121fbece1af6::t_0c18933556a14f 1-138
+plugins/knowledge/skills/source-insights/scripts/check_export.py
+  s_e3121fbece1af6::t_05bad3b5dd47b7 1-54
+plugins/knowledge/skills/source-insights/scripts/check_prepared.py
+  s_e3121fbece1af6::t_c311430b05de93 1-162
+plugins/knowledge/skills/source-insights/scripts/check_search.py
+  s_e3121fbece1af6::t_9126166ab5b8d7 1-61
+plugins/knowledge/skills/source-insights/scripts/check_session.py
+  s_e3121fbece1af6::t_8414aa269b3b58 1-29
+plugins/knowledge/skills/source-insights/scripts/check_workflow.py
+  s_e3121fbece1af6::t_9d3ca17268b2cb 1-80
+plugins/knowledge/skills/source-insights/scripts/render_pdf.swift
+  s_e3121fbece1af6::t_b9160c4eb38784 1-29
+plugins/knowledge/skills/source-insights/scripts/session_records.py
+  s_e3121fbece1af6::t_9d7070948aaaa6 1-118
+plugins/knowledge/skills/source-insights/scripts/session_workflow.py
+  s_e3121fbece1af6::t_fe19f280c62ebe 1-149
+plugins/knowledge/skills/source-insights/workflows/session-to-insight.md
+  s_e3121fbece1af6::t_d4b1d1f5373b71 1-136
+plugins/knowledge/skills/source-insights/workflows/session-to-insight.yaml
+  s_e3121fbece1af6::t_0cb34c0316a9e5 1-49
+plugins/knowledge/tools/bkd/ARCHITECTURE.md
+  s_e3121fbece1af6::t_a4cbf81d249a99 1-89
+plugins/knowledge/tools/bkd/Cargo.lock
+  s_e3121fbece1af6::t_82b2f1a48189eb 1-3113
+plugins/knowledge/tools/bkd/Cargo.toml
+  s_e3121fbece1af6::t_b5e9a02005d798 1-38
+plugins/knowledge/tools/bkd/DESIGN.md
+  s_e3121fbece1af6::t_d943c88ec90498 1-33
+plugins/knowledge/tools/bkd/README.md
+  s_e3121fbece1af6::t_08567a8927eb97 1-192
+plugins/knowledge/tools/bkd/database/blog-kind-rollback.sql
+  s_e3121fbece1af6::t_dba8d4f5ac0a63 1-25
+plugins/knowledge/tools/bkd/database/blog-kind-upgrade.sql
+  s_e3121fbece1af6::t_a37f16c67ee585 1-25
+plugins/knowledge/tools/bkd/database/bookmarkdrop.sql
+  s_e3121fbece1af6::t_d57ff212ad3e6e 1-205
+plugins/knowledge/tools/bkd/database/disable-publisher.sql
+  s_e3121fbece1af6::t_352ba627c3ce74 1-7
+plugins/knowledge/tools/bkd/src/bin/bookmarkdrop.rs
+  s_e3121fbece1af6::t_9945cd6030975d 1-3
+plugins/knowledge/tools/bkd/src/capture.rs
+  s_e3121fbece1af6::t_9cb96422299a3b 1-855
+plugins/knowledge/tools/bkd/src/connectors.rs
+  s_e3121fbece1af6::t_b26599112bb63a 1-183
+plugins/knowledge/tools/bkd/src/database_tests.rs
+  s_e3121fbece1af6::t_bbdc6934e54d4c 1-156
+plugins/knowledge/tools/bkd/src/embedding.rs
+  s_e3121fbece1af6::t_c4eb260dea9ae7 1-201
+plugins/knowledge/tools/bkd/src/graph.rs
+  s_e3121fbece1af6::t_65f95020e8114a 1-550
+plugins/knowledge/tools/bkd/src/importer.rs
+  s_e3121fbece1af6::t_3b99d3108bb57a 1-472
+plugins/knowledge/tools/bkd/src/index.rs
+  s_e3121fbece1af6::t_ddd7ae68ef410b 1-231
+plugins/knowledge/tools/bkd/src/knowledge.rs
+  s_e3121fbece1af6::t_5ba544041135a8 1-752
+plugins/knowledge/tools/bkd/src/knowledge_tests.rs
+  s_e3121fbece1af6::t_9d69a2e85f3f82 1-265
+plugins/knowledge/tools/bkd/src/lexical.rs
+  s_e3121fbece1af6::t_26562ccad5e30b 1-211
+plugins/knowledge/tools/bkd/src/lib.rs
+  s_e3121fbece1af6::t_e4cb751a00eb91 1-832
+plugins/knowledge/tools/bkd/src/main.rs
+  s_e3121fbece1af6::t_9a1b60ee1c40f9 1-3
+plugins/knowledge/tools/bkd/src/model.rs
+  s_e3121fbece1af6::t_b1bbe8e9cddd01 1-312
+plugins/knowledge/tools/bkd/src/passage.rs
+  s_e3121fbece1af6::t_a7de7017071a43 1-74
+plugins/knowledge/tools/bkd/src/reader.rs
+  s_e3121fbece1af6::t_075875803dd408 1-192
+plugins/knowledge/tools/bkd/src/render.rs
+  s_e3121fbece1af6::t_e9e0b666aace27 1-44
+plugins/knowledge/tools/bkd/src/search.rs
+  s_e3121fbece1af6::t_07690abeeb1906 1-611
+plugins/knowledge/tools/bkd/src/store.rs
+  s_e3121fbece1af6::t_bf35405cef5564 1-164
+plugins/knowledge/tools/bkd/src/tui.rs
+  s_e3121fbece1af6::t_963b3b464b3c48 1-218
+plugins/knowledge/tools/bkd/src/ui.rs
+  s_e3121fbece1af6::t_b5d24cfbee69ab 1-321
+plugins/knowledge/tools/bkd/tests/browser.mjs
+  s_e3121fbece1af6::t_ce1c28dc1928ee 1-239
+plugins/knowledge/tools/bkd/tests/cli.rs
+  s_e3121fbece1af6::t_dc021802dd9d68 1-474
+plugins/knowledge/tools/bkd/tests/composition.py
+  s_e3121fbece1af6::t_408c56f8f82dd8 1-21
+plugins/knowledge/tools/bkd/tests/fixtures/bookmarks.jsonl
+  s_e3121fbece1af6::t_b158c2adb9c342 1-6
+plugins/knowledge/tools/bkd/tests/fixtures/retrieval.json
+  s_e3121fbece1af6::t_1a8e10a47cb365 1-383
+plugins/knowledge/tools/bkd/tests/knowledge_pipeline.py
+  s_e3121fbece1af6::t_c734d89579ed6f 1-55
+plugins/knowledge/tools/bkd/tests/retrieval.py
+  s_e3121fbece1af6::t_869bf4169ac2f2 1-95
+plugins/knowledge/tools/bkd/tests/tui.py
+  s_e3121fbece1af6::t_5536f98a78b8ce 1-157
+plugins/knowledge/tools/bkd/web/app.js
+  s_e3121fbece1af6::t_a823001be5f88b 1-253
+plugins/knowledge/tools/bkd/web/index.html
+  s_e3121fbece1af6::t_5e45091651ea6b 1-13
+plugins/knowledge/tools/bkd/web/style.css
+  s_e3121fbece1af6::t_af1c92872068dd 1
+plugins/knowledge/tools/distiller/Cargo.lock
+  s_e3121fbece1af6::t_f503ac73ea588b 1-3365
+plugins/knowledge/tools/distiller/Cargo.toml
+  s_e3121fbece1af6::t_a7e3780241b0ba 1-39
+plugins/knowledge/tools/distiller/assets/FONTS.md
+  s_e3121fbece1af6::t_1c0c5277bc1f78 1-10
+plugins/knowledge/tools/distiller/assets/NotoSans-LICENSE.txt
+  s_e3121fbece1af6::t_fc379ecf047bfe 1-94
+plugins/knowledge/tools/distiller/assets/epub.css
+  s_e3121fbece1af6::t_e2620b07c0b573 1-17
+plugins/knowledge/tools/distiller/assets/pdf-reconstruction.schema.json
+  s_e3121fbece1af6::t_1b42e92dfc1396 1-128
+plugins/knowledge/tools/distiller/src/constants.rs
+  s_e3121fbece1af6::t_2df0f8b82a854b 1-50
+plugins/knowledge/tools/distiller/src/dom.rs
+  s_e3121fbece1af6::t_7e7384d34a530c 1-47
+plugins/knowledge/tools/distiller/src/dom_ops.rs
+  s_e3121fbece1af6::t_099550d84c1331 1-102
+plugins/knowledge/tools/distiller/src/epub.rs
+  s_e3121fbece1af6::t_ca032c0149ee1d 1-406
+plugins/knowledge/tools/distiller/src/extraction/checks.rs
+  s_e3121fbece1af6::t_0e6fca4f962fef 1-126
+plugins/knowledge/tools/distiller/src/extraction/llm.rs
+  s_e3121fbece1af6::t_173c3d4897246c 1-257
+plugins/knowledge/tools/distiller/src/extraction/mod.rs
+  s_e3121fbece1af6::t_ce24ef461aa058 1-2
+plugins/knowledge/tools/distiller/src/extractors/chat_llm.rs
+  s_e3121fbece1af6::t_ce2220e1248a0f 1-78
+plugins/knowledge/tools/distiller/src/extractors/github.rs
+  s_e3121fbece1af6::t_3538697d15ccbc 1-53
+plugins/knowledge/tools/distiller/src/extractors/hackernews.rs
+  s_e3121fbece1af6::t_e02e065ff9717f 1-48
+plugins/knowledge/tools/distiller/src/extractors/mod.rs
+  s_e3121fbece1af6::t_5e4c406c5cd887 1-8
+plugins/knowledge/tools/distiller/src/extractors/reddit.rs
+  s_e3121fbece1af6::t_6b2af1d23c274a 1-53
+plugins/knowledge/tools/distiller/src/extractors/registry.rs
+  s_e3121fbece1af6::t_84f54eb21e9d30 1-25,28-109
+plugins/knowledge/tools/distiller/src/extractors/substack.rs
+  s_e3121fbece1af6::t_de79c27ddf3c64 1-132
+plugins/knowledge/tools/distiller/src/extractors/x_twitter.rs
+  s_e3121fbece1af6::t_323caf89dbdfc9 1-68
+plugins/knowledge/tools/distiller/src/extractors/youtube.rs
+  s_e3121fbece1af6::t_b64e0c6aa632c8 1-65
+plugins/knowledge/tools/distiller/src/fetch.rs
+  s_e3121fbece1af6::t_b2172790e40dfb 1-617
+plugins/knowledge/tools/distiller/src/find_content.rs
+  s_e3121fbece1af6::t_3f95b0bc6eb58f 1-59
+plugins/knowledge/tools/distiller/src/kfx.rs
+  s_e3121fbece1af6::t_26fd4477741e55 1-71
+plugins/knowledge/tools/distiller/src/lib.rs
+  s_e3121fbece1af6::t_8f6303660a6ca0 1-423
+plugins/knowledge/tools/distiller/src/main.rs
+  s_e3121fbece1af6::t_fdb535f3ed3091 1-263
+plugins/knowledge/tools/distiller/src/markdown.rs
+  s_e3121fbece1af6::t_a995ffdbf01068 1-425
+plugins/knowledge/tools/distiller/src/markdown_ast.rs
+  s_e3121fbece1af6::t_03ea29874061aa 1-407
+plugins/knowledge/tools/distiller/src/metadata.rs
+  s_e3121fbece1af6::t_bfa5f613fc9a85 1-288
+plugins/knowledge/tools/distiller/src/observability.rs
+  s_e3121fbece1af6::t_0206cd3aead003 1-45
+plugins/knowledge/tools/distiller/src/pdf.rs
+  s_e3121fbece1af6::t_990e2f88c32b0d 1-400
+plugins/knowledge/tools/distiller/src/pdf_reconstruct.rs
+  s_e3121fbece1af6::t_c6f6d290e52a60 1-949
+plugins/knowledge/tools/distiller/src/removal/content_patterns.rs
+  s_e3121fbece1af6::t_6fcdbe74d2ad73 1-122
+plugins/knowledge/tools/distiller/src/removal/hidden.rs
+  s_e3121fbece1af6::t_68cf565808d827 1-57
+plugins/knowledge/tools/distiller/src/removal/metadata_block.rs
+  s_e3121fbece1af6::t_c5513f2ba544fb 1-82
+plugins/knowledge/tools/distiller/src/removal/mod.rs
+  s_e3121fbece1af6::t_07d3d5e19de545 1-6
+plugins/knowledge/tools/distiller/src/removal/scoring.rs
+  s_e3121fbece1af6::t_14c93aa972b2a4 1-36
+plugins/knowledge/tools/distiller/src/removal/selectors.rs
+  s_e3121fbece1af6::t_ff778fd5fdd5c8 1-103
+plugins/knowledge/tools/distiller/src/removal/small_images.rs
+  s_e3121fbece1af6::t_2c6a8810a54129 1-47
+plugins/knowledge/tools/distiller/src/sanitize.rs
+  s_e3121fbece1af6::t_44e07c75f1f34e 1-100
+plugins/knowledge/tools/distiller/src/scoring.rs
+  s_e3121fbece1af6::t_6f46d5bdb331cc 1-89
+plugins/knowledge/tools/distiller/src/standardize/callouts.rs
+  s_e3121fbece1af6::t_6b65f82fc889a2 1-23
+plugins/knowledge/tools/distiller/src/standardize/footnotes.rs
+  s_e3121fbece1af6::t_618e66e833eec9 1-13
+plugins/knowledge/tools/distiller/src/standardize/mod.rs
+  s_e3121fbece1af6::t_c8c13b8dbd92f7 1-2
+plugins/knowledge/tools/distiller/src/types.rs
+  s_e3121fbece1af6::t_9fcc6776ec5b01 1-68
+plugins/knowledge/tools/distiller/tests/cli.rs
+  s_e3121fbece1af6::t_3a76a421461932 1-100
+plugins/knowledge/tools/distiller/tests/epub_journey.py
+  s_e3121fbece1af6::t_7779a96bdbf89b 1-150
+plugins/knowledge/tools/distiller/tests/fixtures/general--cp4space-jordan-algebra.html
+  s_e3121fbece1af6::t_0e702d358910bb 1-111
+plugins/knowledge/tools/distiller/tests/fixtures/vectorized-clz-and-ctz.html
+  s_e3121fbece1af6::t_d336171e6aed8c 1-72
+plugins/knowledge/tools/distiller/tests/integration.rs
+  s_e3121fbece1af6::t_7930fe33c4b326 1-391
+plugins/knowledge/tools/distiller/tests/kfx_cli.rs
+  s_e3121fbece1af6::t_63b4fb59ed4f32 1-27
+plugins/knowledge/tools/distiller/tests/pdf_journey.py
+  s_e3121fbece1af6::t_734e4b4a7c1414 1-149
+plugins/knowledge/tools/distiller/tests/pdf_model_stub.py
+  s_e3121fbece1af6::t_2455016d4ee171 1-89
+plugins/knowledge/tools/insights/ARCHITECTURE.md
+  s_e3121fbece1af6::t_c1f5694ccacca4 1-28
+plugins/knowledge/tools/insights/README.md
+  s_e3121fbece1af6::t_457634391fa915 1-42
+plugins/knowledge/tools/insights/go.mod
+  s_e3121fbece1af6::t_05547b0fe4853f 1-3
+plugins/knowledge/tools/insights/main_test.go
+  s_e3121fbece1af6::t_b23bc7c8b0c8be 1-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f4558ae93876c585a4f5e4ad0f7ef1ee0862cd9d",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
