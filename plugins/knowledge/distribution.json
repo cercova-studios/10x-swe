@@ -1,0 +1,17 @@
+{
+  "schema": "knowledge-distribution/v1",
+  "profile": "keyword",
+  "platforms": ["macOS", "Linux/WSL"],
+  "components": [
+    {"name": "skill-search", "source": "skills/skill-graph/scripts/search-core", "build": "cargo --locked", "state": "knowledge/skills"},
+    {"name": "bkd", "source": "tools/bkd", "build": "cargo --locked", "state": "state/bookmarks"},
+    {"name": "distiller", "source": "tools/distiller", "build": "cargo --locked", "state": "state/covers"},
+    {"name": "insights", "source": "tools/insights", "build": "go build", "state": "read-only"},
+    {"name": "source-insights", "source": "skills/source-insights", "build": "requirements.lock", "state": "knowledge/sources"},
+    {"name": "session-search", "source": "skills/session-search", "build": "Python standard library", "state": "state/session-search.sqlite"}
+  ],
+  "optional": ["Pinned BGE model and llama-embedding", "Dagu 2.19.2", "Pandoc", "PDFium", "media extraction tools", "explicit connector/provider credentials"],
+  "excluded": ["Personal Kindle delivery", "SSH configuration", "personal libraries and source sessions", "credential discovery", "automatic publication"],
+  "provenance": "provenance.json",
+  "license_notice": "../../THIRD_PARTY.md"
+}

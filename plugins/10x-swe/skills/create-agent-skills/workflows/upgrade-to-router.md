@@ -10,7 +10,7 @@
 ## Step 1: Select the Skill
 
 ```bash
-ls ${AGENT_ROOT}/skills/
+ls ${SKILL_ROOT}/
 ```
 
 Present numbered list, ask: "Which skill should be upgraded to the router pattern?"
@@ -19,8 +19,8 @@ Present numbered list, ask: "Which skill should be upgraded to the router patter
 
 Read the skill:
 ```bash
-cat ${AGENT_ROOT}/skills/{skill-name}/SKILL.md
-ls ${AGENT_ROOT}/skills/{skill-name}/
+cat ${SKILL_ROOT}/{skill-name}/SKILL.md
+ls ${SKILL_ROOT}/{skill-name}/
 ```
 
 **Already a router?** (has workflows/ and intake question)
@@ -65,8 +65,8 @@ Ask: "Does this breakdown look right? Any adjustments?"
 ## Step 4: Create Directory Structure
 
 ```bash
-mkdir -p ${AGENT_ROOT}/skills/{skill-name}/workflows
-mkdir -p ${AGENT_ROOT}/skills/{skill-name}/references
+mkdir -p ${SKILL_ROOT}/{skill-name}/workflows
+mkdir -p ${SKILL_ROOT}/{skill-name}/references
 ```
 
 ## Step 5: Extract Workflows

@@ -1,0 +1,49 @@
+description: Capture selected session evidence, review exact artifacts, and publish cited learning locally.
+type: graph
+working_dir: ..
+params:
+  - QUERY: ""
+  - RECORDS: ""
+  - SESSION: ""
+  - AGENT: codex
+  - WORK: ""
+  - LIBRARY: ""
+env:
+  SESSION_QUERY: "${params.QUERY}"
+  SESSION_RECORDS: "${params.RECORDS}"
+  SESSION_ID: "${params.SESSION}"
+  SESSION_AGENT: "${params.AGENT}"
+  SESSION_WORK: "${params.WORK}"
+  SESSION_LIBRARY: "${params.LIBRARY}"
+steps:
+  - id: capture
+    run: python3 scripts/session_workflow.py capture
+  - id: prepare
+    depends: [capture]
+    run: python3 scripts/session_workflow.py prepare
+  - id: review
+    depends: [prepare]
+    action: human.task
+    with:
+      prompt: >-
+        Review ${params.WORK}/evidence/document.md and ${params.WORK}/analysis.json.
+        Session ${params.SESSION}; publication destination ${params.LIBRARY}.
+        Run session_workflow.py review with these exact values. Submit its digest
+        only after inspecting claims, coverage, citations and destination.
+      form:
+        type: object
+        additionalProperties: false
+        properties:
+          decision:
+            type: string
+            enum: [publish, reject]
+          digest:
+            type: string
+            pattern: "^[0-9a-f]{64}$"
+        required: [decision, digest]
+  - id: publish
+    depends: [review]
+    env:
+      SESSION_REVIEW_DECISION: "${steps.review.outputs.decision}"
+      SESSION_REVIEW_DIGEST: "${steps.review.outputs.digest}"
+    run: python3 scripts/session_workflow.py publish

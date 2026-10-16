@@ -1,1 +1,6 @@
 .osgrep
+__pycache__/
+*.py[cod]
+target/
+.venv/
+.DS_Store

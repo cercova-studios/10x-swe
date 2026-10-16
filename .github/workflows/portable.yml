@@ -1,0 +1,61 @@
+name: Portable knowledge tools
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bootstrap:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Source build and idempotent setup
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.99.0 --profile minimal
+          rustup default 1.99.0
+          ./knowledge plan --prefix "$RUNNER_TEMP/knowledge"
+          ./knowledge setup --prefix "$RUNNER_TEMP/knowledge"
+          ./knowledge setup --prefix "$RUNNER_TEMP/knowledge"
+      - name: Independent pipes, review gates and read-only intake
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$RUNNER_TEMP/knowledge/env.sh"
+          export PYTHONPATH="$PWD/plugins/knowledge/lib"
+          export PYTHONDONTWRITEBYTECODE=1
+          RUNTIME="$RUNNER_TEMP/knowledge/runtimes/source-insights/bin/python"
+          "$RUNTIME" -m unittest discover -s tests -p 'test_*.py' -v
+          "$RUNTIME" -m unittest discover -s plugins/knowledge/tests -v
+          "$RUNTIME" tests/check_concurrent_graph.py
+          "$RUNTIME" tests/check_distribution.py
+          "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_graph.py
+          "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_concepts.py
+          "$RUNTIME" plugins/knowledge/skills/session-search/tests/check.py
+          "$RUNTIME" tests/acceptance.py "$RUNNER_TEMP/knowledge"
+          ./knowledge doctor --prefix "$RUNNER_TEMP/knowledge"
+      - name: Rust and Go regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller; do
+            cargo test --locked --release --manifest-path "$PROJECT/Cargo.toml" --target-dir "$RUNNER_TEMP/knowledge/build/rust"
+          done
+          cd plugins/knowledge/tools/insights
+          go test ./...
+          go vet ./...

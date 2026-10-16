@@ -10,7 +10,7 @@
 ## Step 1: Select the Skill
 
 ```bash
-ls ${AGENT_ROOT}/skills/
+ls ${SKILL_ROOT}/
 ```
 
 Present numbered list, ask: "Which skill needs a new reference?"
@@ -18,8 +18,8 @@ Present numbered list, ask: "Which skill needs a new reference?"
 ## Step 2: Analyze Current Structure
 
 ```bash
-cat ${AGENT_ROOT}/skills/{skill-name}/SKILL.md
-ls ${AGENT_ROOT}/skills/{skill-name}/references/ 2>/dev/null
+cat ${SKILL_ROOT}/{skill-name}/SKILL.md
+ls ${SKILL_ROOT}/{skill-name}/references/ 2>/dev/null
 ```
 
 Determine:

@@ -1,175 +1,20 @@
-<when_to_use_scripts>
-Even if an agent could write a script, pre-made scripts offer advantages:
-- More reliable than generated code
-- Save tokens (no need to include code in context)
-- Save time (no code generation required)
-- Ensure consistency across uses
+# Helpers that earn their keep
 
-<execution_vs_reference>
-Make clear whether the agent should:
-- **Execute the script** (most common): "Run `analyze_form.py` to extract fields"
-- **Read it as reference** (for complex logic): "See `analyze_form.py` for the extraction algorithm"
+Use a script only when it makes a repeated operation clearer, safer or verifiable.
+Keep it in the owning bundle's scripts directory. Resolve paths from the selected
+SKILL_DIR; do not depend on the caller's working directory or a global wrapper.
 
-For most utility scripts, execution is preferred.
-</execution_vs_reference>
+State whether a resource is reference data or executable code. Inspect untrusted
+helpers before execution; their presence in a graph is not approval. Document inputs,
+outputs, dependencies, external effects and failure behavior. Pin build inputs and
+check prerequisites explicitly rather than downloading packages during discovery.
 
-<how_scripts_work>
-When the agent executes a script via bash:
-1. Script code never enters context window
-2. Only script output consumes tokens
-3. Far more efficient than having the assistant generate equivalent code
-</how_scripts_work>
-</when_to_use_scripts>
+Pass structured arguments without shell evaluation. Bound files, subprocesses and
+network operations. Preserve useful errors and cleanup. Missing input or permission
+failure must not silently become empty successful data. Avoid overwriting outputs;
+use owned temporary files and atomic publication when needed. Do not hide a provider
+failure behind a default value unless that fallback is an explicit public contract.
 
-<file_organization>
-<scripts_directory>
-**Best practice**: Place all executable scripts in a `scripts/` subdirectory within the skill folder.
-
-```
-skill-name/
-├── SKILL.md
-├── scripts/
-│   ├── main_utility.py
-│   ├── helper_script.py
-│   └── validator.py
-└── references/
-    └── api-docs.md
-```
-
-**Benefits**:
-- Keeps skill root clean and organized
-- Clear separation between documentation and executable code
-- Consistent pattern across all skills
-- Easy to reference: `python scripts/script_name.py`
-
-**Reference pattern**: In SKILL.md, reference scripts using the `scripts/` path:
-
-```bash
-python ${AGENT_ROOT}/skills/skill-name/scripts/analyze.py input.har
-```
-</scripts_directory>
-</file_organization>
-
-<utility_scripts_pattern>
-<example>
-## Utility scripts
-
-**analyze_form.py**: Extract all form fields from PDF
-
-```bash
-python scripts/analyze_form.py input.pdf > fields.json
-```
-
-Output format:
-```json
-{
-  "field_name": { "type": "text", "x": 100, "y": 200 },
-  "signature": { "type": "sig", "x": 150, "y": 500 }
-}
-```
-
-**validate_boxes.py**: Check for overlapping bounding boxes
-
-```bash
-python scripts/validate_boxes.py fields.json
-# Returns: "OK" or lists conflicts
-```
-
-**fill_form.py**: Apply field values to PDF
-
-```bash
-python scripts/fill_form.py input.pdf fields.json output.pdf
-```
-</example>
-</utility_scripts_pattern>
-
-<solve_dont_punt>
-Handle error conditions rather than punting to the assistant.
-
-<example type="good">
-```python
-def process_file(path):
-    """Process a file, creating it if it doesn't exist."""
-    try:
-        with open(path) as f:
-            return f.read()
-    except FileNotFoundError:
-        print(f"File {path} not found, creating default")
-        with open(path, 'w') as f:
-            f.write('')
-        return ''
-    except PermissionError:
-        print(f"Cannot access {path}, using default")
-        return ''
-```
-</example>
-
-<example type="bad">
-```python
-def process_file(path):
-    # Just fail and let the assistant figure it out
-    return open(path).read()
-```
-</example>
-
-<configuration_values>
-Document configuration parameters to avoid "voodoo constants":
-
-<example type="good">
-```python
-# HTTP requests typically complete within 30 seconds
-REQUEST_TIMEOUT = 30
-
-# Three retries balances reliability vs speed
-MAX_RETRIES = 3
-```
-</example>
-
-<example type="bad">
-```python
-TIMEOUT = 47  # Why 47?
-RETRIES = 5   # Why 5?
-```
-</example>
-</configuration_values>
-</solve_dont_punt>
-
-<package_dependencies>
-<runtime_constraints>
-Skills run in code execution environment with platform-specific limitations:
-- **Interactive/web IDE environments**: Often allow runtime package installs
-- **API/sandboxed environments**: Often restrict network access and runtime installs
-</runtime_constraints>
-
-<guidance>
-List required packages in your SKILL.md and verify they're available.
-
-<example type="good">
-Install required package: `pip install pypdf`
-
-Then use it:
-
-```python
-from pypdf import PdfReader
-reader = PdfReader("file.pdf")
-```
-</example>
-
-<example type="bad">
-"Use the pdf library to process the file."
-</example>
-</guidance>
-</package_dependencies>
-
-<mcp_tool_references>
-If your Skill uses MCP (Model Context Protocol) tools, always use fully qualified tool names.
-
-<format>ServerName:tool_name</format>
-
-<examples>
-- Use the BigQuery:bigquery_schema tool to retrieve table schemas.
-- Use the GitHub:create_issue tool to create issues.
-</examples>
-
-Without the server prefix, the agent may fail to locate the tool, especially when multiple MCP servers are available.
-</mcp_tool_references>
+Exercise the real helper with a small fixture, invalid input, interruption where
+relevant and an external-failure case. A skipped check remains unverified. Name
+actual available harness tools; do not assume universal MCP server/tool identifiers.

@@ -1,316 +1,37 @@
 ---
 name: code-research
-description: Conducts in-depth code research using a tiered tool strategy. Use when investigating codebases, researching libraries/APIs, debugging errors, or understanding unfamiliar code patterns.
+description: Investigate architecture, library APIs, engineering tradeoffs or unfamiliar behavior using inspected source and current primary evidence.
+metadata:
+  skill-graph-id: plugin/10x-swe/code-research
+uses:
+  - '[[plugin/10x-swe/code-search/SKILL]]'
+related:
+  - '[[plugin/10x-swe/diagnose/SKILL]]'
 ---
 
-<objective>
-Perform comprehensive code research by intelligently selecting from built-in tools, lightweight scripts, and MCP servers. The skill prioritizes context-efficient approaches—using the simplest tool that gets the job done before escalating to heavier solutions.
-</objective>
+# Research a code question
 
-<quick_start>
-Before any Bash command that uses `${AGENT_ROOT}`, run:
-```bash
-source ./scripts/agent-env.sh
-```
-This resolves `AGENT_ROOT` to `./.agents` in the current working directory.
+1. Define the question, repository/version, constraints and evidence needed.
+2. For local lookup, use [[plugin/10x-swe/code-search/SKILL]]; inspect the source,
+   callers, tests and authoritative architecture before inferring behavior.
+3. For external behavior, consult official documentation and source at the relevant
+   version. Use issues and articles to generate hypotheses, not override contracts.
+4. Record observations, inferences, contradictions and unknowns separately. Cite
+   exact files/lines or source URLs. Expand the search only for a concrete gap.
+5. Answer with the conclusion, supporting evidence, applicability and limitations.
 
-When researching code, follow the **tool escalation ladder**:
+Use available terminal, browser or connector tools. Verify their flags before use.
+Do not assume a harness-specific tool, MCP server, repository `.agents` directory,
+credential or remote service exists. Do not start services or install tooling as a
+side effect of research. Delegate only when the user and harness authorize it.
 
-1. **Local first** - For pure code lookup, invoke `code-search` skill first; otherwise use Grep/Glob/Read
-2. **Terminal research** - Use fast CLI tools (w3m/lynx, curl, jq, rg, fd, gh) and DDG bangs
-3. **Built-in web** - Use WebSearch/WebFetch for documentation and articles
-4. **Skills & Scripts** - Use `gh-cli` skill for GitHub, scripts for Stack Overflow
-5. **MCP servers** - Use Exa/Deepwiki/Chrome for complex research needs
+For a reproducible failure, switch to [[plugin/10x-swe/diagnose/SKILL]].
+For reusable learning, optionally use [[global/source-insights/SKILL]] when that
+plugin is installed: inspect evidence, prepare citations and review publication.
+Keep source preparation and publication separate. Do not automatically send sources,
+queries, code or highlights to Readwise or another external store.
 
-Start simple. Escalate only when simpler tools fail.
-</quick_start>
-
-<tool_hierarchy>
-<tier name="1" label="Built-in Tools (Use First)">
-**Local codebase exploration:**
-- `Grep` - Search for patterns, function names, error messages in code
-- `Glob` - Find files by pattern (e.g., `**/*.ts`, `**/config.*`)
-- `Read` - Read specific files once you know what to look at
-- `Task` with `subagent_type=Explore` - For open-ended codebase exploration
-
-**Web research:**
-- `WebSearch` - General web search for docs, tutorials, discussions
-- `WebFetch` - Fetch and analyze specific URLs (works for most static sites)
-
-**When to use:** Always start here. These tools are fast, low-cost, and handle 80% of research tasks.
-</tier>
-
-<tier name="1.5" label="Terminal Research (CLI)">
-**Prefer Rust utils when available (speed/ergonomics):**
-- `rg` (ripgrep), `fd`, `bat`, `sd`, `xsv`, `hyperfine`
-
-**Fallback to POSIX tools:**
-- `grep`, `find`, `sed`, `awk`, `cut`, `sort`, `uniq`
-
-**Terminal web/doc workflows:**
-- `w3m` / `lynx` for fast doc browsing
-- DuckDuckGo bangs (`!gh`, `!so`, `!npm`, `!pypi`) to jump directly to sources
-- `curl` + `jq` + `rg` for structured data and targeted extraction
-- `pup`/`htmlq`/`python -m bs4` for HTML parsing when needed
-- `readability-lxml` (or `python -m readability`) to clean article content
-- `csvkit` / `xsv` for CSV docs and tables
-- `fzf` to interactively select snippets and URLs
-- Clipboard handoff: `pbcopy` (macOS) / `xclip -selection clipboard` (Linux)
-
-**Rate-limit hygiene:**
-- `curl --retry 3 --retry-delay 2 --compressed` + backoff (`sleep`)
-- Use `ETag`/`If-Modified-Since` to avoid refetching unchanged docs
-
-**When to use:** Quick web/CLI research before WebSearch, or when you need high-throughput data extraction.
-</tier>
-
-<tier name="2" label="Lightweight Scripts & Skills (CLI Access)">
-**Code search routing (`code-search`)** - Use for dedicated local code finding tasks:
-- semantic search, structural/AST search, repo layout discovery, literal text matches
-- invoke first when the user intent is "find code in this repo"
-
-**GitHub CLI (`gh`)** - Use the `gh-cli` skill for comprehensive GitHub operations:
-- Repository info, issues, PRs, code search, Actions, releases, and more
-- Invoke with: `Skill: gh-cli`
-
-**stackoverflow-api.sh** - Find solutions to errors
-```bash
-# Search Stack Overflow for solutions
-${AGENT_ROOT}/skills/code-research/scripts/stackoverflow-api.sh "error message or question"
-```
-
-**When to use:** When you need structured GitHub data (issues, PRs, code across repos) that WebSearch can't provide cleanly.
-</tier>
-
-<tier name="3" label="MCP Servers (Heavy Artillery)">
-**Contextplus MCP** - Local code intelligence for large repos
-- Use for: structure trees, file skeletons, semantic symbol search, blast-radius checks
-- Always pass **repo-root-relative** paths (not cwd-relative paths)
-- Path normalization workflow:
-  ```bash
-  REPO_ROOT="$(git rev-parse --show-toplevel)"
-  CWD="$(pwd)"
-  TARGET="$CWD/src/lib.rs"   # or any absolute target discovered from current task
-  RELATIVE_PATH="$(python3 -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$TARGET" "$REPO_ROOT")"
-  # Use RELATIVE_PATH with contextplus tools
-  ```
-
-**Exa MCP** - Semantic web search with AI understanding
-- Use for: Finding related libraries, discovering best practices, semantic similarity search
-- Better than WebSearch when you need conceptual matches, not keyword matches
-
-**Deepwiki MCP** - Documentation and wiki content
-- Use for: Library documentation, API references, technical wikis
-- Better than WebFetch for structured documentation extraction
-
-**Chrome Web Tools MCP** - Headless browser automation
-- Use for: JavaScript-heavy sites, sites requiring authentication, dynamic content
-- Example: Navigating `https://codewiki.google/github.com/anomalyco/opencode`
-
-**When to use:** When simpler tools fail—JS-rendered content, semantic search needs, or complex documentation sites.
-</tier>
-</tool_hierarchy>
-
-<research_workflow>
-<step name="1" label="Understand the Query">
-Classify the research type:
-- **Codebase understanding** - How does this code work? What's the architecture?
-- **Library/API research** - How do I use this library? What are the patterns?
-- **Bug investigation** - Why is this error happening? How do others solve it?
-- **Pattern discovery** - How do other projects implement X?
-</step>
-
-<step name="2" label="Start Local">
-For any codebase question, explore locally first:
-```
-# If the primary intent is local code finding, route to code-search skill first
-Skill: code-search
-
-# Find relevant files
-Glob: **/*{keyword}*.{ts,py,go}
-
-# Search for patterns
-Grep: "functionName|className|errorMessage"
-
-# Deep exploration
-Task(subagent_type=Explore): "Find how authentication is implemented"
-```
-</step>
-
-<step name="2.5" label="Terminal Research">
-Use fast terminal tools to browse docs and extract data:
-```
-# Quick doc browsing
-w3m https://docs.example.com/guide
-
-# DDG bangs
-WebSearch: "!gh repo:org/project authentication middleware"
-
-# Fast extraction
-curl -s https://docs.example.com/api | rg -n "endpoint" | sed -n '1,120p'
-
-# Structured GitHub data via gh
-gh repo view org/repo --json description --jq '.description'
-
-# Clean article text
-curl -s https://blog.example.com/post | python -m readability | rg -n "API" | sed -n '1,80p'
-
-# CSV extraction
-curl -s https://docs.example.com/table.csv | xsv select 1,3 | xsv table | sed -n '1,40p'
-
-# Interactive selection
-curl -s https://docs.example.com/api | rg -n "endpoint" | fzf
-
-# Clipboard handoff
-curl -s https://docs.example.com/api | pbcopy   # or: xclip -selection clipboard
-```
-Prefer Rust utilities when available (rg/fd/bat/sd/xsv); fall back to standard Unix tools otherwise.
-</step>
-
-<step name="3" label="Expand to Web">
-If local exploration isn't enough:
-```
-# General search
-WebSearch: "library-name how to implement X"
-
-# Fetch specific docs
-WebFetch: "https://docs.library.com/guide"
-```
-</step>
-
-<step name="4" label="Use Skills & Scripts for Structured Data">
-When you need GitHub/StackOverflow data:
-```
-# GitHub operations - invoke the gh-cli skill
-Skill: gh-cli
-# Then use gh directly, e.g.:
-gh issue list -R facebook/react --search "useEffect cleanup"
-gh search code "useEffect cleanup" --repo facebook/react
-```
-```bash
-# Find error solutions
-${AGENT_ROOT}/skills/code-research/scripts/stackoverflow-api.sh "React useEffect memory leak"
-```
-</step>
-
-<step name="5" label="Escalate to MCP When Needed">
-For complex research needs:
-```
-# Local code intelligence (Contextplus)
-# 1) compute repo-root-relative path before calling contextplus
-# 2) call contextplus with RELATIVE_PATH (for example: extensions/swe_distiller/src/lib.rs)
-
-# Semantic search (Exa)
-mcp__web_search_exa: "best practices for React state management 2024"
-mcp__get_code_context_exa: "langgraph deepagent cli"
-mcp__crawling_exa: "https://codewiki.google/github.com/anomalyco/opencode"
-
-# Documentation extraction (Deepwiki)
-mcp__deepwiki__read_wiki_contents: "react/react"
-mcp__deepwiki__read_wiki_structure: "anomalyco/opencode"
-mcp__deepwiki__ask_question: "What are the context engineering strategies used by anomalyco/opencode?"
-
-# Website Navigation
-Use chrome-devtools-mcp to open up webpages and crawl through them for deeper information extraction tasks.
-```
-</step>
-
-<step name="6" label="Save High-Value Sources to Readwise">
-When a source is highly relevant (authoritative docs, key blog posts, insightful discussions), persist it for future retrieval:
-```bash
-# Save a URL to Reader with research tags
-readwise reader-create-document --url "https://..." --tags "code-research,<topic>"
-
-# Create a highlight for a key finding or quote
-readwise readwise-create-highlights --highlights '[{"text": "key finding text", "title": "Source Title", "source_url": "https://...", "note": "Why this matters"}]'
-```
-Only save sources scoring 2-3 on relevance (directly answers the question or provides strong supporting context). Do not save noise.
-</step>
-
-<step name="7" label="Synthesize Findings">
-Combine findings from all sources:
-- Cross-reference information across sources
-- Identify consensus patterns vs. edge cases
-- Note version-specific information (library versions matter!)
-- Cite sources when presenting findings
-</step>
-</research_workflow>
-
-<output_formats>
-Adapt output to the query:
-
-**Quick answer** - For simple questions, respond inline with sources
-**Structured summary** - For broader research:
-```markdown
-## Findings
-- Key finding 1
-- Key finding 2
-
-## Recommendations
-- Recommended approach with rationale
-
-## Sources
-- [Source 1](url)
-- [Source 2](url)
-```
-
-**Research report** - For deep dives, create a markdown file:
-```bash
-Write: research-{topic}-{date}.md
-```
-</output_formats>
-
-<tool_selection_heuristics>
-| Situation | Tool Choice |
-|-----------|-------------|
-| "How does X work in this codebase?" | Grep → Read → Task/Explore |
-| "Find where code lives in this repo" | `code-search` skill first, then continue research if needed |
-| "What's the best library for X?" | WebSearch → Exa MCP |
-| "How do I use library X?" | WebFetch (docs URL) → Deepwiki MCP |
-| "Why am I getting error X?" | Grep (local) → stackoverflow-api.sh → WebSearch |
-| "How do other projects do X?" | gh-cli skill → `gh search` |
-| "Show me the docs for X" | WebFetch → Deepwiki → Chrome MCP |
-| "Quickly skim docs" | w3m/lynx → curl + rg/sed |
-| "Find issues related to X" | gh-cli skill → `gh issue/search` |
-| "Understand large local codebase quickly" | Contextplus (`get_context_tree`/`get_file_skeleton`) with repo-root-relative paths |
-| "Search code for pattern X" | rg (local) → Exa MCP |
-| "Need fast CLI search" | rg/fd/bat (fallback: grep/find/cat) |
-| "Navigate to JS-heavy site" | Chrome MCP (browser_navigate + browser_snapshot) |
-</tool_selection_heuristics>
-
-<anti_patterns>
-<pitfall name="mcp_first">
-Don't reach for MCP servers immediately. Try built-in tools and scripts first—they're faster and use less context.
-</pitfall>
-
-<pitfall name="contextplus_wrong_path">
-Don't pass cwd-relative paths to contextplus when cwd is not repo root. Always normalize to repo-root-relative paths first.
-</pitfall>
-
-<pitfall name="ignoring_local">
-Don't skip local codebase exploration. The answer might already be in the code you're working with.
-</pitfall>
-
-<pitfall name="single_source">
-Don't rely on one source. Cross-reference findings from multiple tools for accuracy.
-</pitfall>
-
-<pitfall name="no_version_check">
-Don't ignore version information. Library APIs change—verify findings match the version in use.
-</pitfall>
-
-<pitfall name="rate_limit_hygiene">
-Don't spam endpoints with aggressive scraping. Use retries, backoff, and caching headers to avoid rate limits.
-</pitfall>
-</anti_patterns>
-
-<success_criteria>
-Research is complete when:
-- Query is fully answered with supporting evidence
-- Multiple sources consulted when appropriate
-- Pure local code-finding requests are routed through `code-search` before broader research
-- Tool selection followed the escalation ladder (simplest first)
-- Findings are synthesized, not just listed
-- Sources are cited for traceability
-- Output format matches query complexity
-</success_criteria>
+Optional specialist routes: `gh-cli` for GitHub operations; the existing
+`scripts/stackoverflow-api.sh` for public error lookup. Resolve script paths from
+this skill's directory, inspect effects and availability, and keep queries free of
+secrets. These are alternatives, not mandatory steps.

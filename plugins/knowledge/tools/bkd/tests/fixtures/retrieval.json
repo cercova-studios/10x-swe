@@ -1,0 +1,383 @@
+{
+  "schema": 1,
+  "records": [
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "chip",
+      "url": "https://huyenchip.com",
+      "title": "Chip Huyen",
+      "tags": [
+        "machine learning"
+      ]
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "chip-post",
+      "url": "https://huyenchip.com/2023/04/11/llm-engineering.html",
+      "title": "Chip Huyen — Building LLM applications",
+      "note": "Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. Chip Huyen blog. "
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "openai",
+      "url": "https://openai.com/index/sparse-features/",
+      "title": "Research into sparse autoencoders",
+      "excerpt": "Extracting interpretable features from transformer neural networks.",
+      "tags": [
+        "research",
+        "interpretability"
+      ]
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "harness",
+      "url": "https://openai.com/index/harness-engineering/",
+      "title": "Harness engineering",
+      "excerpt": "Engineering practices for coding agents and software harnesses.",
+      "tags": [
+        "engineering"
+      ]
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "index",
+      "url": "https://openai.com/blog",
+      "title": "OpenAI blog",
+      "excerpt": "Research engineering papers announcements"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "lookalike",
+      "url": "https://openai.com.evil.example/research",
+      "title": "OpenAI research sparse features",
+      "note": "sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research sparse autoencoders research "
+    },
+    {
+      "provider": "instapaper",
+      "account": "fixture",
+      "external_id": "copy",
+      "url": "https://openai.com/index/sparse-features/",
+      "title": "Research into sparse autoencoders",
+      "note": "excludedsecret metadata"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "paper",
+      "url": "https://arxiv.org/abs/2401.12345",
+      "title": "Sparse feature extraction",
+      "excerpt": "Research paper on interpretable neural networks.",
+      "tags": [
+        "interpretability"
+      ]
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "video",
+      "url": "https://www.youtube.com/watch?v=fixture",
+      "title": "Transformer interpretability lecture",
+      "excerpt": "A video lecture on sparse autoencoders."
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "bm25",
+      "url": "https://docs.example.org/fts5",
+      "title": "SQLite BM25 ranking reference",
+      "excerpt": "Field weights, inverse document frequency, and length normalization."
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "noise",
+      "url": "https://example.org/repetitions",
+      "title": "Search notes",
+      "note": "SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference SQLite BM25 ranking reference "
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "body",
+      "url": "https://example.org/long-note",
+      "title": "Retrieval journal",
+      "note": "Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. Background context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. \nQuantum memory decoherence mitigation\nMore context. "
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "substring",
+      "url": "https://example.org/partial",
+      "title": "Cartesian woodworking",
+      "note": "carpet cartesian concatenate"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "cat",
+      "url": "https://example.org/cat",
+      "title": "Cat nutrition"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "ada",
+      "url": "https://ada.example.org",
+      "title": "Ada Lovelace",
+      "kind": "blog"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "ada-post",
+      "url": "https://ada.example.org/blog/engine",
+      "title": "Ada Lovelace — Analytical engine",
+      "note": "Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog Ada Lovelace blog "
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "utf",
+      "url": "https://example.org/unicode",
+      "title": "研究 検索",
+      "note": "Unicode evidence: 研究 検索 preservation."
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "linus",
+      "url": "https://linus.example.org",
+      "title": "Linus Torvalds",
+      "kind": "blog"
+    },
+    {
+      "provider": "raindrop",
+      "account": "fixture",
+      "external_id": "linus-post",
+      "url": "https://linus.example.org/blog/kernel",
+      "title": "Linus Torvalds kernel blog",
+      "note": "Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog Linus Torvalds blog "
+    }
+  ],
+  "queries": [
+    {
+      "id": "chip-home",
+      "query": "Chip Huyen blog",
+      "relevance": {
+        "https://huyenchip.com": 3,
+        "https://huyenchip.com/2023/04/11/llm-engineering.html": 1
+      },
+      "split": "development",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "chip-post",
+      "query": "Chip Huyen LLM applications",
+      "relevance": {
+        "https://huyenchip.com/2023/04/11/llm-engineering.html": 3,
+        "https://huyenchip.com": 1
+      },
+      "split": "development",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "exact-title",
+      "query": "SQLite BM25 ranking reference",
+      "relevance": {
+        "https://docs.example.org/fts5": 3,
+        "https://example.org/repetitions": 1
+      },
+      "split": "development",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "domain-filter",
+      "query": "sparse autoencoders",
+      "relevance": {
+        "https://openai.com/index/sparse-features/": 3
+      },
+      "split": "development",
+      "flags": [
+        "--domain",
+        "openai.com"
+      ],
+      "forbidden": [
+        "https://openai.com.evil.example/research",
+        "https://arxiv.org/abs/2401.12345",
+        "https://www.youtube.com/watch?v=fixture"
+      ]
+    },
+    {
+      "id": "source-filter",
+      "query": "excludedsecret",
+      "relevance": {},
+      "split": "development",
+      "flags": [
+        "--source",
+        "raindrop"
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "kind-paper",
+      "query": "sparse feature extraction",
+      "relevance": {
+        "https://arxiv.org/abs/2401.12345": 3
+      },
+      "split": "development",
+      "flags": [
+        "--kind",
+        "paper"
+      ],
+      "forbidden": [
+        "https://openai.com/index/sparse-features/",
+        "https://www.youtube.com/watch?v=fixture"
+      ]
+    },
+    {
+      "id": "kind-video",
+      "query": "transformer interpretability",
+      "relevance": {
+        "https://www.youtube.com/watch?v=fixture": 3
+      },
+      "split": "development",
+      "flags": [
+        "--kind",
+        "video"
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "engineering",
+      "query": "harness engineering",
+      "relevance": {
+        "https://openai.com/index/harness-engineering/": 3,
+        "https://openai.com/blog": 1
+      },
+      "split": "development",
+      "flags": [
+        "--domain",
+        "openai.com"
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "long-passage",
+      "query": "quantum memory decoherence mitigation",
+      "relevance": {
+        "https://example.org/long-note": 3
+      },
+      "split": "development",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "whole-token",
+      "query": "cat",
+      "relevance": {
+        "https://example.org/cat": 3
+      },
+      "split": "development",
+      "flags": [],
+      "forbidden": [
+        "https://example.org/partial"
+      ]
+    },
+    {
+      "id": "unknown",
+      "query": "zirconiumquuxunmatched",
+      "relevance": {},
+      "split": "development",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "ada-home",
+      "query": "Ada Lovelace website",
+      "relevance": {
+        "https://ada.example.org": 3,
+        "https://ada.example.org/blog/engine": 1
+      },
+      "split": "held-out",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "ada-post",
+      "query": "analytical engine",
+      "relevance": {
+        "https://ada.example.org/blog/engine": 3
+      },
+      "split": "held-out",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "linus-home",
+      "query": "Linus Torvalds blog",
+      "relevance": {
+        "https://linus.example.org": 3,
+        "https://linus.example.org/blog/kernel": 1
+      },
+      "split": "held-out",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "unicode",
+      "query": "研究 検索",
+      "relevance": {
+        "https://example.org/unicode": 3
+      },
+      "split": "held-out",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "bm25-paraphrase",
+      "query": "inverse document frequency",
+      "relevance": {
+        "https://docs.example.org/fts5": 3
+      },
+      "split": "held-out",
+      "flags": [],
+      "forbidden": []
+    },
+    {
+      "id": "filtered-empty",
+      "query": "quantum memory decoherence",
+      "relevance": {},
+      "split": "held-out",
+      "flags": [
+        "--kind",
+        "paper"
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "source-dedup",
+      "query": "sparse autoencoders",
+      "relevance": {
+        "https://openai.com/index/sparse-features/": 3
+      },
+      "split": "held-out",
+      "flags": [
+        "--source",
+        "instapaper"
+      ],
+      "forbidden": [
+        "https://www.youtube.com/watch?v=fixture",
+        "https://openai.com.evil.example/research"
+      ]
+    }
+  ]
+}

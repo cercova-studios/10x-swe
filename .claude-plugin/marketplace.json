@@ -8,7 +8,12 @@
     {
       "name": "10x-swe",
       "source": "./plugins/10x-swe",
-      "description": "Adds a /10x-swe command for enhanced software engineering workflows"
+      "description": "Engineering skills and bounded workflows for investigation, implementation and verification"
+    },
+    {
+      "name": "knowledge",
+      "source": "./plugins/knowledge",
+      "description": "Portable independent knowledge tools, reviewed evidence pipelines and skill/workflow discovery"
     }
   ]
 }

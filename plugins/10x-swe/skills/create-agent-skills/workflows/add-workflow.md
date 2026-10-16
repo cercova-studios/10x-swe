@@ -12,7 +12,7 @@
 **DO NOT use AskUserQuestion** - there may be many skills.
 
 ```bash
-ls ${AGENT_ROOT}/skills/
+ls ${SKILL_ROOT}/
 ```
 
 Present numbered list, ask: "Which skill needs a new workflow?"
@@ -21,8 +21,8 @@ Present numbered list, ask: "Which skill needs a new workflow?"
 
 Read the skill:
 ```bash
-cat ${AGENT_ROOT}/skills/{skill-name}/SKILL.md
-ls ${AGENT_ROOT}/skills/{skill-name}/workflows/ 2>/dev/null
+cat ${SKILL_ROOT}/{skill-name}/SKILL.md
+ls ${SKILL_ROOT}/{skill-name}/workflows/ 2>/dev/null
 ```
 
 Determine:

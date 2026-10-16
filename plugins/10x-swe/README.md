@@ -1,6 +1,6 @@
 # 10x-swe
 
- A terminal-first AI agent plugin with 60 skills for software engineering, debugging, architecture, and development workflows.
+ A terminal-first AI agent plugin with 69 skills for software engineering, debugging, architecture, and development workflows.
 
 ## Skills
 
@@ -110,3 +110,14 @@ This plugin builds on the work of:
 ## License
 
 MIT
+
+## Portable knowledge integration
+
+Use the root source bootstrap for independent discovery, evidence and bookmark
+CLIs. Seven common entrypoints were tightened and explicitly linked; specialist
+references remain separate. See `../../docs/reports/10x-swe-refresh.json`.
+
+MCP configuration is opt-in at `examples/mcp.optional.json`. Inspect endpoints and
+pin package versions before activating it; the plugin no longer launches MCP
+servers or changes directory environment state by default. Skill authoring uses explicit SKILL_DIR, SKILL_ROOT and optional COMMAND_ROOT paths;
+no per-working-directory state or compatibility links are created.

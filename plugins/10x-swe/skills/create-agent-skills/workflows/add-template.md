@@ -24,7 +24,7 @@ If not a good fit, suggest alternatives (workflow guidance, reference examples).
 ## Step 3: Create Templates Directory
 
 ```bash
-mkdir -p ${AGENT_ROOT}/skills/{skill-name}/templates
+mkdir -p ${SKILL_ROOT}/{skill-name}/templates
 ```
 
 ## Step 4: Design Template Structure

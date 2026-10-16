@@ -1,64 +1,28 @@
 ---
 name: code-search
-description: Routes code search requests to semantic, structural, repo-discovery, or text-search workflows. Use when the user wants to find code, inspect repository layout, or search by meaning or syntax.
+description: 'Routes local code lookup by intent: literal identifiers, syntax, repository layout, or meaning. Use before broad code research.'
+metadata:
+  skill-graph-id: plugin/10x-swe/code-search
+related:
+  - '[[plugin/10x-swe/code-research/SKILL]]'
 ---
 
-<objective>
-Help the assistant choose the right code-search strategy for the task: start with repo discovery when needed, prefer osgrep for semantic search, use ast-grep for structural matching, and fall back to ripgrep for exact text search.
-</objective>
+# Find code
 
-<quick_start>
-<default_order>
-1. If the repo layout is unclear, load `workflows/repo-discovery.md`.
-2. If the user wants "find code by meaning", load `workflows/semantic-search.md`.
-3. If the user wants a structural pattern, load `workflows/structural-search.md`.
-4. If the user wants a literal match, load `workflows/text-search.md`.
-</default_order>
+Infer the search route from the request; ask only when the intent is ambiguous.
+Respect the project's configured search tools and index policy.
 
-<priority>
-Default to the `osgrep` CLI for semantic code search. If the repo does not have a usable root index, create or refresh it with `osgrep index` before searching. Confirm availability with `osgrep --help`; if unavailable, fall back to ripgrep-based discovery. Never start the `osgrep mcp` or `osgrep serve` background processes — use the CLI commands directly.
-</priority>
-</quick_start>
+| Need | Route | Evidence required |
+|---|---|---|
+| Exact identifier or text | `workflows/text-search.md` | Read the matching source and callers |
+| Syntax or safe rewrite | `workflows/structural-search.md` | Confirm the AST match and inspect the diff |
+| Repository layout | `workflows/repo-discovery.md` | Locate real entrypoints and project documentation |
+| Meaning or concept | `workflows/semantic-search.md` | Verify index coverage, then read returned source |
 
-<intake>
-What kind of code search do you want?
+Use available tools. Do not download models, install packages, start servers, or
+rebuild an expensive index merely because a preferred tool is missing. Report the
+limitation and choose a bounded fallback. A search miss is not proof of absence.
+For cross-repository/API evidence, continue with [[plugin/10x-swe/code-research/SKILL]].
 
-1. Find code by meaning or concept
-2. Find code by structure or AST shape
-3. Get the lay of the land in a repo
-4. Find exact text or identifier matches
-
-Wait for the answer, then follow the matching workflow.
-</intake>
-
-<routing>
-| Response | Workflow |
-|----------|----------|
-| 1, "meaning", "semantic", "concept", "osgrep" | `workflows/semantic-search.md` |
-| 2, "structure", "ast", "ast-grep", "pattern" | `workflows/structural-search.md` |
-| 3, "layout", "overview", "repo", "land" | `workflows/repo-discovery.md` |
-| 4, "text", "literal", "identifier", "grep", "ripgrep" | `workflows/text-search.md` |
-</routing>
-
-<reference_index>
-<files>
-- `references/tool-selection.md` - Tool priorities and fallback rules
-- `references/osgrep.md` - Semantic search workflow and index expectations
-- `references/ast-grep.md` - Practical ast-grep workflow, rewrites, and CLI usage
-- `references/ast-grep-rules.md` - Detailed ast-grep rule syntax and metavariables
-- `references/repo-discovery.md` - Layout discovery and repo mapping guidance
-</files>
-</reference_index>
-
-<workflows_index>
-<files>
-- `workflows/repo-discovery.md` - Find entry points, project shape, and candidate files
-- `workflows/semantic-search.md` - Use osgrep to search by meaning after confirming index state
-- `workflows/structural-search.md` - Use ast-grep to search by syntax, structure, and rewrites
-- `workflows/text-search.md` - Use ripgrep for exact matches and lightweight fallback searches
-</files>
-</workflows_index>
-
-<success_criteria>
-The right workflow is selected, the search strategy matches the task, and the assistant avoids using a heavier tool when a simpler one is enough.
-</success_criteria>
+Read only the selected workflow and its relevant reference. Return source anchors,
+what they establish, and unresolved coverage. Search results are hints, not proof.
