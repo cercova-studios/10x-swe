@@ -49,6 +49,38 @@ jobs:
           "$RUNTIME" plugins/knowledge/skills/session-search/tests/check.py
           "$RUNTIME" tests/acceptance.py "$RUNNER_TEMP/knowledge"
           ./knowledge doctor --prefix "$RUNNER_TEMP/knowledge"
+      - name: Install pinned EPUB test prerequisite
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$RUNNER_OS/$RUNNER_ARCH" in
+            Linux/X64)
+              ASSET=pandoc-3.12.1-linux-amd64.tar.gz
+              SHA256=d0c90410e90204c9ca83b8539fac5c7aed01fd537207e4585849f8abc5df20b8
+              ;;
+            macOS/ARM64)
+              ASSET=pandoc-3.12.1-arm64-macOS.zip
+              SHA256=c2146cf33a583f3ac93eccddf1bb662371d5cfcce1aad1c87ad860cca1435d46
+              ;;
+            *) echo "Unsupported CI Pandoc platform: $RUNNER_OS/$RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          ARCHIVE="$RUNNER_TEMP/$ASSET"
+          curl --fail --location --retry 3 "https://github.com/jgm/pandoc/releases/download/3.12.1/$ASSET" --output "$ARCHIVE"
+          python3 - "$ARCHIVE" "$SHA256" <<'PY'
+          import hashlib, pathlib, sys
+          actual = hashlib.sha256(pathlib.Path(sys.argv[1]).read_bytes()).hexdigest()
+          if actual != sys.argv[2]:
+              raise SystemExit('Pandoc archive checksum mismatch')
+          PY
+          mkdir "$RUNNER_TEMP/pandoc"
+          if [[ "$ASSET" == *.zip ]]; then
+            unzip -q "$ARCHIVE" -d "$RUNNER_TEMP/pandoc"
+          else
+            tar -xzf "$ARCHIVE" -C "$RUNNER_TEMP/pandoc"
+          fi
+          PANDOC=$(find "$RUNNER_TEMP/pandoc" -type f -name pandoc)
+          "$PANDOC" --version
+          dirname "$PANDOC" >> "$GITHUB_PATH"
       - name: Rust and Go regressions
         shell: bash
         run: |
