@@ -1,53 +1,49 @@
 # 10x-swe
 
-**Give your coding agent reusable engineering workflows and a searchable knowledge library.**
+**Engineering workflows and searchable knowledge for your coding agent.**
 
-10x-swe is a plugin marketplace for terminal agents. It combines task-specific
-engineering skills with tools for finding and reusing what you've already learned
-from code, agent sessions, bookmarks and articles.
+10x-swe is a plugin marketplace for terminal agents. Its skills are task-specific
+guides your agent reads: how to investigate a bug, refactor safely, or review a
+change. Its knowledge tools help you find and reuse material from skills, past
+sessions, bookmarks and articles.
 
-## What can I do with it?
+Use it to:
 
-| When you want to… | Use 10x-swe to… |
+- **Investigate and fix code:** follow workflows for reproduction, diagnosis, small changes and verification.
+- **Find prior work:** search skills and sessions, then explore related skills and workflows in a terminal graph.
+- **Keep useful lessons:** extract reading material, prepare cited insights, review them and save them for later retrieval.
+
+## Start with a plugin
+
+| Plugin | Choose it for |
 |---|---|
-| Fix a bug or refactor unfamiliar code | Give your agent a workflow for investigation, small changes and verification. |
-| Find a previous decision or useful technique | Search skills and past sessions; explore related skills and workflows in a graph. |
-| Reuse something learned during a task or while reading | Extract source material, prepare a cited insight, review it and save it for later retrieval. |
+| [10x-swe](plugins/10x-swe) | Engineering skills for research, debugging, review, testing and refactoring. **Start here.** |
+| [knowledge](plugins/knowledge) | Skill discovery, session recall, bookmark search, article conversion and reviewed insights. |
 
-Install either plugin, or use both:
-
-| Plugin | What you get |
-|---|---|
-| [10x-swe](plugins/10x-swe) | Engineering skills for code research, debugging, review, testing, refactoring and specialist tasks. |
-| [knowledge](plugins/knowledge) | Skill and workflow discovery, session recall, bookmark search, article conversion and reviewed insights. |
-
-Skills guide the agent's work. The knowledge tools provide searchable material;
-you choose what to index and save. Each tool also works on its own and can exchange
-records through files or pipes. The default search runs locally without a model or cloud service.
-
-## Start with engineering skills
-
-In Claude Code:
+Install either or both in Claude Code:
 
 ```sh
 claude plugin marketplace add cercova-studios/10x-swe
 claude plugin install 10x-swe@10x-swe
+claude plugin install knowledge@10x-swe   # optional
 ```
 
-Start a new session and ask for a specific skill, for example:
+Start a new session and give the agent a concrete task:
 
-> Use the diagnose skill to investigate this regression. Reproduce it, identify
-> the cause, and verify the fix.
+> Use the diagnose skill: `npm test` started failing on `parser.spec.ts` after
+> yesterday's merge. Reproduce the failure, identify the cause, and verify the fix.
 
-For the knowledge skills, also install `knowledge@10x-swe` and build the CLI tools
-below. Other agents can load the repository's `SKILL.md` bundles through their
-own skill mechanism; bootstrap does not configure your harness.
+The skill guides the investigation; the agent still needs to execute and check
+its work. Other agent harnesses can load the repository's `SKILL.md` bundles
+through their own skill mechanism.
 
 ## Add the knowledge tools
 
+The knowledge plugin provides skills; build its CLI tools separately.
+
 Requires macOS or Linux/WSL, Python 3.11+, Rust supporting edition 2024, Go 1.22+,
 a C compiler and network access. Linux also needs OpenSSL headers and pkg-config.
-See [platform requirements](https://github.com/cercova-studios/10x-swe/wiki/Platforms).
+The default keyword search runs locally. [Platform requirements](https://github.com/cercova-studios/10x-swe/wiki/Platforms).
 
 ```sh
 git clone https://github.com/cercova-studios/10x-swe.git
@@ -58,33 +54,29 @@ cd 10x-swe
 ./knowledge doctor
 ```
 
-Setup installs the tools and indexes bundled skills. It leaves your existing
-skills, harness configuration and source collections alone. Use
-`--prefix /absolute/new/path` for an isolated installation; changed package sources
-require a fresh prefix. [Setup and recovery details](https://github.com/cercova-studios/10x-swe/wiki/Getting-started).
+Setup installs tools and indexes bundled skills. Use `--prefix /absolute/new/path`
+for isolation; changed package sources require a fresh prefix.
+[Setup and recovery](https://github.com/cercova-studios/10x-swe/wiki/Getting-started).
 
-Find a skill for your next task, or browse its relationships:
+### Find skills and bring your own
 
 ```sh
 skill-search search 'debug a regression' --limit 5
 skill-search path 'capture reusable session learning'
 skill-search graph
-```
 
-### Bring your existing skills
-
-```sh
 knowledge-intake --root codex=/absolute/path/to/skills --output intake.json
-# Review the report, then register the skills for discovery.
+# Review the report before registering existing skills for discovery.
 knowledge-intake --root codex=/absolute/path/to/skills --index
 ```
 
-Intake reports duplicates and conflicts without rewriting bundles or running their
-helpers. Indexed skills remain unreviewed; inspect a skill before loading it.
+Intake reports duplicates and conflicts while preserving source bundles.
+Indexed skills remain unreviewed; inspect them before loading their instructions.
 
 ### Connect the tools with pipes
 
-Search across skill and insight exports without sharing their databases:
+Each tool works independently. Combine exported records without coupling their
+storage implementations:
 
 ```sh
 skill-search export --query 'topic' --limit 5 > skills.jsonl
@@ -93,9 +85,9 @@ cat skills.jsonl insights.jsonl | bkd --records - search 'topic' --lexical-only 
 ```
 
 Check each export succeeds before consuming its file; use `pipefail` when streaming.
-For a complete learning workflow, follow [session to insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md):
-select a session, prepare evidence, write an analysis, review it, then publish only
-with approval. Dagu is optional; the same workflow runs through the shell.
+For [session to insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md),
+select a session, prepare evidence, write an analysis, review it and publish with
+approval. Dagu can optionally coordinate the same shell workflow.
 
 ## Explore further
 
