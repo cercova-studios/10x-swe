@@ -10,7 +10,7 @@ cargo test --locked
 cargo clippy --locked --all-targets -- -D warnings
 ```
 
-Both binaries are in `target/release/`. This release targets macOS. BookmarkDrop never calls source-insights or skill-search and has no Python dependency. Knowledge is explicit caller-supplied JSONL. Bookmark BGE inference uses the installed local runtime on demand.
+Both binaries are in `target/release/`. macOS supports persistent keychain authentication; Linux uses explicitly injected credentials. BookmarkDrop never calls source-insights or skill-search and has no Python dependency. Knowledge is explicit caller-supplied JSONL. Bookmark BGE inference uses the installed local runtime on demand.
 
 ## Connect
 
@@ -52,7 +52,7 @@ bkd
 
 Ranking uses whole-token, field-weighted BM25 and local BGE embeddings. Homepage requests with matching identity terms and exact/subtitle-free title queries skip model inference. Single-word lookup is literal. Other queries combine document and cached passage similarity without double voting. These heuristics and similarity cutoffs are provisional; no-match results can still miss relevant paraphrases.
 
-`sync --offline` also builds missing passage vectors from existing excerpts and notes. JSON hits expose `passage` with verbatim text, source origin, field, byte offsets and field hash; top-level `strategy` identifies the retrieval route, and `passage_index` is `complete`, `partial` or `not-used`. A partial old cache remains searchable; offline sync completes passage coverage. No page fetching or external provider is involved. See [retrieval checks](docs/retrieval.md) for the benchmark and limits.
+`sync --offline` also builds missing passage vectors from existing excerpts and notes. JSON hits expose `passage` with verbatim text, source origin, field, byte offsets and field hash; top-level `strategy` identifies the retrieval route, and `passage_index` is `complete`, `partial` or `not-used`. A partial old cache remains searchable; offline sync completes passage coverage. No page fetching or external provider is involved. See [retrieval](ARCHITECTURE.md#reading-caching-and-retrieval) for scoring and traversal bounds.
 
 Search prints only the top bookmark URL by default. `--list` shows ranked rows, `--rich` opts into a rich ranked list, and `--json` retains complete structured results for agents. No matching bookmark exits with an error. `--limit` bounds list/JSON results without changing the one-URL default. URL-only mode skips external knowledge retrieval because corpus ranks do not change bookmark ranking.
 
@@ -89,8 +89,8 @@ Use a fresh destination file. Export without `--query` for full graph navigation
 queried exports also include complete navigation metadata. For interactive TUI,
 graph or browser use a file; stdin is for data-oriented commands. `--records` does
 not change the default top-bookmark URL result; request `--json`, `--list` or
-`--rich` for combined search. [The external recipe](examples/compose-search.zsh)
-stages records and prevents either producer failure from reaching the consumer.
+`--rich` for combined search. Check each producer succeeds before consuming its staged export. See the
+[pipe example](../../../../README.md#connect-the-tools-with-pipes).
 
 Incoming ranks apply only to the exact producer query. New queries search supplied
 labels and descriptive metadata locally and report `snapshot lexical`; they do not
@@ -104,7 +104,7 @@ packet alongside insights and skills to search session evidence and navigate
 recorded turn membership. Published source-insights entries retain exact session/
 turn revision pins; matching supplied turns produce `captured_from` graph edges.
 No session URL mention becomes a bookmark link, and no companion tool is invoked.
-See [the record contract](docs/knowledge-integration.md) for the piped recipe,
+See [explicit knowledge records](ARCHITECTURE.md#explicit-knowledge-records) for
 coverage bounds and changed-pin behavior.
 
 Reviewed links stay in private `knowledge-links.json`, pin supplied endpoint
@@ -114,9 +114,8 @@ snapshot is current; it makes no live freshness or independent review claim.
 Only the producer validates its original files. Paths and handoff argument arrays
 are displayed metadata, never opened or executed by the knowledge consumer.
 
-See [the record contract and checks](docs/knowledge-integration.md) and
-[the composable workflow](docs/workflow.md). The former implicit bridge and its
-configuration flags have been removed rather than retained as aliases.
+See [the architecture](ARCHITECTURE.md#explicit-knowledge-records) and
+[the pipe example](../../../../README.md#connect-the-tools-with-pipes).
 
 ## Your OpenAI import example
 
@@ -164,15 +163,15 @@ Select a row and press Space (or double-click) for Quick Look. The web view uses
 
 Reader mode supports public UTF-8 HTML, up to 2 MiB, five checked redirects and a 20-second HTTP budget. It rejects private/reserved destinations and custom ports, pins validated DNS addresses and sends no browser cookies or credentials. OS DNS resolution may take longer than the HTTP budget; the foreground server handles requests sequentially. This basic text extractor cannot render JavaScript-only pages, bypass logins, or convert PDFs. It may omit article-adjacent content; use the original for a full source review.
 
-The viewer runs only on 127.0.0.1 with a single-use launch link, session cookie, Host/Origin checks and local assets. Cached Markdown remains inert. [DESIGN.md](DESIGN.md) records the viewer conventions. No new UI framework or resident service is installed.
+The viewer runs only on 127.0.0.1 with a single-use launch link, session cookie, Host/Origin checks and local assets. Cached Markdown remains inert. [DESIGN.md](DESIGN.md) records the viewer conventions. The viewer runs for the active UI session.
 
 ## Local state and inference
 
 State defaults to `~/.local/share/bookmarkdrop`; override with `--home` or `BKD_HOME`. `doctor` reports local coverage, generation and pending writes without reading credentials. The SQLite cache is disposable; remote receipts and annotations remain in Neon.
 
-`bkd model` prints the model path, SHA256 and runtime. Set `BKD_MODEL_PATH` to the already-downloaded BGE-small GGUF. The pinned hash is `c5d2302edc429f679642433b9f96dd217799727a06e675abef3b40a79f5e1589`. The model is verified before use, runs CPU-only and offline, and has no resident process. UTF-8 windows bound inputs; exact cosine retrieval uses cached vectors. Winnow-12B is not enabled or auto-started.
+`bkd model` prints the model path, SHA256 and runtime. Set `BKD_MODEL_PATH` to the already-downloaded BGE-small GGUF. The pinned hash is `c5d2302edc429f679642433b9f96dd217799727a06e675abef3b40a79f5e1589`. The model is verified before use, runs CPU-only and offline, and has no resident process. UTF-8 windows bound inputs; exact cosine retrieval uses cached vectors.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for boundaries and [verification](docs/verification.md) for evidence and unverified behavior.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for retrieval, publication and storage contracts.
 
 ## Terminal capture and review
 
@@ -180,7 +179,7 @@ Run `bkd` to open a quiet capture canvas, with no library rows on startup (or `b
 
 `/` searches, `f` edits source/type/domain filters, Enter opens styled Markdown and evidence details, `g` opens the graph, and `o` opens a validated bookmark URL. PageUp/PageDown scrolls long panels. `r` reviews every structurally eligible bookmark under the filters, with semantic results shown only as review evidence. `bkd --plan ./review.json` reviews an existing agent plan with nothing preselected. Agent commands remain noninteractive; `--json` is rejected in TUI mode.
 
-After confirmed receipts, the TUI refreshes Neon without embeddings. Cache or search refresh failures do not undo a confirmed remote write; follow the displayed recovery command. Run `bkd sync --offline` when you want vectors for newly saved records. The user confirmed that Safari drag sends no input in installed WezTerm 20240203 on macOS. Its native drop handler accepts file paths, not Safari URL payloads. Copy and paste the URL instead; `?` shows keys and this limitation. The HTML viewer is retained alongside the TUI for browser capture and reading.
+After confirmed receipts, the TUI refreshes Neon without embeddings. Cache or search refresh failures do not undo a confirmed remote write; follow the displayed recovery command. Run `bkd sync --offline` when you want vectors for newly saved records. Paste a URL into the TUI, or use the browser viewer to drag links into capture and read saved pages.
 
 ## Pipe portable bookmarks
 
@@ -189,4 +188,4 @@ bkd export --source instapaper,raindrop | bkd --home ./review-cache index - --le
 bkd export --source raindrop | bkd import - --dry-run --plan ./review.json --json
 ```
 
-Stdin is validated before changing the destination cache. A file-backed plan and explicit approval remain required for noninteractive publication. See [the Unix composition audit](docs/unix-composition.md) and the external `examples/compose-search.zsh` demonstration. The existing combined-search subprocess bridge remains pending replacement with explicit streams.
+Stdin is validated before changing the destination cache. A file-backed plan and explicit approval remain required for noninteractive publication. Use [the pipe example](../../../../README.md#connect-the-tools-with-pipes) to stage independent producer exports before retrieval.

@@ -94,8 +94,8 @@ index update reports the saved entry path. Missing indexes rebuild automatically
 corruption or a changed model/schema requires reindex --rebuild. No silent fallback.
 Embedding uses only the pinned local model; no download or server during search.
 
-## 12. In-flight work
-None. One source-insights skill and knowledge/sources library serve all supported
+## 12. Session capture
+One source-insights skill and knowledge/sources library serve the supported
 source types. Harness instruction pointers and skill links use these canonical paths.
 Session capture is agent-initiated at milestones, not a watcher, log scraper or
 automatic cross-harness hook. No model weights, agent rules or skills self-modify.

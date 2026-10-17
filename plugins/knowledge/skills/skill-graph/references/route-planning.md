@@ -13,6 +13,4 @@ For a paper-to-animation task, the output workflow may be Manim explainers. Evid
 
 “Optimal” means sufficient task coverage with minimal unnecessary work under the user's constraints. The tool cannot prove a globally optimal path: graph edges do not encode complete task applicability, costs, prerequisites or conflicts. Candidate steps are suggestions, not a scheduled sequence. Same-name project skills are alternatives until their scope and content justify distinct uses.
 
-The initial twelve-task synthetic pilot put all eight expected primary skills in the semantic top five and abstained on four ordinary no-skill controls. It selected six expected primaries first and found only two of four requested extensions. These are development observations, not general calibration or successful task execution. Lexical routing performed worse. Agent verification and separate capability queries remain necessary.
-
 The map binds entrypoint hashes, bounded text locators, extraction settings and the installed model specification. Only entrypoint text is embedded; linked reference bodies are excluded. Communities are heuristic and may reflect boilerplate or miss rare interdisciplinary relationships. New connections remain inferred until reviewed and authored with a direct body link and matching frontmatter.

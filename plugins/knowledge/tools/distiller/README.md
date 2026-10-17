@@ -103,7 +103,7 @@ Scans, graphic-only pages, rotated/skewed/stretched Forms and rotated/mirrored/s
 images are rejected. Figures render at integer source-pixel scale to avoid resampling.
 
 PDFs then use `deepseek/deepseek-v4.1-flash` through OpenRouter with strict JSON
-Schema. This supersedes the initial Gemma cloud pilot. The model sees source text
+Schema. The model sees source text
 and geometry plus bounded grayscale page images and returns source-linked blocks,
 tables, note associations and joins;
 it cannot rewrite the prose. This sends the PDF text to a cloud provider, without
@@ -244,7 +244,3 @@ retain semantic HTML; single-line TeX annotations become math delimiters; multil
 tables retain empty cells and links; complex tables remain HTML. A compatible
 renderer is required for math and raw HTML. Sanitization edits real DOM attributes
 and does not rewrite attribute-like strings inside code.
-
-Regression source: PurpleSyringa's [Vectorized clz and ctz](https://purplesyringa.moe/blog/vectorized-clz-and-ctz/),
-frozen in tests/fixtures/vectorized-clz-and-ctz.html on 2026-10-12.
-The CLI comparison specification is [distiller-xberg-fidelity](../../experiments/specs/distiller-xberg-quoted-fidelity/README.md).

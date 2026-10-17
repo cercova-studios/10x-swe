@@ -23,12 +23,10 @@ versioned JSONL records and files; discovery never grants execution authority.
 
 ## Installation and extension points
 
-The bootstrap plans first, installs into an explicitly owned prefix, and verifies
-tools before reporting readiness. It does not edit shell profiles, global harness
-instructions, credential stores, existing skills or source sessions. Optional
-connectors, media extraction, local models and Dagu have separate
-prerequisites; unavailable capabilities remain visible in doctor output.
-Personal Kindle delivery, SSH configuration and device workflows are excluded.
+The bootstrap plans, installs and verifies tools in an owned prefix. Harness
+configuration, source indexing and connector setup are explicit user operations.
+Doctor reports installed capabilities and their prerequisites. Connectors, media
+extraction, local models and Dagu each have separate setup requirements.
 
 Keyword `skill-search path` uses declared relationships without a neural map.
 Semantic routing remains optional and validates its mapping provenance. Session

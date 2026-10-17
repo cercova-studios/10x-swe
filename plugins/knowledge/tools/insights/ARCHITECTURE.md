@@ -17,9 +17,6 @@ and file symlinks are rejected. Broken entries fail visibly. No matches is valid
 empty JSON. Human output strips terminal controls; JSON remains untrusted data.
 Ranking scores are not confidence. Write failures exit 1 and may leave partial stdout.
 
-## 12. In-flight work
-Standalone consumer; canonical library schemas remain unchanged.
-
 ## 14. Operations
 Build with go build; verify with go test and go vet. Install on local PATH and
 document in source-insights. Binary rollback is independent of library data.

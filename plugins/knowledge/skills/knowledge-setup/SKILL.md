@@ -20,6 +20,6 @@ not activation or acceptance. Existing source files stay unchanged.
 
 Search with `skill-search search 'task' --limit 5`, inspect selected entrypoints,
 then navigate neighbors, path or graph. Choose the smallest useful route. Each tool
-owns its store and exchanges versioned records/files through pipes. Optional models,
-connectors, Dagu and media tools are separate capabilities. Kindle delivery is
-excluded. No session crawl, paid requests, imports or publication during setup.
+owns its store and exchanges versioned records/files through pipes. Configure models,
+connectors, Dagu and media tools separately. Run session indexing, imports and
+publication as explicit operations after setup.

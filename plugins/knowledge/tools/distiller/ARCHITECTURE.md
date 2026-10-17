@@ -91,8 +91,7 @@ src/
 
 ### Output Contract
 
-- Device delivery, SSH configuration and personal credential-manager wrappers are
-  excluded from this portable source package. Extraction and conversion stand alone.
+- Extraction and conversion produce standalone files for downstream tools.
 - CLI `--mode kfx` selects the existing EPUB extraction/cover path internally,
   then invokes the independent `epub-to-kfx` executable on a temporary EPUB.
   Library ParseMode and extraction semantics stay unchanged. The adapter checks
@@ -101,7 +100,7 @@ src/
   EPUB constraints, and has a 370-second conversion deadline. The independent
   encoder uses Amazon Previewer plus KFX Output, publishes with a no-clobber hard
   link, and owns its bounded process deadlines and cleanup. Amazon may resize and
-  recompress images. Distiller does not invoke bookmark discovery or SSH delivery.
+  recompress images.
 - `DistillerResponse` contains content, markdown, metadata, parse timings, and meta tags.
 - `ParseMode` controls Markdown/JSON/EPUB output behavior. EPUB preserves the
   structured DOM rather than replacing it with a longer plain-text schema body;
