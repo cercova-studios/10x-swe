@@ -115,7 +115,7 @@ MIT
 
 Use the root source bootstrap for independent discovery, evidence and bookmark
 CLIs. Seven common entrypoints were tightened and explicitly linked; specialist
-references remain separate. See `../../docs/reports/10x-swe-refresh.json`.
+references remain separate. See the [full refresh record](https://github.com/cercova-studios/terminal-agent-plugins/wiki/10x-swe-refresh).
 
 MCP configuration is opt-in at `examples/mcp.optional.json`. Inspect endpoints and
 pin package versions before activating it; the plugin no longer launches MCP

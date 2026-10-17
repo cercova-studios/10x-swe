@@ -1,115 +1,68 @@
 # Terminal agent plugins
 
-Independent engineering skills and knowledge tools for terminal agents. Start
-with [ARCHITECTURE.md](ARCHITECTURE.md); this repository is source, not a personal
-knowledge backup. Existing skills and stores are never overwritten by setup.
+Independent engineering skills and knowledge tools for terminal agents.
+[Full guide, plans and validation](https://github.com/cercova-studios/terminal-agent-plugins/wiki) · [Architecture](ARCHITECTURE.md)
 
-## Bootstrap a fresh environment
+## Install
 
-Requires macOS or Linux/WSL, Python 3.11+, a Rust toolchain supporting edition 2024,
-Go 1.22+, and a C compiler. Linux also needs OpenSSL development headers and
-pkg-config. Network access is needed to download hash-locked build dependencies.
-Native Windows is unsupported. No cloud service or model is required for the
-default keyword profile.
+Requires Python 3.11+, Rust supporting edition 2024, Go 1.22+, a C compiler and
+network access for locked dependencies. Linux also needs OpenSSL headers and
+pkg-config. macOS and Linux are tested; WSL follows Linux but is untested separately.
+[Native Windows needs installer work](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Platforms).
 
 ```sh
 git clone https://github.com/cercova-studios/terminal-agent-plugins.git
 cd terminal-agent-plugins
 ./knowledge plan
 ./knowledge setup
+# Activate using the exact env.sh command printed by setup.
+./knowledge doctor
 ```
 
-Setup prints the explicit `env.sh` activation command. It builds skill-search, bkd,
-distiller and insights; installs locked Python dependencies for source-insights and
-session-search; and indexes the bundled knowledge/engineering skills. It creates
-empty local libraries and a receipt. It does not edit profiles/global instructions,
-index sessions, import bookmarks, publish insights, discover credentials or make AI
-requests. `./knowledge doctor` checks artifacts, tool entrypoints and graph freshness.
-Use `--prefix /absolute/new/path` on every command for an isolated environment.
+Use `--prefix /absolute/new/path` on every bootstrap command for isolation.
+Setup builds skill-search, bkd, distiller and insights; installs source-insights
+and session-search; and indexes bundled skills. The default keyword profile needs
+no model or cloud service. It does not edit profiles/harness settings, discover
+credentials, index sessions, import bookmarks or publish insights.
 
-Interrupted setup retains diagnostic/build state and can be retried with the same
-source bytes. Rechecking a completed installation does not require build tools.
-A completed prefix with changed source bytes requires a fresh prefix;
-upgrades never replace an installation silently. Roll back by activating the prior
-prefix. Never delete a prefix containing knowledge you want to retain.
+Retry interrupted setup with the same source. Completed retries need no compilers.
+Changed sources need a fresh prefix; roll back by activating the prior prefix.
+Never delete a prefix containing knowledge you want to retain.
 
-## Discover and process existing skills
+## Intake existing skills
 
 ```sh
 knowledge-intake --root codex=/absolute/path/to/existing/skills --output intake.json
-# Review conflicts, duplicates, coverage and parse limitations, then explicitly index:
+# Inspect coverage, conflicts, duplicates and parse errors before indexing.
 knowledge-intake --root codex=/absolute/path/to/existing/skills --index
 skill-search search 'debug a regression' --limit 5
 skill-search path 'capture reusable session learning'
 skill-search graph
 ```
 
-Intake reads bounded metadata/resources and hashes complete bundles. It never runs
-helpers, rewrites sources or activates instructions. Exact duplicates are identified;
-same-name differing versions remain separate. `--index` registers complete bundles
-as namespaced, read-only, **unreviewed** graph nodes. Unresolved/ambiguous original
-links are reported in node metadata. Partial inventory exits nonzero. Resolve parse
-issues or inspect narrower roots; do not interpret omitted bundles as accepted.
+Intake never runs helpers or rewrites sources. Indexed bundles stay namespaced,
+read-only and **unreviewed**; partial inventory exits nonzero. Review a selected
+SKILL.md before loading it through your harness. Discovery grants no execution,
+delegation or publication authority. Bootstrap does not configure your harness.
 
-The CLI is harness-independent. Load a selected SKILL.md using the agent's normal
-skill mechanism; review existing untrusted skills before treating them as
-instructions. Registering graph data does not install a harness plugin or grant
-permission. Native Claude plugin metadata is available for `10x-swe` and `knowledge`;
-other harnesses can load these standard skill directories explicitly. Bootstrap
-does not change their configuration or invent activation paths.
+## Compose
 
-## Compose tools
+Tools own separate stores and exchange explicit JSONL records/files:
 
 ```sh
-# Ad hoc article extraction works without bookmarks.
-distiller --stdin --base-url https://example.org/article --mode json < article.html > article.json
-source-insights prepare-article https://example.org/article --prepared article.json --snapshot article.html --work /absolute/new/evidence
-
-# A fresh index is empty. Explicitly select a harness before searching its sessions.
-session-search status
-session-search index --agent codex
-# Select session evidence explicitly; inspect the exact returned ID and coverage.
-session-search export --mode naive --agent codex --role assistant --limit 1 'topic' > selected.jsonl
-source-insights prepare-session session:codex:EXACT_ID --records selected.jsonl --work /absolute/new/session-evidence
-
-# Join portable exports; each producer keeps its own store and ranking.
 skill-search export --query 'topic' --limit 5 > skills.jsonl
 source-insights export > insights.jsonl
 cat skills.jsonl insights.jsonl | bkd --records - search 'topic' --lexical-only --list
 ```
 
-Run producer commands successfully before consuming redirected files; use the
-shell's `pipefail` when streaming. Preparation is not publication. Inspect evidence,
-author analysis and explicitly review claims/citations/destination before publish.
-The bundled Dagu session-to-insight workflow adds a digest-bound human review gate;
-Dagu remains optional and external to the tools.
-`source-insights validate WORK ANALYSIS` checks prepared evidence and citations
-without publication. For review-only tasks, retain the recipe's review packet and
-stop before the publication commands; its digest is not approval.
+Check producer success before consuming redirected files; use `pipefail` when
+streaming. For session learning, follow the bundled [session-to-insight workflow](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md).
+It supports shell-only execution; Dagu is optional. Explicitly select sessions,
+prepare evidence, author analysis and validate citations. **Stop at review when
+publication is not requested. A review digest is not approval.**
 
-For a complete capture → analysis → review → publication → retrieval walkthrough,
-see [session-to-insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md).
-It includes a shell-only path; installing Dagu is unnecessary for this workflow.
+[Complete examples](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Getting-started) · [Optional capabilities](plugins/knowledge/README.md) · [Engineering skills](plugins/10x-swe/README.md) · [Validation history](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Validation)
 
-Optional local neural models, connectors, media tools and EPUB/PDF prerequisites
-are described in [the knowledge plugin](plugins/knowledge/README.md). Personal
-Kindle delivery and device configuration are intentionally excluded.
-
-## Engineering skills
-
-`10x-swe` retains specialist guidance while tightening the common research,
-search, diagnosis, parallel-work and refactor routes. Relationships are conditional
-discovery hints. They grant no delegation, external-message or execution authority.
-See [the refresh report](docs/reports/10x-swe-refresh.json) and preserve upstream
-credits in each bundle. Optional MCP configuration is an example, never part of
-the source bootstrap.
-
-Validation commands and actual platform results belong in `docs/reports/acceptance.md`.
-Hosted run evidence and CI fixes are recorded in
-[the CI report](docs/reports/hosted-ci.md). Full native regression tests include EPUB
-packaging and require Pandoc; CI installs a checksum-pinned test copy separately
-from the default bootstrap.
-The [fresh-environment trial](docs/reports/fresh-agent.md) records onboarding fixes,
-public-CLI acceptance, existing-skill intake and explicit review/recovery checks.
-The [docs-only agent trial](docs/reports/docs-only-agent.md) covers a fresh agent
-preparing a real-session insight and stopping at validated review.
+Plans and detailed reports live in the wiki. Executable contracts, skill resources,
+licenses and upstream credits stay with their source. Tools remain independent;
+personal Kindle delivery, device configuration and SSH setup are excluded.

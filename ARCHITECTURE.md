@@ -62,15 +62,10 @@ malformed and duplicate existing skills, changed resource hashes, portable expor
 and the session-to-reviewed-insight path. Test Linux and macOS in CI; only executed
 platform checks count as verified. Keep capability-specific prerequisites explicit.
 
-## In-flight work
+## Status and documentation
 
 The portable keyword profile and seven core 10x-swe routes are implemented.
-Fresh setup, independent pipes, review gates, read-only intake and native
-regressions passed on hosted Linux and macOS at `0fa385d`, including the expanded
-fresh-environment onboarding and read-only review checks.
-See [local acceptance](docs/reports/acceptance.md) and
-[hosted CI](docs/reports/hosted-ci.md) for evidence and optional capability limits.
-The subsequent [fresh-environment trial](docs/reports/fresh-agent.md) exercises
-onboarding through public indexing, runtime-only retries and explicit review pipes.
-The [docs-only agent trial](docs/reports/docs-only-agent.md) verifies real-session
-preparation and a validated review stop without publication.
+[Plans and validation history](https://github.com/cercova-studios/terminal-agent-plugins/wiki)
+retain exact tested revisions, reproduction commands, failures and capability limits.
+Keep this offline boundary map and executable skill resources in the repository;
+maintain detailed plans and reports in the wiki instead of parallel copies.
