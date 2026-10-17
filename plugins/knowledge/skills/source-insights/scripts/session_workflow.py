@@ -44,7 +44,7 @@ def atomic(path,raw):
 def helper(*args,raw=None):
     p=subprocess.run([sys.executable,str(ROOT/'scripts/sources.py'),*map(str,args)],
                      input=raw,capture_output=True,timeout=180)
-    if p.returncode: raise RuntimeError(p.stderr.decode(errors='replace').strip())
+    if p.returncode: raise RuntimeError(p.stderr.decode(errors='replace').strip().removeprefix('ERROR: '))
     return p.stdout
 
 
@@ -117,7 +117,10 @@ def main():
             if args.operation=='review':
                 analysis=json.loads(read(work/'analysis.json'))
                 if not isinstance(analysis,dict):raise ValueError('Analysis must be a JSON object')
+                validation=json.loads(helper('validate',work/'evidence',work/'analysis.json'))
+                if binding(work,args.session,library)[1]!=digest:raise ValueError('Artifacts changed during review validation')
                 print(json.dumps(dict(review_digest=digest,library=str(library),session=args.session,
+                     validation=validation,
                      title=analysis.get('title'),summary=analysis.get('summary'),tags=analysis.get('tags'),
                      evidence=str(work/'evidence/document.md'),coverage=analysis.get('coverage'),
                      insights=analysis.get('insights'),instruction='Inspect retained evidence and citations before submitting this digest.'),indent=2))

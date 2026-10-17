@@ -30,6 +30,9 @@ Personal Kindle delivery, SSH configuration and device workflows are excluded.
 Keyword `skill-search path` uses declared relationships without a neural map.
 Semantic routing remains optional and validates its mapping provenance. Session
 onboarding explicitly indexes the selected harness; setup leaves that index empty.
+Source-insights exposes read-only evidence/analysis validation. Session review
+checks citations and prepared hashes before issuing a digest, and stops without
+creating a destination library or granting publication approval.
 
 Existing skill roots are explicit. Inspection never executes their scripts or
 hooks. Exact duplicate bundles can share an indexed identity; differing bundles

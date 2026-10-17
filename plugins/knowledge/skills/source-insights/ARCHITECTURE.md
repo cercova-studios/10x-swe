@@ -46,7 +46,7 @@ option; downloader/transcription defaults are unchanged.
 
 ## 9. Extension points
 scripts/sources.py: prepare (video), frame, prepare-pdf, prepare-paper, page,
-prepare-article, prepare-session, publish, reindex, search, export, doctor. All source types reuse the
+prepare-article, prepare-session, validate, publish, reindex, search, export, doctor. All source types reuse the
 publisher, search, index, locking, and common file/process helpers.
 `references/composable-workflow.md` documents optional external shell orchestration
 from bookmark selection to retained evidence, reviewed publication, and task-based
@@ -149,3 +149,7 @@ invocation, not evidence storage. The shared source bootstrap makes no cloud req
 and does not publish, index source sessions, or activate optional media providers.
 Direct `sources.py` invocations resolve the installation's `lib` directory from
 AGENT_KNOWLEDGE_HOME; shell recipes do not require a global PYTHONPATH setting.
+`validate WORK ANALYSIS` checks the existing source-specific analysis/citation and
+prepared-hash rules without a runtime, library lock, index or publication. Session
+review invokes that public CLI before emitting a digest and rejects concurrent
+artifact changes. It grants no claim verification or publication authority.

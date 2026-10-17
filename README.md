@@ -83,6 +83,9 @@ shell's `pipefail` when streaming. Preparation is not publication. Inspect evide
 author analysis and explicitly review claims/citations/destination before publish.
 The bundled Dagu session-to-insight workflow adds a digest-bound human review gate;
 Dagu remains optional and external to the tools.
+`source-insights validate WORK ANALYSIS` checks prepared evidence and citations
+without publication. For review-only tasks, retain the recipe's review packet and
+stop before the publication commands; its digest is not approval.
 
 For a complete capture → analysis → review → publication → retrieval walkthrough,
 see [session-to-insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md).

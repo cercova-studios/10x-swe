@@ -68,14 +68,21 @@ nl -ba "$WORK/evidence/document.md"
 
 Write `WORK/analysis.json` using the [analysis contract](../references/analysis-format.md).
 Inspect the retained lines, coverage omissions and exact quotes. Then generate the
-review packet:
+review packet. This first validates analysis structure, coverage, citation quotes
+and prepared evidence hashes without opening or creating the destination library:
 
 ```sh
 python3 "$SKILL_DIR/scripts/session_workflow.py" review \
-  --session "$SESSION" --work "$WORK" --library "$LIBRARY"
+  --session "$SESSION" --work "$WORK" --library "$LIBRARY" > "$WORK/review.json"
 ```
 
-After the user approves the reviewed claims and destination, submit the printed
+For a review-only task, stop here. Return `review.json`, `analysis.json` and the
+retained evidence path to the user. Do not run publication, submit an approval
+decision, or create a library entry. The digest identifies reviewed bytes; it is
+not approval. Standalone callers can run the same read-only check with
+`source-insights validate "$WORK/evidence" "$WORK/analysis.json"`.
+
+After the user approves the reviewed claims and destination, submit the recorded
 digest explicitly. Agents must not supply that approval themselves:
 
 ```sh

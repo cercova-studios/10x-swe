@@ -813,6 +813,9 @@ def main():
     p.add_argument('work', type=Path)
     p.add_argument('analysis', type=Path)
     p.add_argument('--library', type=Path, default=LIBRARY)
+    p = sub.add_parser('validate', help='Check analysis, coverage, citations and prepared hashes without publication')
+    p.add_argument('work', type=Path)
+    p.add_argument('analysis', type=Path)
     p = sub.add_parser('reindex')
     p.add_argument('--library', type=Path, default=LIBRARY)
     p.add_argument('--rebuild', action='store_true', help='Atomically rebuild the derived search database')
@@ -856,6 +859,22 @@ def main():
         print(frame(args.work.resolve(), args.seconds, args.width))
     elif args.command == 'publish':
         publish(args)
+    elif args.command == 'validate':
+        work = args.work.expanduser().resolve()
+        manifest = read(work / 'manifest.json')
+        if not isinstance(manifest, dict) or not manifest.get('ready'):
+            raise ValueError('Preparation is incomplete')
+        if not isinstance(manifest.get('source_id'), str) or not manifest['source_id'].strip():
+            raise ValueError('Source manifest needs an explicit source identity')
+        analysis = read(args.analysis.expanduser())
+        if not isinstance(analysis, dict):
+            raise ValueError('Analysis must be a JSON object')
+        try:
+            validate(analysis, manifest, work)
+        except (KeyError, TypeError, AttributeError) as exc:
+            raise ValueError(f'Malformed analysis or source manifest: {exc}') from exc
+        print(json.dumps(dict(status='valid', source_id=manifest['source_id'], work=str(work),
+                              meaning='Citation integrity checked; not claim verification or publication approval.')))
     elif args.command == 'reindex':
         library = args.library.expanduser().resolve()
         with library_lock(library):

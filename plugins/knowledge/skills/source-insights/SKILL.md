@@ -25,7 +25,11 @@ The HTML must be the exact input snapshot bound by the extraction hash. Selected
 `prepare-session EXACT_ID --records FILE --work NEW_DIR`; neither producer is required
 by the consumer. Retain snapshots, exact evidence ranges and provenance.
 
-Author analysis, inspect claims/citations/coverage and review the destination before
+Author analysis and run `source-insights validate WORK ANALYSIS` to check citations,
+coverage and prepared hashes without publication or a search runtime. The session
+recipe's `review` operation runs that check before issuing a digest. For review-only
+tasks, return the packet and stop; a digest does not authorize publication.
+Inspect claims/citations/coverage and review the destination before
 `source-insights publish WORK ANALYSIS --library DESTINATION`. Publication is separate
 from preparation and never updates skills automatically. Session workflow approval
 is bound to artifact and destination hashes; edited evidence invalidates approval.
