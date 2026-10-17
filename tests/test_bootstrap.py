@@ -25,6 +25,13 @@ class BootstrapTests(unittest.TestCase):
         p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan','--prefix',str(target)],capture_output=True)
         self.assertEqual(p.returncode,0,p.stderr);self.assertFalse(target.exists())
         self.assertIn('Kindle delivery',json.loads(p.stdout)['excluded'])
+    def test_default_prefix_respects_data_home_without_writes(self):
+        data_home=self.root/'data home'
+        p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan'],
+                         env=dict(os.environ,XDG_DATA_HOME=str(data_home)),capture_output=True)
+        self.assertEqual(p.returncode,0,p.stderr)
+        self.assertEqual(json.loads(p.stdout)['prefix'],str((data_home/'10x-swe/knowledge').resolve()))
+        self.assertFalse(data_home.exists())
     def test_owned_retries_reject_conflicts_and_changed_source(self):
         target=self.root/'owned';bootstrap.owned(target,'a'*64);bootstrap.owned(target,'a'*64)
         with self.assertRaisesRegex(ValueError,'different source'): bootstrap.owned(target,'b'*64)

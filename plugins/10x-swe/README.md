@@ -1,5 +1,9 @@
 # 10x-swe
 
+```sh
+claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
+```
+
  A terminal-first AI agent plugin with 69 skills for software engineering, debugging, architecture, and development workflows.
 
 ## Skills

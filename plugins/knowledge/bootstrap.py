@@ -191,7 +191,7 @@ def setup(prefix):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('plan', 'setup', 'doctor'))
-    parser.add_argument('--prefix', type=Path, default=Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'terminal-agent-plugins/knowledge')
+    parser.add_argument('--prefix', type=Path, default=Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / '10x-swe/knowledge')
     args = parser.parse_args()
     prefix = args.prefix.expanduser().absolute()
     try:

@@ -1,5 +1,9 @@
 # Knowledge tools
 
+```sh
+claude plugin install knowledge --marketplace cercova-studios/10x-swe
+```
+
 Run the repository's `knowledge plan`, `setup` and `doctor` commands. Tools build
 from source into an owned prefix. Each executable and store remains independent:
 

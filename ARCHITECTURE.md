@@ -1,6 +1,9 @@
-# Terminal agent plugins
+# 10x-swe
 
 ## Boundaries
+
+The `10x-swe` repository is a plugin marketplace. `.claude-plugin/marketplace.json`
+registers the independent `10x-swe` and `knowledge` plugin directories.
 
 `plugins/10x-swe` owns engineering guidance, specialist references and workflows.
 `plugins/knowledge` owns portable discovery, evidence preparation and installation.
@@ -64,6 +67,6 @@ platform checks count as verified. Keep capability-specific prerequisites explic
 
 ## Further reading
 
-[Documentation](https://github.com/cercova-studios/terminal-agent-plugins/wiki)
+[Documentation](https://github.com/cercova-studios/10x-swe/wiki)
 covers setup, composition and platform requirements. Executable contracts and
 skill resources stay beside their source for offline use.
