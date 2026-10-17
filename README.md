@@ -111,3 +111,5 @@ packaging and require Pandoc; CI installs a checksum-pinned test copy separately
 from the default bootstrap.
 The [fresh-environment trial](docs/reports/fresh-agent.md) records onboarding fixes,
 public-CLI acceptance, existing-skill intake and explicit review/recovery checks.
+The [docs-only agent trial](docs/reports/docs-only-agent.md) covers a fresh agent
+preparing a real-session insight and stopping at validated review.

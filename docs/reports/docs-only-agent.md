@@ -62,12 +62,42 @@ files/no library effects on successful validation. Twelve graph tests, the
 independent session-preparation checks, distribution checks and diff whitespace
 also passed. These checks never invoked publication.
 
-The real draft passed the new validator without publication. A fresh-agent retry
-against the updated published docs is recorded after its handoff is verified.
+The same fresh agent pulled published `0fa385d` and followed the updated documented
+standalone route, without source inspection or reinstalling the unchanged native
+tools. Capture, preparation, standalone validation and review passed against the
+same real-session packet and byte-identical analysis. An isolated absent quote
+was rejected by both validation and review with no digest or library effects.
+
+The integrator verified all eight input skill hashes, unchanged baseline artifacts,
+the original session-prefix hash, and the new review digest from its exact files
+and recipe resources. The 25 baseline and 13 retry product commands contained no
+publish invocation, decision submission or human-task completion. Both proposed
+destinations remained absent; the installed source library had zero insight entries.
+The private final review, analysis and evidence are retained for the user. This
+trial ends at review and does not grant permission to publish them.
 
 Local changes are construction-reviewed for the modified CLI/recipe/docs and
 their denial tests. Unchanged resources retain baseline provenance/licenses; no
 scanner acceptance, extra credentials, service or execution authority is implied.
+The reviewed source-insights bundle content digest is
+`174606c48bd6fcbc27eb28369b94729cf46d1b5325b727c01bebd269486e3d75`
+(SHA256 of sorted compact JSON mapping relative files to content SHA256, excluding
+bytecode caches). The changed recipe calls the source owner through its public
+read-only CLI; no companion producer, model or private index is required.
+
+## Hosted integration
+
+The [Linux/macOS run](https://github.com/cercova-studios/terminal-agent-plugins/actions/runs/39070041946)
+completed successfully at `0fa385d875bb3bd1280399b6354762867e2510f0`.
+Both job conclusions and logs were inspected on 2026-10-17. Each platform passed
+fresh source setup, repeat setup, eight bootstrap/review tests, the installed
+workflow checks, 147 Rust tests, Go tests and vet. The three standard ignored
+tests still require an external mapped graph fixture, local neural model or
+disposable PostgreSQL; they were not exercised by this run.
+
+Hosted workflow publication checks use synthetic fixtures in disposable stores.
+The real-session draft and its review artifacts were never supplied to CI or
+published. The subsequent report update changes documentation only.
 
 ## Limits
 
