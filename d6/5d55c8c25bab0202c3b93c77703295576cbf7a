@@ -1,0 +1,19 @@
+README.md
+  s_467129469abcc4::t_4579d6512677db 3,5-8,10,12-14,16,18,20-21,23,28,31,33-34,36-38,42-43,46,57-59,61,69,73-74,78-79,88-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d65d55c8c25bab0202c3b93c77703295576cbf7a",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
