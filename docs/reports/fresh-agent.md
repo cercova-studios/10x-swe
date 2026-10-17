@@ -75,9 +75,25 @@ mapping relative filenames to content SHA256, excluding build/bytecode caches:
 | skill-graph | `8709e002256f4e0e6328c762fca327cba756056d76a9c8a2f6426673ebfb619d` |
 | source-insights | `af0cee66707d7d21fcc6a2473611858a2839ca094951d09629ac8139cdec14f6` |
 
-The Linux/macOS workflow includes the expanded acceptance path. A hosted rerun
-will validate the published fixes; the earlier successful run covers the previous
-revision only. Local evidence above does not substitute for that hosted result.
+## Hosted validation
+
+The [Linux/macOS run](https://github.com/cercova-studios/terminal-agent-plugins/actions/runs/39067448060)
+completed successfully on the published fixes at
+`42c31bf57ba0c6eba7cb14af61119998e7800e4f`. Both job conclusions and logs were
+checked on 2026-10-17. Each job built into an absent prefix containing spaces.
+
+| Check | Linux x86_64 | macOS arm64 |
+|---|---|---|
+| Source bootstrap and repeat setup | Passed | Passed |
+| Public session indexing, runtime-only setup retry and direct workflow without PYTHONPATH | Passed | Passed |
+| Read-only intake, exact citations, review/recovery and explicit mixed records | Passed | Passed |
+| Rust regressions | 147 passed, 3 ignored | 147 passed, 3 ignored |
+| Go tests and vet | Passed | Passed |
+
+The three standard ignored tests require a mapped external graph fixture, a local
+neural model or disposable PostgreSQL. They remain unverified in this hosted run.
+The subsequent validation-report update changes documentation only; executable
+sources and tests remain identical to this successful candidate.
 
 ## Limits
 

@@ -63,7 +63,8 @@ platform checks count as verified. Keep capability-specific prerequisites explic
 
 The portable keyword profile and seven core 10x-swe routes are implemented.
 Fresh setup, independent pipes, review gates, read-only intake and native
-regressions passed on hosted Linux and macOS at `4133e7f`.
+regressions passed on hosted Linux and macOS at `42c31bf`, including the expanded
+fresh-environment onboarding checks.
 See [local acceptance](docs/reports/acceptance.md) and
 [hosted CI](docs/reports/hosted-ci.md) for evidence and optional capability limits.
 The subsequent [fresh-environment trial](docs/reports/fresh-agent.md) exercises
