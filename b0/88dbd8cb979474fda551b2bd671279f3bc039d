@@ -1,0 +1,45 @@
+AGENTS.md
+  s_467129469abcc4::t_d5be898dd21152 190-197
+plugins/10x-swe/README.md
+  s_467129469abcc4::t_15b7eaf370850c 7,24
+plugins/10x-swe/skills/technical-writing/LICENSE
+  s_e3121fbece1af6::t_2f0100c8bfe478 1-21
+plugins/10x-swe/skills/technical-writing/SKILL.md
+  s_e3121fbece1af6::t_2fd21c96a71b80 1-57
+plugins/10x-swe/skills/technical-writing/references/developer-docs.md
+  s_e3121fbece1af6::t_5f5c379ff04f9d 1-32
+plugins/10x-swe/skills/technical-writing/references/readmes.md
+  s_e3121fbece1af6::t_b4896f160f36f1 1-32
+plugins/10x-swe/skills/technical-writing/references/review.md
+  s_e3121fbece1af6::t_5af08cb6fece6d 1-27
+plugins/10x-swe/skills/technical-writing/references/sources.md
+  s_e3121fbece1af6::t_ce3776da8876be 1-13
+plugins/10x-swe/skills/technical-writing/references/style.md
+  s_e3121fbece1af6::t_288ece6649923b 1-33
+plugins/10x-swe/skills/technical-writing/references/upstream-asd-ste100-LICENSE.txt
+  s_e3121fbece1af6::t_8fcd15c8d2ca10 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b088dbd8cb979474fda551b2bd671279f3bc039d",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
