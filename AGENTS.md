@@ -187,6 +187,24 @@ Default response structure:
 - “Why” → lead with mechanism.
 - “Design” → lead with tradeoffs.
 </verbosity-control>
+<documentation-placement>
+Keep default-branch documentation focused on current capabilities, architecture,
+setup, usage, interfaces and operation. Lead READMEs with usefulness and concrete
+examples before installation details. Describe supported behavior and prerequisites
+precisely; avoid repeated absence lists and implementation metacommentary.
+
+Put plans, TODOs, experiments, abandoned approaches, development history and detailed
+validation/provenance records in the project wiki or its designated development
+archive. Link to that material for readers who want depth instead of repeating it
+in user or agent guides. Follow the project's documentation policy and preserve
+privacy when relocating material.
+
+Keep executable skill instructions, runnable examples, tests, schemas, licenses
+and essential operating contracts with the code. Preserve input bounds, approval
+rules, failure recovery and safety requirements needed for correct use. Historical
+results and planned work must not imply current capability or verification.
+</documentation-placement>
+
 </output-contract>
 
 ────────────────────────────────────────────────────────
