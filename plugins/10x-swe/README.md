@@ -114,8 +114,8 @@ MIT
 ## Portable knowledge integration
 
 Use the root source bootstrap for independent discovery, evidence and bookmark
-CLIs. Seven common entrypoints were tightened and explicitly linked; specialist
-references remain separate. See the [full refresh record](https://github.com/cercova-studios/terminal-agent-plugins/wiki/10x-swe-refresh).
+CLIs. Discover relevant skills and workflows with `skill-search`; load the
+selected entrypoints for their instructions.
 
 MCP configuration is opt-in at `examples/mcp.optional.json`. Inspect endpoints and
 pin package versions before activating it; the plugin no longer launches MCP

@@ -62,10 +62,8 @@ malformed and duplicate existing skills, changed resource hashes, portable expor
 and the session-to-reviewed-insight path. Test Linux and macOS in CI; only executed
 platform checks count as verified. Keep capability-specific prerequisites explicit.
 
-## Status and documentation
+## Further reading
 
-The portable keyword profile and seven core 10x-swe routes are implemented.
-[Plans and validation history](https://github.com/cercova-studios/terminal-agent-plugins/wiki)
-retain exact tested revisions, reproduction commands, failures and capability limits.
-Keep this offline boundary map and executable skill resources in the repository;
-maintain detailed plans and reports in the wiki instead of parallel copies.
+[Documentation](https://github.com/cercova-studios/terminal-agent-plugins/wiki)
+covers setup, composition and platform requirements. Executable contracts and
+skill resources stay beside their source for offline use.

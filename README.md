@@ -1,14 +1,14 @@
 # Terminal agent plugins
 
 Independent engineering skills and knowledge tools for terminal agents.
-[Full guide, plans and validation](https://github.com/cercova-studios/terminal-agent-plugins/wiki) · [Architecture](ARCHITECTURE.md)
+[Documentation](https://github.com/cercova-studios/terminal-agent-plugins/wiki) · [Architecture](ARCHITECTURE.md)
 
 ## Install
 
 Requires Python 3.11+, Rust supporting edition 2024, Go 1.22+, a C compiler and
 network access for locked dependencies. Linux also needs OpenSSL headers and
-pkg-config. macOS and Linux are tested; WSL follows Linux but is untested separately.
-[Native Windows needs installer work](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Platforms).
+pkg-config. Use macOS, Linux or WSL.
+[Platform requirements and limitations](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Platforms).
 
 ```sh
 git clone https://github.com/cercova-studios/terminal-agent-plugins.git
@@ -61,8 +61,6 @@ It supports shell-only execution; Dagu is optional. Explicitly select sessions,
 prepare evidence, author analysis and validate citations. **Stop at review when
 publication is not requested. A review digest is not approval.**
 
-[Complete examples](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Getting-started) · [Optional capabilities](plugins/knowledge/README.md) · [Engineering skills](plugins/10x-swe/README.md) · [Validation history](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Validation)
+[Complete examples](https://github.com/cercova-studios/terminal-agent-plugins/wiki/Getting-started) · [Optional capabilities](plugins/knowledge/README.md) · [Engineering skills](plugins/10x-swe/README.md)
 
-Plans and detailed reports live in the wiki. Executable contracts, skill resources,
-licenses and upstream credits stay with their source. Tools remain independent;
-personal Kindle delivery, device configuration and SSH setup are excluded.
+Personal Kindle delivery, device configuration and SSH setup are excluded.
