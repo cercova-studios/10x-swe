@@ -3,7 +3,16 @@
 A README helps a visitor decide whether the project solves their problem and reach
 one useful result. Start with the product's purpose, not its package layout.
 
-Use only the sections the reader needs:
+Start from the [README template](readme-template.md). Keep the shared shape:
+a compact identity block, purpose and examples, quick start, setup, usage,
+documentation and license. Use a centered title, one-line description, verified
+license badge and optional short workflow line for the project family. Keep body
+content left-aligned and commands in fenced blocks. Use tables for real choices
+or comparisons, not decorative layouts. Avoid badge walls and status dashboards.
+
+Adapt section names and omit unused sections. A library, service or marketplace
+needs different examples; visual consistency must not hide required setup or
+make an unverified claim. Use only the sections the reader needs:
 
 1. Name and a concrete explanation of what the project helps the reader do.
 2. A few recognizable use cases; define unfamiliar concepts through examples.

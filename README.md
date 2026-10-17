@@ -1,6 +1,14 @@
+<div align="center">
+
 # 10x-swe
 
 **Engineering workflows and searchable knowledge for your coding agent.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+*Discover → Investigate → Verify → Reuse*
+
+</div>
 
 10x-swe is a plugin marketplace for terminal agents. Its skills are task-specific
 guides your agent reads: how to investigate a bug, refactor safely, or review a
@@ -13,7 +21,7 @@ Use it to:
 - **Find prior work:** search skills and sessions, then explore related skills and workflows in a terminal graph.
 - **Keep useful lessons:** extract reading material, prepare cited insights, review them and save them for later retrieval.
 
-## Start with a plugin
+## Quick start
 
 | Plugin | Choose it for |
 |---|---|
@@ -37,7 +45,7 @@ The skill guides the investigation; the agent still needs to execute and check
 its work. Other agent harnesses can load the repository's `SKILL.md` bundles
 through their own skill mechanism.
 
-## Add the knowledge tools
+## Setup
 
 The knowledge plugin provides skills; build its CLI tools separately.
 
@@ -57,6 +65,8 @@ cd 10x-swe
 Setup installs tools and indexes bundled skills. Use `--prefix /absolute/new/path`
 for isolation; changed package sources require a fresh prefix.
 [Setup and recovery](https://github.com/cercova-studios/10x-swe/wiki/Getting-started).
+
+## Usage
 
 ### Find skills and bring your own
 
@@ -89,9 +99,11 @@ For [session to insight](plugins/knowledge/skills/source-insights/workflows/sess
 select a session, prepare evidence, write an analysis, review it and publish with
 approval. Dagu can optionally coordinate the same shell workflow.
 
-## Explore further
+## Documentation
 
 [Guides and examples](https://github.com/cercova-studios/10x-swe/wiki) · [Tool capabilities](plugins/knowledge/README.md) · [Skill catalog](plugins/10x-swe/README.md) · [Architecture](ARCHITECTURE.md) · [Help and issues](https://github.com/cercova-studios/10x-swe/issues)
 
-Maintained by [Rohit Nair](https://github.com/rnair98). [MIT licensed](LICENSE);
-bundled tools and skills retain their upstream licenses and credits.
+## License
+
+[MIT](LICENSE). Bundled tools and skills retain their upstream licenses and credits.
+Maintained by [Rohit Nair](https://github.com/rnair98).
