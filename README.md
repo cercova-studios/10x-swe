@@ -94,3 +94,7 @@ credits in each bundle. Optional MCP configuration is an example, never part of
 the source bootstrap.
 
 Validation commands and actual platform results belong in `docs/reports/acceptance.md`.
+Hosted run evidence and CI fixes are recorded in
+[the CI report](docs/reports/hosted-ci.md). Full native regression tests include EPUB
+packaging and require Pandoc; CI installs a checksum-pinned test copy separately
+from the default bootstrap.

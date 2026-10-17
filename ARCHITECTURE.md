@@ -55,6 +55,8 @@ platform checks count as verified. Keep capability-specific prerequisites explic
 
 ## In-flight work
 
-The portable keyword profile and seven core 10x-swe routes are implemented and
-locally validated on macOS. Linux/macOS CI is defined but has not run remotely.
-See docs/reports/acceptance.md for exact evidence, optional checks and limits.
+The portable keyword profile and seven core 10x-swe routes are implemented.
+Fresh setup, independent pipes, review gates, read-only intake and native
+regressions passed on hosted Linux and macOS at `4133e7f`.
+See [local acceptance](docs/reports/acceptance.md) and
+[hosted CI](docs/reports/hosted-ci.md) for evidence and optional capability limits.

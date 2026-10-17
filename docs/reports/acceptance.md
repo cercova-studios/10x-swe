@@ -1,8 +1,10 @@
 # Portable knowledge acceptance — 2026-10-14
 
 Implemented in an isolated clone; the pre-existing dirty checkout, installed global
-skills/tools, personal libraries and website were not modified. Nothing was committed,
-pushed or deployed.
+skills/tools, personal libraries and website were not modified. This report records
+local acceptance before publication. The package and CI repair were subsequently
+committed and pushed; see [hosted validation](hosted-ci.md) for the successful
+Linux/macOS run and tested revision.
 
 ## Delivered behavior
 
@@ -87,9 +89,10 @@ not an installation being edited concurrently.
 
 ## Limits retained explicitly
 
-- Linux/WSL execution is unverified locally: the existing Podman socket refused
-  connection. Linux/macOS CI is defined but has not run on GitHub. Native Windows
-  is unsupported. The actions use their documented [checkout](https://github.com/actions/checkout/tree/v4),
+- Linux/WSL execution was unverified locally: the existing Podman socket refused
+  connection. Subsequent hosted Linux and macOS checks passed as recorded in
+  [hosted validation](hosted-ci.md); WSL remains untested. Native Windows is
+  unsupported. The actions use their documented [checkout](https://github.com/actions/checkout/tree/v4),
   [Python](https://github.com/actions/setup-python/tree/v5) and [Go](https://github.com/actions/setup-go/tree/v5) inputs.
 - The optional bkd neural-retrieval and disposable-PostgreSQL tests were not run.
   Real connector credentials, Neon publication, terminal/browser drop hardware,

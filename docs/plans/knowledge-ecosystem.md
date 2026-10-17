@@ -14,8 +14,9 @@ bootstrap the independent tools already implemented and reuse their protocols.
 
 ## Completion
 
-K1–K4 are implemented; K5's local macOS acceptance passed. Linux/macOS CI is
-defined and remains unexecuted remotely. See `../reports/acceptance.md` for exact
-checks, the initial failures and remaining optional/platform limits. The seven
+K1–K5 are complete for the portable keyword profile. Local macOS acceptance and
+hosted Linux/macOS CI passed. See [local acceptance](../reports/acceptance.md) and
+[hosted validation](../reports/hosted-ci.md) for exact checks, the initial failures
+and remaining optional/platform limits. The seven
 core-route cleanup retains specialist bundles and removes the retired ambient
 directory/credential-wrapper assumptions. Kindle delivery stays excluded.
