@@ -4,7 +4,7 @@
 claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 ```
 
- A terminal-first AI agent plugin with 69 skills for software engineering, debugging, architecture, and development workflows.
+ A terminal-first AI agent plugin with 70 skills for software engineering, debugging, architecture, and development workflows.
 
 ## Skills
 
@@ -21,6 +21,7 @@ claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 | self-learning | Learn new technologies from the web and generate reusable skills |
 | subagent-driven-development | Execute implementation plans with independent tasks via subagents |
 | task-coordination-strategies | Decompose tasks, design dependency graphs, coordinate multi-agent work |
+| technical-writing | Clear, source-grounded READMEs, developer documentation and project copy |
 | test-driven-development | TDD workflow: write tests before implementation code |
 
 ### Development Tools

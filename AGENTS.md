@@ -187,6 +187,14 @@ Default response structure:
 - “Why” → lead with mechanism.
 - “Design” → lead with tradeoffs.
 </verbosity-control>
+<technical-writing>
+Before creating or revising project copy, READMEs, developer documentation, UI text,
+errors or agent instructions, read [technical-writing](plugins/10x-swe/skills/technical-writing/SKILL.md).
+Load it once per task and apply the relevant reference. Scale the process to the
+edit; use a single-agent pass for small changes and authorized independent review
+for substantial rewrites. Follow project voice while preserving technical meaning.
+</technical-writing>
+
 <documentation-placement>
 Keep default-branch documentation focused on current capabilities, architecture,
 setup, usage, interfaces and operation. Lead READMEs with usefulness and concrete
