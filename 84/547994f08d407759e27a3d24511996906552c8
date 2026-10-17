@@ -1,0 +1,23 @@
+ARCHITECTURE.md
+  s_467129469abcc4::t_53b3cf6e3e3a23 65,68-71
+README.md
+  s_467129469abcc4::t_35b9c9b25fb22f 3-4,6,8-11,18-19,22-26,28-30,32,36,43-46,48,50,58-62,64,66-68
+plugins/10x-swe/README.md
+  s_467129469abcc4::t_20f2fdc718f7fd 118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "84547994f08d407759e27a3d24511996906552c8",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
