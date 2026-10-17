@@ -13,7 +13,7 @@ local cache; it does not refresh connectors or fetch articles.
 
 ```sh
 set -euo pipefail
-SKILL_DIR="$HOME/.agents/skills/source-insights"
+SKILL_DIR="$AGENT_KNOWLEDGE_HOME/skills/source-insights"
 work=$(mktemp -d "${TMPDIR:-/tmp}/bookmark-insight.XXXXXX")
 
 bkd search 'The UNIX Pipe Card Game' --lexical-only |

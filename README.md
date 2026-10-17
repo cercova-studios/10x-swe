@@ -28,7 +28,8 @@ requests. `./knowledge doctor` checks artifacts, tool entrypoints and graph fres
 Use `--prefix /absolute/new/path` on every command for an isolated environment.
 
 Interrupted setup retains diagnostic/build state and can be retried with the same
-source bytes. A completed prefix with changed source bytes requires a fresh prefix;
+source bytes. Rechecking a completed installation does not require build tools.
+A completed prefix with changed source bytes requires a fresh prefix;
 upgrades never replace an installation silently. Roll back by activating the prior
 prefix. Never delete a prefix containing knowledge you want to retain.
 
@@ -64,6 +65,9 @@ does not change their configuration or invent activation paths.
 distiller --stdin --base-url https://example.org/article --mode json < article.html > article.json
 source-insights prepare-article https://example.org/article --prepared article.json --snapshot article.html --work /absolute/new/evidence
 
+# A fresh index is empty. Explicitly select a harness before searching its sessions.
+session-search status
+session-search index --agent codex
 # Select session evidence explicitly; inspect the exact returned ID and coverage.
 session-search export --mode naive --agent codex --role assistant --limit 1 'topic' > selected.jsonl
 source-insights prepare-session session:codex:EXACT_ID --records selected.jsonl --work /absolute/new/session-evidence
@@ -79,6 +83,10 @@ shell's `pipefail` when streaming. Preparation is not publication. Inspect evide
 author analysis and explicitly review claims/citations/destination before publish.
 The bundled Dagu session-to-insight workflow adds a digest-bound human review gate;
 Dagu remains optional and external to the tools.
+
+For a complete capture → analysis → review → publication → retrieval walkthrough,
+see [session-to-insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md).
+It includes a shell-only path; installing Dagu is unnecessary for this workflow.
 
 Optional local neural models, connectors, media tools and EPUB/PDF prerequisites
 are described in [the knowledge plugin](plugins/knowledge/README.md). Personal
@@ -98,3 +106,5 @@ Hosted run evidence and CI fixes are recorded in
 [the CI report](docs/reports/hosted-ci.md). Full native regression tests include EPUB
 packaging and require Pandoc; CI installs a checksum-pinned test copy separately
 from the default bootstrap.
+The [fresh-environment trial](docs/reports/fresh-agent.md) records onboarding fixes,
+public-CLI acceptance, existing-skill intake and explicit review/recovery checks.

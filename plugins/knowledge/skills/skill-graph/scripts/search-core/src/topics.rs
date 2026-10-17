@@ -361,7 +361,9 @@ pub fn clusters(graph: &Value, query: Option<&str>, limit: usize) -> Result<Valu
 }
 
 pub fn paths(graph: &Value, query: &str, semantic: Option<&Value>, limit: usize) -> Result<Value> {
-    validate(graph)?;
+    if semantic.is_some() || graph.get("concepts").is_some() {
+        validate(graph)?;
+    }
     let ranked = ranks(graph, query, semantic)?;
     let nodes = graph["nodes"].as_array().unwrap();
     let mut paths = Vec::new();
@@ -431,6 +433,24 @@ pub fn paths(graph: &Value, query: &str, semantic: Option<&Value>, limit: usize)
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn lexical_paths_need_no_map_but_stale_maps_and_semantic_paths_still_fail() {
+        let mut graph = json!({"nodes":[{"id":"global/session-search","name":"session-search","description":"Recall session evidence"},{"id":"global/learning","name":"learning","description":"Review session evidence"}],"aliases":[],"edges":[{"source":"global/session-search","target":"global/learning","relation":"uses"}]});
+        let result = paths(&graph, "recall session evidence", None, 1).unwrap();
+        assert_eq!(result["method"], "lexical_seed_plus_typed_graph");
+        assert_eq!(
+            result["candidate_paths"][0]["entrypoint"],
+            "global/session-search"
+        );
+        assert_eq!(
+            result["candidate_paths"][0]["conditional_routes"][0]["id"],
+            "global/learning"
+        );
+        assert!(paths(&graph, "session evidence", Some(&json!([])), 1).is_err());
+        graph["concepts"] = json!({"status":"stale"});
+        assert!(paths(&graph, "session evidence", None, 1).is_err());
+    }
+
     #[test]
     fn typed_paths_do_not_execute_or_turn_similarity_into_dependency() {
         let graph = json!({"nodes":[{"id":"global/a","name":"animation","description":"animate math","sha256":"a"},{"id":"global/b","name":"evidence","description":"cited math evidence","sha256":"b"}],"aliases":[],"edges":[{"source":"global/a","target":"global/b","relation":"related","status":"inferred","weight":0.8}],"clusters":[{"id":"c","members":["global/a","global/b"]}],"concepts":{"status":"fresh","records":[{"id":"global/a","entrypoint_sha256":"a"},{"id":"global/b","entrypoint_sha256":"b"}]}});

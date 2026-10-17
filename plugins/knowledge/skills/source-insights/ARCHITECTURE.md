@@ -147,3 +147,5 @@ index without embeddings and rejects semantic/hybrid queries. Rebuilding is requ
 when changing profiles. The optional stateless local_embeddings primitive owns model
 invocation, not evidence storage. The shared source bootstrap makes no cloud requests
 and does not publish, index source sessions, or activate optional media providers.
+Direct `sources.py` invocations resolve the installation's `lib` directory from
+AGENT_KNOWLEDGE_HOME; shell recipes do not require a global PYTHONPATH setting.

@@ -1,6 +1,7 @@
 """Installation ownership, failed readiness and concurrency boundaries."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -41,6 +42,14 @@ class BootstrapTests(unittest.TestCase):
     def test_source_tree_install_is_rejected_before_write(self):
         with self.assertRaisesRegex(ValueError,'outside the source'): bootstrap.setup(REPO/'never-create-this')
         self.assertFalse((REPO/'never-create-this').exists())
+    def test_incomplete_setup_still_requires_build_tools_and_retains_no_receipt(self):
+        target=self.root/'missing-tools'
+        for _ in range(2):
+            p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'setup','--prefix',str(target)],
+                             env=dict(os.environ,PATH=str(self.root/'no-tools')),capture_output=True)
+            self.assertNotEqual(p.returncode,0)
+            self.assertIn(b'Missing build prerequisite: cargo',p.stderr)
+            self.assertFalse((target/'installation.json').exists())
 
 
 if __name__=='__main__': unittest.main()

@@ -13,8 +13,8 @@ resources:
 
 # Session to insight
 
-Dagu 2.19.2 coordinates existing CLIs. This document is discovery metadata, not
-authorization. The YAML and recipe are owned by source-insights; neither producer
+Dagu 2.19.2 optionally coordinates existing CLIs. This document is discovery metadata,
+not authorization. The YAML and recipe are owned by source-insights; neither producer
 nor publisher depends on Dagu. Skill-search only indexes documents and hashes
 their resources. Graph relationships never execute a workflow.
 
@@ -38,23 +38,72 @@ Outputs: `records.jsonl`, line-cited `evidence/`, human-authored `analysis.json`
 after approval, immutable entries and a derived index in the chosen library.
 No Neon, public website, cloud AI, skill mutation or automatic analysis.
 
-## Run
+## Resolve the installed skill
 
-Use a Python 3.10+ installation on PATH and the installed `session-search` CLI.
-The local Dagu config explicitly passes PATH and SESSION_SEARCH_DB; it binds the
-optional UI to loopback, disables update checks and has no cloud reporting.
-CLI runs work without a server. To resume human tasks automatically, start the optional local UI and scheduler:
+Activate the `env.sh` printed by bootstrap, then resolve this skill from that
+installation. For a standalone skill, set SKILL_DIR to this document's parent skill
+directory instead. No `~/.agents` installation is required.
 
 ```sh
-dagu start-all --dags "$HOME/.agents/skills/source-insights/workflows"
+SKILL_DIR="$AGENT_KNOWLEDGE_HOME/skills/source-insights"
 ```
 
-Keep that foreground process running in another terminal. The coordinator is disabled; start-all also disables the standalone scheduler’s wildcard health listener. Then choose paths and
-run (replace SESSION with the ID you inspected):
+## Run without a coordinator
+
+Use Python 3.11+ on PATH. The independent recipe accepts an already selected
+packet through stdin. Choose an exact inspected session ID, a fresh work directory,
+and an explicit destination outside it:
+
+```sh
+set -euo pipefail
+SESSION='session:codex:EXACT_ID'
+WORK='/absolute/fresh/work'
+LIBRARY='/absolute/chosen/library'
+python3 "$SKILL_DIR/scripts/session_workflow.py" capture \
+  --records - --session "$SESSION" --work "$WORK" --library "$LIBRARY" < selected.jsonl
+python3 "$SKILL_DIR/scripts/session_workflow.py" prepare \
+  --session "$SESSION" --work "$WORK" --library "$LIBRARY"
+nl -ba "$WORK/evidence/document.md"
+```
+
+Write `WORK/analysis.json` using the [analysis contract](../references/analysis-format.md).
+Inspect the retained lines, coverage omissions and exact quotes. Then generate the
+review packet:
+
+```sh
+python3 "$SKILL_DIR/scripts/session_workflow.py" review \
+  --session "$SESSION" --work "$WORK" --library "$LIBRARY"
+```
+
+After the user approves the reviewed claims and destination, submit the printed
+digest explicitly. Agents must not supply that approval themselves:
+
+```sh
+python3 "$SKILL_DIR/scripts/session_workflow.py" publish \
+  --session "$SESSION" --work "$WORK" --library "$LIBRARY" \
+  --decision publish --review-digest REVIEW_DIGEST
+source-insights search 'topic' --mode keyword --library "$LIBRARY"
+source-insights export --query 'topic' --mode keyword --library "$LIBRARY" > insights.jsonl
+skill-search export --query 'topic' > skills.jsonl
+cat skills.jsonl insights.jsonl | bkd --records - search 'topic' --lexical-only --list
+```
+
+Publication without approval or with a stale digest fails. Retrying the same
+approved publication deduplicates it. The exported packets can be consumed without
+access to the producer's store. Use `--agent claude` on each recipe command for a
+Claude packet.
+
+## Run with Dagu
+
+Install Dagu 2.19.2 separately. CLI runs work without a server. This package does
+not install a Dagu UI/scheduler configuration or configure its listeners or
+authentication. If running those optional services, review their configuration
+separately. Pass the activated PATH and any SESSION_SEARCH_DB override to the runner.
+Replace SESSION with the ID you inspected:
 
 ```sh
 dagu start --run-id my-session-learning \
-  "$HOME/.agents/skills/source-insights/workflows/session-to-insight.yaml" -- \
+  "$SKILL_DIR/workflows/session-to-insight.yaml" -- \
   RECORDS='/absolute/selected.jsonl' SESSION='session:codex:EXACT_ID' AGENT=codex \
   WORK='/absolute/fresh/work' LIBRARY='/absolute/chosen/library'
 ```
@@ -67,7 +116,7 @@ exact and cite the retained document's line numbers; recalled claims remain lead
 Review with the same session and destination:
 
 ```sh
-python3 "$HOME/.agents/skills/source-insights/scripts/session_workflow.py" review \
+python3 "$SKILL_DIR/scripts/session_workflow.py" review \
   --work '/absolute/fresh/work' --session 'session:codex:EXACT_ID' \
   --library '/absolute/chosen/library'
 dagu human-task complete session-to-insight --run-id my-session-learning \
@@ -95,7 +144,7 @@ skill-search export --query 'session learning' > skills.jsonl
 The recipe also accepts stdin without Dagu:
 
 ```sh
-python3 "$HOME/.agents/skills/source-insights/scripts/session_workflow.py" capture \
+python3 "$SKILL_DIR/scripts/session_workflow.py" capture \
   --records - --session 'session:codex:EXACT_ID' --work '/absolute/fresh/work' \
   --library '/absolute/chosen/library' < selected.jsonl
 ```
@@ -115,7 +164,7 @@ be replaced by explicit CLI composition without changing producer contracts.
 ```sh
 dagu status session-to-insight --run-id my-session-learning
 dagu retry --run-id my-session-learning \
-  "$HOME/.agents/skills/source-insights/workflows/session-to-insight.yaml"
+  "$SKILL_DIR/workflows/session-to-insight.yaml"
 ```
 
 Failed capture leaves no published packet. Retry freezes an existing successful
@@ -128,9 +177,7 @@ retry restores the export without creating another entry. A post-publication ind
 error reports the retained entry; diagnose it before retry. Never delete published
 entries as workflow cleanup. Dagu logs and work directories remain for diagnosis.
 
-The optional UI and scheduler are `dagu start-all --dags "$HOME/.agents/skills/source-insights/workflows"`
-at `http://127.0.0.1:8099`. Stop foreground processes with Ctrl-C. No login item,
-recurring schedule or resident service is installed.
+No login item, recurring schedule or resident service is installed.
 
 References: [Dagu human tasks](https://docs.dagu.sh/writing-workflows/human-tasks),
 [Dagu source/release](https://github.com/dagucloud/dagu/releases/tag/v2.19.2).

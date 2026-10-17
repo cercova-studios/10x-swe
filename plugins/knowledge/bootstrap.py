@@ -128,9 +128,6 @@ def setup(prefix):
         raise ValueError('This source package targets macOS and Linux/WSL; native Windows is unsupported')
     if sys.version_info < (3, 11):
         raise ValueError('Python 3.11+ is required')
-    for command in ('cargo', 'go', 'cc'):
-        if not shutil.which(command):
-            raise ValueError('Missing build prerequisite: ' + command)
     manifest = inputs()
     fingerprint = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
     owned(prefix, fingerprint)
@@ -139,6 +136,9 @@ def setup(prefix):
         if (prefix / 'installation.json').exists():
             doctor(prefix)
             return
+        for command in ('cargo', 'go', 'cc'):
+            if not shutil.which(command):
+                raise ValueError('Missing build prerequisite: ' + command)
         for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
         for source, dest in ((PACKAGE / 'skills', prefix / 'skills'),

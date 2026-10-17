@@ -306,12 +306,12 @@ fn run(cli: Cli) -> Result<Value> {
                 "task query is empty or exceeds the selected retrieval byte budget"
             );
             let checked = bundle::check_graph(&graph)?;
-            topics::validate(&checked)?;
             ensure!(
                 semantic || (python.is_none() && helper.is_none()),
                 "runtime overrides require --semantic"
             );
             let scores = if semantic {
+                topics::validate(&checked)?;
                 let python =
                     python.unwrap_or_else(|| root.join("runtimes/source-insights/bin/python"));
                 let helper =

@@ -56,6 +56,9 @@ AGENT_KNOWLEDGE_HOME selects installation resources and state. `refresh --lexica
 rebuilds declared inventory and FTS5 without running mapping or a model. The graph
 TUI falls back to connected components when no semantic map exists. Model invocation
 is a stateless local_embeddings primitive, independent of source-insights storage.
+`path` ranks lexical seeds and follows typed relationships without a topic map.
+An existing map must still validate; `path --semantic` requires a fresh map and the
+configured local model. Keyword routing never starts a model or silently accepts a stale map.
 Read-only external roots use namespaced identities and retain original IDs, trust
 and unresolved references in exports/loads. They never receive generated rewrites.
 Links outside their import namespace remain unresolved; review them explicitly rather

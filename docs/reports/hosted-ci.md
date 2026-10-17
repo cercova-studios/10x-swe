@@ -36,9 +36,9 @@ a pinned local neural model, or disposable PostgreSQL. They were not exercised b
 hosted CI. The separate local graph-fixture check is recorded in
 [local acceptance](acceptance.md).
 
-The final validation update changes documentation only; executable sources, locks,
-tests and the workflow remain identical to the tested revision. No additional
-full build is required for that documentation follow-up.
+The validation update at `52b89fe` changed documentation only; its executable
+sources, locks, tests and workflow match the tested revision. Subsequent onboarding
+fixes and their separate validation are recorded in [the fresh-environment report](fresh-agent.md).
 
 Tools continue to own separate stores and exchange explicit records/files. Personal
 Kindle delivery, device configuration and SSH aliases remain excluded. Live

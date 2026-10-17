@@ -12,8 +12,9 @@ PREFIX = Path(sys.argv[1]).resolve()
 BIN = PREFIX / 'bin'
 PYTHON = PREFIX / 'runtimes/source-insights/bin/python'
 env = dict(os.environ, PATH=str(BIN)+os.pathsep+os.environ.get('PATH',''),
-           AGENT_KNOWLEDGE_HOME=str(PREFIX), PYTHONPATH=str(PREFIX/'lib'),
+           AGENT_KNOWLEDGE_HOME=str(PREFIX),
            SOURCE_INSIGHTS_INDEX_MODE='keyword', PYTHONDONTWRITEBYTECODE='1')
+env.pop('PYTHONPATH',None)
 
 
 def run(command, *args, data=None, ok=True, extra=None):
@@ -29,27 +30,30 @@ def python(script, *args, ok=True):
     return p.stdout
 
 
+routes=json.loads(run('skill-search','path','capture reusable session learning'))
+assert routes['method']=='lexical_seed_plus_typed_graph' and routes['candidate_paths'],routes
+run('skill-search','path','capture reusable session learning','--semantic',ok=False)
+runtime_only=dict(env,PATH=str(PYTHON.parent))
+repeat=subprocess.run([str(PYTHON),str(Path(__file__).resolve().parents[1]/'plugins/knowledge/bootstrap.py'),
+                       'setup','--prefix',str(PREFIX)],env=runtime_only,capture_output=True,timeout=90)
+assert repeat.returncode==0,(repeat.stdout[-1000:],repeat.stderr[-2000:])
+
 with tempfile.TemporaryDirectory(prefix='knowledge-pipes-') as temp:
     root=Path(temp);library=root/'library';env['SOURCE_INSIGHTS_LIBRARY']=str(library)
     env['BKD_HOME']=str(root/'bookmarks');env['SESSION_SEARCH_DB']=str(root/'sessions.sqlite')
-    # Build a fixture index through the adapter/store contract, never a real session crawl.
-    fixture=root/'fixture.jsonl';quote='Compositionfixture retains exact citations and independent tool boundaries.'
+    # Exercise public indexing against a fresh harness home, never personal sessions.
+    home=root/'home';sessions=home/'.codex/sessions';sessions.mkdir(parents=True)
+    env['HOME']=str(home)
+    assert json.loads(run('session-search','status','--json'))['total']==0
+    fixture=sessions/'fixture.jsonl';quote='Compositionfixture retains exact citations and independent tool boundaries.'
     rows=[{'type':'session_meta','payload':{'id':'portable-fixture','cwd':str(root)}},
           {'type':'response_item','payload':{'type':'message','role':'assistant','channel':'final',
                                            'content':[{'type':'output_text','text':quote}]}},
           {'type':'response_item','payload':{'type':'message','role':'assistant','channel':'analysis',
                                            'content':[{'type':'output_text','text':'HIDDEN_MUST_NOT_EXPORT'}]}}]
     fixture.write_text(''.join(json.dumps(r)+'\n' for r in rows))
-    seed=root/'seed.py'
-    seed.write_text('''import sys
-from pathlib import Path
-sys.path.insert(0,sys.argv[1])
-from session_search.adapters.codex import CodexAdapter
-from session_search.store import Store
-record=CodexAdapter()._from_rollout(Path(sys.argv[2]),{},{})
-store=Store(Path(sys.argv[3]));store.replace_agent('codex',[record]);store.close()
-''')
-    python(seed,PREFIX/'skills/session-search/scripts',fixture,env['SESSION_SEARCH_DB'])
+    indexed=json.loads(run('session-search','index','--agent','codex','--json'))
+    assert indexed['counts']=={'codex':1} and not indexed['errors'],indexed
     raw=run('session-search','export','--mode','naive','--agent','codex','--role','assistant','--limit','1','Compositionfixture')
     assert b'HIDDEN_MUST_NOT_EXPORT' not in raw
     packet=json.loads(raw);sid='session:codex:portable-fixture'

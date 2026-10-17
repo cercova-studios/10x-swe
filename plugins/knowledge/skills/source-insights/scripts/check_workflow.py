@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -21,7 +22,8 @@ with tempfile.TemporaryDirectory() as tmp:
     root=Path(tmp);work=root/'work';library=root/'library';bins=root/'bin';bins.mkdir()
     producer=bins/'session-search'
     def fake(raw,code=0):
-        producer.write_text('#!'+sys.executable+'\nimport sys\nsys.stdout.buffer.write('+repr(raw)+')\nsys.exit('+str(code)+')\n');producer.chmod(0o700)
+        program='import sys; sys.stdout.buffer.write('+repr(raw)+'); sys.exit('+str(code)+')'
+        producer.write_text('#!/bin/sh\nexec '+shlex.quote(sys.executable)+' -c '+shlex.quote(program)+'\n');producer.chmod(0o700)
     env=dict(os.environ,PATH=str(bins))
     def run(op,dest=work,**kwargs):
         flags=[sys.executable,str(script),op,'--work',str(dest),'--session',sid,'--library',str(library)]

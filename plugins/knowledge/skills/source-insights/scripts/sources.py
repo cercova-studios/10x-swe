@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from urllib.request import urlopen, Request
 
 ROOT = Path(os.environ.get('AGENT_KNOWLEDGE_HOME', Path.home() / '.agents'))
+sys.path.insert(0, str(ROOT / 'lib'))
 LIBRARY = Path(os.environ.get('SOURCE_INSIGHTS_LIBRARY', ROOT / 'knowledge/sources'))
 DEFAULT_SEARCH_MODE = 'keyword' if os.environ.get('SOURCE_INSIGHTS_INDEX_MODE') == 'keyword' else 'hybrid'
 MODELS = {'whisper': 'mlx-community/whisper-large-v3-turbo',

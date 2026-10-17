@@ -27,6 +27,10 @@ connectors, media extraction, local models and Dagu have separate
 prerequisites; unavailable capabilities remain visible in doctor output.
 Personal Kindle delivery, SSH configuration and device workflows are excluded.
 
+Keyword `skill-search path` uses declared relationships without a neural map.
+Semantic routing remains optional and validates its mapping provenance. Session
+onboarding explicitly indexes the selected harness; setup leaves that index empty.
+
 Existing skill roots are explicit. Inspection never executes their scripts or
 hooks. Exact duplicate bundles can share an indexed identity; differing bundles
 with the same name remain distinct. Suggested rewrites or activation require review.
@@ -36,6 +40,8 @@ tokens, session transcripts, bookmarks, caches and machine binaries do not.
 Reviewed skill changes use staged proposals, backups and concurrent-change checks.
 Source revisions install into fresh prefixes; an owned receipt never silently
 upgrades an existing installation. Remote publication and delivery remain separate acts.
+Completed setup retries verify readiness without requiring compilers; incomplete
+installs still require the documented build prerequisites.
 
 ## Invariants
 
@@ -60,3 +66,5 @@ Fresh setup, independent pipes, review gates, read-only intake and native
 regressions passed on hosted Linux and macOS at `4133e7f`.
 See [local acceptance](docs/reports/acceptance.md) and
 [hosted CI](docs/reports/hosted-ci.md) for evidence and optional capability limits.
+The subsequent [fresh-environment trial](docs/reports/fresh-agent.md) exercises
+onboarding through public indexing, runtime-only retries and explicit review pipes.
