@@ -1,0 +1,38 @@
+plugins/knowledge/skills/source-insights/SKILL.md
+  s_e3121fbece1af6::t_f954391695df88 28-32
+plugins/knowledge/skills/source-insights/scripts/session_workflow.py
+  s_e3121fbece1af6::t_1c759b615fa971 47
+  s_e3121fbece1af6::t_582995316f70a9 120-121,123
+plugins/knowledge/skills/source-insights/workflows/session-to-insight.md
+  s_e3121fbece1af6::t_f954391695df88 71-72,76,79-85
+README.md
+  s_e3121fbece1af6::t_f954391695df88 86-88
+docs/reports/docs-only-agent.md
+  s_e3121fbece1af6::t_e59db9a48cbd48 1-77
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_f954391695df88 33-35
+tests/test_review.py
+  s_e3121fbece1af6::t_3f155512c91001 1-64,66-98
+  s_e3121fbece1af6::t_1c759b615fa971 65
+plugins/knowledge/skills/source-insights/ARCHITECTURE.md
+  s_e3121fbece1af6::t_f954391695df88 49,152-155
+plugins/knowledge/skills/source-insights/scripts/sources.py
+  s_e3121fbece1af6::t_582995316f70a9 816-818,862-866,870-877
+  s_e3121fbece1af6::t_f954391695df88 867-869
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0fa385d875bb3bd1280399b6354762867e2510f0",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
