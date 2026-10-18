@@ -25,6 +25,8 @@ changing tool interfaces, store ownership or review authority. Docker Sandboxes
   labeled inferred relationships. Ranking is not approval or truth.
 - Evidence library: immutable source records, exact citations and reviewed analysis.
 - Portable records: independent skills, sessions, insights and bookmark snapshots.
+- Newsletter edition: frozen public research, cited editorial JSON, revision-bound
+  review, HTML/Markdown and an owned checksum manifest.
 - Playground identity: owned VM names, the active VM, source hash and Nix lock hash.
 - Host share: explicit canonical directory, read-only or writable mode, root identity and per-user lease.
 - Checkpoint: stopped guest image, writable host-tree archives, SHA-256 hashes and environment identity.
@@ -56,6 +58,21 @@ Engineering bundles keep canonical workflows and optional references together.
 Web research guidance routes to independently available connectors, clients and
 provider APIs. The optional search helper inherits credentials and emits JSON;
 research acquisition, evidence transformation and reviewed publication stay separate.
+The optional newsletter recipe invokes public search/extraction commands, then a
+separate writer and reviewer. The local renderer validates explicit files without
+opening companion stores. Dagu coordinates those commands under an operator-owned
+environment. Newsletter publication never grants insight-library publication.
+Acquisition searches every configured topic and balances source selection across
+topics under explicit source/text limits. The local publication reader exposes
+topic-level search/evidence/story coverage separately from editorial content.
+HTML and Markdown share a current-news/background split and first-use source
+numbering by URL. The quick briefing links the first six current stories in
+editorial order; earlier or unconfirmed-date reading stays separate. Briefs show
+self-contained summaries and essential caveats; deep dives retain full analysis.
+Exact supporting passages are grouped once per source behind an evidence disclosure.
+Its store owns immutable dated editions and marked daily work directories. Seven-day
+retention validates ownership, inventory, hashes and symlinks before journaled
+removal; interrupted removal resumes without adopting unrelated directories.
 Skill authoring owns its initializer, basic metadata validator and construction
 checklist. Ghidra's canonical artifacts use address identities, bounded selected
 decompilation and identity-checked read-only reuse; native fixtures never run
@@ -120,6 +137,9 @@ independent evidence preparation through review without publication.
 Host-share tests cover escaping links, ownership, leases, metadata, checksum failures
 before mutation, partial replacement and explicit rollback. A separate microVM
 acceptance test deletes data in two host shares and the guest, then rewinds both.
+Newsletter tests cover citation/review binding, escaped rendering, immutable
+publication, interrupted reader updates, strict retention boundaries, symlink
+rejection, cleanup recovery and local environment permissions.
 
 ## Further reading
 

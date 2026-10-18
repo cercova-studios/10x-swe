@@ -1,0 +1,113 @@
+/* Publication chrome stays quiet; the article owns the reading column. */
+:root {
+  color-scheme: light;
+  --paper: #fff; --ink: #222; --muted: #6b6b6b; --line: #e6e6e6;
+  --accent: #a63b09; --brand: #ff6719; --wash: #f7f7f7;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 24px; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 20px/1.7 Georgia, "Times New Roman", serif; }
+body.dark { color-scheme: dark; --paper: #191919; --ink: #eee; --muted: #aaa; --line: #383838; --accent: #ffa16e; --wash: #242424; }
+a { color: var(--accent); text-underline-offset: 3px; }
+button, input, kbd, .masthead, .publication p, .publication-nav, .edition-meta, .story-meta, summary, footer { font-family: var(--sans); }
+button { color: inherit; cursor: pointer; background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 8px 13px; }
+button:hover { background: var(--wash); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.masthead { height: 64px; display: flex; align-items: center; gap: 24px; padding: 0 30px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.publication-brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 650; }
+.publication-mark { display: grid; place-items: center; width: 28px; height: 32px; background: var(--brand); color: #222; border-radius: 3px; font: bold 23px Georgia, serif; }
+.edition-label { margin-left: auto; color: var(--muted); font-size: 13px; }
+#theme { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; }
+.publication { text-align: center; padding: 38px 20px 24px; }
+.wordmark { color: var(--ink); text-decoration: none; font: 760 38px/1.2 var(--sans); letter-spacing: -1.4px; }
+.wordmark span { font-weight: 400; }
+.publication p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+.publication-nav { display: flex; justify-content: center; align-items: stretch; gap: 32px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.publication-nav > a, .archive-menu > summary { display: block; padding: 13px 0; color: var(--muted); cursor: pointer; text-decoration: none; }
+.publication-nav > a[aria-current] { color: var(--ink); font-weight: 650; border-bottom: 2px solid var(--brand); }
+.archive-menu { position: relative; }
+.archive-menu > summary { list-style: none; }
+.archive-menu > summary::-webkit-details-marker { display: none; }
+#archive { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); top: 100%; min-width: 180px; padding: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px #00000010; }
+#archive button { display: block; width: 100%; text-align: left; border: 0; font-size: 13px; }
+#archive button[aria-pressed=true] { background: var(--wash); font-weight: 650; }
+.layout { max-width: 728px; margin: 0 auto; }
+main { padding: 38px 24px 44px; min-width: 0; }
+.edition-meta { display: flex; justify-content: space-between; align-items: center; gap: 14px; color: var(--muted); font-size: 12px; }
+#markdown { color: var(--muted); text-decoration: none; white-space: nowrap; }
+#markdown:hover { text-decoration: underline; }
+h1 { font: 780 42px/1.12 var(--sans); letter-spacing: -1.35px; margin: 12px 0 16px; overflow-wrap: anywhere; }
+.standfirst { color: var(--muted); font: 20px/1.5 var(--sans); margin: 0 0 16px; }
+.issue-counts { color: var(--muted); font: 12px/1.6 var(--sans); }
+.briefing { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); padding: 20px 0 14px; margin: 24px 0; }
+.briefing h2, .editorial h2, .section-heading { font: 700 18px/1.4 var(--sans); margin: 0 0 16px; }
+.briefing ol { padding-left: 24px; margin: 0; font: 16px/1.5 var(--sans); }
+.briefing li { padding: 0 0 12px 4px; }
+.briefing a { color: var(--ink); text-decoration-color: var(--line); }
+.briefing a:hover { color: var(--accent); }
+.editorial { margin: 28px 0; }
+.editorial p { margin: 0 0 22px; }
+.toolbar { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 0 12px; margin: 30px 0 10px; }
+.search { display: flex; align-items: center; gap: 10px; max-width: 100%; }
+.search input { width: 100%; padding: 5px 0; border: 0; color: var(--ink); background: transparent; font-size: 14px; }
+.search kbd { color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 6px; font-size: 11px; }
+.topic-filter { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: var(--muted); font: 12px var(--sans); }
+#topics { width: min(260px, 100%); padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: var(--paper); font: 12px var(--sans); }
+#stories { display: block; }
+.story { padding: 30px 0 34px; border-bottom: 1px solid var(--line); min-width: 0; }
+.story-meta { display: flex; gap: 12px; color: var(--muted); font-size: 11px; }
+.story-meta span:first-child { color: var(--accent); font-weight: 650; }
+.story h3 { font: 730 28px/1.25 var(--sans); letter-spacing: -.6px; margin: 12px 0 16px; overflow-wrap: anywhere; }
+.story.lead h3 { font-size: 32px; }
+.story p { margin: 18px 0; }
+.story h4 { font: 650 17px/1.4 var(--sans); margin: 30px 0 12px; }
+.section-heading { margin: 32px 0 0; }
+.section-note { color: var(--muted); font: 13px/1.5 var(--sans); }
+.story.brief { padding: 22px 0; }
+.story.brief h3 { font-size: 22px; margin-bottom: 10px; }
+.story.brief p { font-size: 17px; line-height: 1.65; margin: 10px 0; }
+.story .qualification { color: var(--muted); font: 13px/1.6 var(--sans); }
+.source-links { font: 12px/1.5 var(--sans); }
+.source-ref { font: 12px/1.5 var(--sans); white-space: nowrap; }
+#source-notes { margin-top: 32px; font: 14px/1.65 var(--sans); }
+#source-notes summary { cursor: pointer; color: var(--accent); padding: 6px 0; }
+.technical { overflow-wrap: anywhere; }
+.citations { padding-left: 22px; font: 14px/1.65 var(--sans); overflow-wrap: anywhere; }
+.citations li { padding: 8px 0; }
+.citations blockquote { color: var(--muted); margin: 12px 0; padding-left: 16px; border-left: 2px solid var(--line); white-space: pre-wrap; }
+.source-coverage { color: var(--muted); font-size: 11px; margin-top: 5px; }
+.empty { color: var(--muted); padding: 35px 0; font: 15px/1.6 var(--sans); }
+#research-notes { margin-top: 28px; font: 13px/1.65 var(--sans); color: var(--muted); }
+#research-notes > summary { cursor: pointer; }
+#coverage { padding: 12px 0; overflow-wrap: anywhere; }
+.coverage-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+.coverage-table th, .coverage-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); }
+footer { color: var(--muted); margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12px; text-align: center; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 12px; top: 12px; background: var(--paper); padding: 8px; z-index: 3; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 600px) {
+  .masthead { padding: 0 18px; height: 56px; }
+  .edition-label { font-size: 11px; }
+  .publication { padding: 16px 18px 12px; }
+  .wordmark { font-size: 26px; }
+  .publication p { font-size: 11px; margin-top: 6px; }
+  main { padding: 22px 20px 36px; }
+  h1 { font-size: 30px; letter-spacing: -.7px; }
+  body { font-size: 18px; }
+  .standfirst { font-size: 18px; }
+  .story h3, .story.lead h3 { font-size: 26px; }
+  .story.brief h3 { font-size: 21px; }
+  .briefing { margin-top: 20px; }
+  .briefing ol { font-size: 15px; }
+  .edition-meta { font-size: 10px; }
+}
+@media print {
+  .masthead, .publication-nav, .toolbar, #markdown, footer { display: none; }
+  .publication { padding-top: 0; }
+  .layout { max-width: none; }
+  main { padding: 0; }
+  body { background: white; color: black; }
+  .story { break-inside: avoid; }
+}
