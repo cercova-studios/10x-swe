@@ -220,6 +220,10 @@ def main():
             stream.write(result)
     else:
         print(result, end='')
+    print('intake: %d skills, %d name conflicts, %d issues, coverage=%s%s'
+          % (len(report.get('skills', [])), len(report.get('name_conflicts', {})),
+             len(report.get('issues', [])), report.get('coverage'),
+             ' -> ' + str(args.output) if args.output else ''), file=sys.stderr)
     return 2 if report['coverage'] != 'complete' else 0
 
 
