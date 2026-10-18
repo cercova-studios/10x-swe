@@ -22,7 +22,8 @@ bootstrap=load('bootstrap',REPO/'plugins/knowledge/bootstrap.py')
 
 class BootstrapTests(unittest.TestCase):
     def setUp(self):
-        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name)
+        # Direct helper calls use the same canonical prefix as the CLI (macOS /var is an alias).
+        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
     def tearDown(self): self.temp.cleanup()
     def test_plan_has_no_writes(self):
         target=self.root/'absent'
@@ -154,6 +155,16 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'env.sh'):
                 bootstrap.setup(target)
         self.assertEqual((target / 'env.sh').read_text(), 'custom activation\n')
+
+    def test_cli_resolves_parent_alias_before_recovering_activation(self):
+        target, manifest = self.completed_installation()
+        alias = self.root / 'parent-alias'
+        alias.symlink_to(self.root, target_is_directory=True)
+        with patch.object(sys, 'argv', ['knowledge', 'setup', '--prefix', str(alias / target.name)]), \
+                patch.object(bootstrap, 'inputs', return_value=manifest), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(bootstrap.main(), 0)
+        self.assertEqual((target / 'env.sh').read_text(), bootstrap.activation_text(target))
 
     def test_missing_receipted_activation_is_restored_without_changing_receipt(self):
         target, manifest = self.completed_installation()
