@@ -1,133 +1,84 @@
 ---
 name: find-skills
-description: Helps users discover and install agent skills when they ask questions like "how do I do X", "find a skill for X", "is there a skill that can...", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill.
+description: Find a suitable skill in the installed or bundled catalog first, then search external sources when local guidance does not cover the task. Use when users ask how to do something, request a skill, or want to extend agent capabilities.
 ---
 
-# Find Skills
+# Find skills
 
-This skill helps you discover and install skills from the open agent skills ecosystem.
+Start with guidance the user already has. Discovering a skill does not authorize
+installing it, executing its helpers, or following unreviewed remote instructions.
 
-## When to Use This Skill
+## 1. Identify the task
 
-Use this skill when the user:
+Name the domain, the concrete outcome and any constraints. Search with specific
+terms such as "debug regression", "React performance" or "review test coverage".
 
-- Asks "how do I do X" where X might be a common task with an existing skill
-- Says "find a skill for X" or "is there a skill for X"
-- Asks "can you do X" where X is a specialized capability
-- Expresses interest in extending agent capabilities
-- Wants to search for tools, templates, or workflows
-- Mentions they wish they had help with a specific domain (design, testing, deployment, etc.)
+## 2. Search locally first
 
-## What is the Skills CLI?
+If the knowledge tools are installed and activated:
 
-The Skills CLI (`bunx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages that extend agent capabilities with specialized knowledge, workflows, and tools.
-
-**Key commands:**
-
-- `bunx skills find [query]` - Search for skills interactively or by keyword
-- `bunx skills add <package>` - Install a skill from GitHub or other sources
-- `bunx skills check` - Check for skill updates
-- `bunx skills update` - Update all installed skills
-
-**Browse skills at:** https://skills.sh/
-
-## How to Help Users Find Skills
-
-### Step 1: Understand What They Need
-
-When a user asks for help with something, identify:
-
-1. The domain (e.g., React, testing, design, deployment)
-2. The specific task (e.g., writing tests, creating animations, reviewing PRs)
-3. Whether this is a common enough task that a skill likely exists
-
-### Step 2: Search for Skills
-
-Run the find command with a relevant query:
-
-```bash
-bunx skills find [query]
+```sh
+skill-search search 'debug a regression' --limit 5
+skill-search load plugin/10x-swe/diagnose
 ```
 
-For example:
+Use the exact ID returned by search; the second command shows a bundled example.
+Read the selected entrypoint and only the relevant references before using it.
+Local search uses the explicitly registered inventory; it does not crawl every
+skill directory on the machine.
 
-- User asks "how do I make my React app faster?" → `bunx skills find react performance`
-- User asks "can you help me with PR reviews?" → `bunx skills find pr review`
-- User asks "I need to create a changelog" → `bunx skills find changelog`
+Without `skill-search`, inspect the plugin's README catalog and the harness's
+available skills. If the harness does not include that README, use the
+[repository catalog](https://github.com/cercova-studios/10x-swe/blob/main/plugins/10x-swe/README.md#skills).
+Read the matching local `SKILL.md` directly. Engineering
+skills do not require building the knowledge toolchain just to discover them.
+For example, diagnosis and refactoring already have bundled workflows.
 
-The command will return results like:
+If an appropriate local skill exists, use it and stop searching. Explain a gap
+only when the local guidance does not cover the requested outcome.
 
-```
-Install with bunx skills add <owner/repo@skill>
+## 3. Search externally when needed
 
-vercel-labs/agent-skills@vercel-react-best-practices
-└ https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
-```
+Prefer the knowledge tool's explicit remote discovery when available:
 
-### Step 3: Present Options to the User
-
-When you find relevant skills, present them to the user with:
-
-1. The skill name and what it does
-2. The install command they can run
-3. A link to learn more at skills.sh
-
-Example response:
-
-```
-I found a skill that might help! The "vercel-react-best-practices" skill provides
-React and Next.js performance optimization guidelines from Vercel Engineering.
-
-To install it:
-bunx skills add vercel-labs/agent-skills@vercel-react-best-practices
-
-Learn more: https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
+```sh
+skill-search search 'browser automation' --remote --limit 5
 ```
 
-### Step 4: Offer to Install
+Use public search terms. Remote search sends the query to the public skills.sh
+registry; a matching description or popularity rank is not a trust assessment.
+For loading or installation through this tool, read the remote review procedure at
+`$AGENT_KNOWLEDGE_HOME/skills/skill-graph/references/remote-loading.md` in an activated
+portable installation, or its
+[repository copy](https://github.com/cercova-studios/10x-swe/blob/main/plugins/knowledge/skills/skill-graph/references/remote-loading.md):
+prepare the exact bundle, obtain authorization for scanner uploads, inspect the
+accepted content, then install only when requested. Missing scanner prerequisites
+are a blocker for that loading route, not permission to bypass it.
 
-If the user wants to proceed, you can install the skill for them:
+As a separate discovery fallback, browse [skills.sh](https://skills.sh/) or, if Bun
+is already available and running the package is authorized, use the Skills CLI:
 
-```bash
-bunx skills add <owner/repo@skill> -g -y
+```sh
+bunx skills find react performance
 ```
 
-The `-g` flag installs globally (user-level) and `-y` skips confirmation prompts.
+`bunx` may download and execute the CLI. Check the current official CLI help before
+using installation flags. Search metadata can inform a recommendation; do not load
+remote instructions or execute downloaded helpers while merely researching options.
 
-## Common Skill Categories
+## 4. Recommend and review before installing
 
-When searching, consider these common categories:
+Present the relevant skill's purpose, source URL and why existing guidance is
+insufficient. Identify prerequisites and whether it would affect this project or
+all projects. Obtain approval for the exact source and destination before installing.
+Avoid global, unattended installation as a default.
 
-| Category        | Example Queries                          |
-| --------------- | ---------------------------------------- |
-| Web Development | react, nextjs, typescript, css, tailwind |
-| Testing         | testing, jest, playwright, e2e           |
-| DevOps          | deploy, docker, kubernetes, ci-cd        |
-| Documentation   | docs, readme, changelog, api-docs        |
-| Code Quality    | review, lint, refactor, best-practices   |
-| Design          | ui, ux, design-system, accessibility     |
-| Productivity    | workflow, automation, git                |
+Review the full bundle, provenance, license and overlap with local skills. Keep
+unreviewed material outside active skill roots. The knowledge tool's scanner-gated
+route and a harness's own installation flow are different trust boundaries; never
+use another installer to evade a failed review. Preserve materially different
+versions and do not overwrite existing skills silently.
 
-## Tips for Effective Searches
-
-1. **Use specific keywords**: "react testing" is better than just "testing"
-2. **Try alternative terms**: If "deploy" doesn't work, try "deployment" or "ci-cd"
-3. **Check popular sources**: Many skills come from `vercel-labs/agent-skills` or `ComposioHQ/awesome-claude-skills`
-
-## When No Skills Are Found
-
-If no relevant skills exist:
-
-1. Acknowledge that no existing skill was found
-2. Offer to help with the task directly using your general capabilities
-3. Suggest the user could create their own skill with `bunx skills init`
-
-Example:
-
-```
-I searched for skills related to "xyz" but didn't find any matches.
-I can still help you with this task directly! Would you like me to proceed?
-
-If this is something you do often, you could create your own skill:
-bunx skills init my-xyz-skill
-```
+If no suitable skill is found, help directly with the task where possible. Offer
+local skill authoring only when the user wants reusable guidance; the bundled
+[create-agent-skills](../create-agent-skills/SKILL.md) guide covers that workflow.

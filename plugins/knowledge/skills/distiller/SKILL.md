@@ -17,7 +17,8 @@ and its record for evidence handoff. URL/local JSON extraction currently uses th
 legacy result shape; use the stdin route for prepared evidence. Verify options with `distiller --help`.
 
 `distiller article.html --mode epub --cover cover.png -o article.epub` creates a
-readable EPUB using Pandoc and a supplied valid cover, without cover-generation
+readable EPUB using Pandoc 3.12.1 (the CI-pinned version) and a supplied valid cover,
+without cover-generation
 credentials. Cloud cover generation and PDF reconstruction require explicit provider
 configuration and data-sharing authorization. Bootstrap does neither. Existing
 destinations and missing prerequisites fail visibly.

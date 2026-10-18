@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shlex
 import shutil
 import subprocess
@@ -45,6 +46,51 @@ def atomic(path, value):
 def run(argv, **kwargs):
     print('+ ' + shlex.join(map(str, argv)), flush=True)
     subprocess.run(list(map(str, argv)), check=True, **kwargs)
+
+
+def command_check(command, arguments, *, input=None):
+    path = shutil.which(command)
+    result = {'command': command, 'path': path, 'passed': False}
+    if not path:
+        result['error'] = 'Missing build prerequisite: ' + command
+        return result
+    try:
+        probe = subprocess.run([path, *arguments], input=input, capture_output=True,
+                               text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        result['error'] = f'{command} probe failed: {error}'
+        return result
+    result['output'] = probe.stdout.strip()[:500]
+    result['passed'] = probe.returncode == 0
+    if not result['passed']:
+        result['error'] = f'{command} probe failed: {probe.stderr.strip()[:500] or probe.returncode}'
+    return result
+
+
+def version_check(command, arguments, pattern, minimum):
+    result = command_check(command, arguments)
+    if result['passed']:
+        match = re.match(pattern, result['output'])
+        result['passed'] = bool(match and tuple(map(int, match.groups())) >= minimum)
+        if not result['passed']:
+            label = 'Go' if command == 'go' else command
+            version = '.'.join(map(str, minimum))
+            result['error'] = f'{result["path"]} must report {label} {version}+; check PATH or update the compiler'
+    return result
+
+
+def build_checks():
+    python = {'command': 'python', 'path': sys.executable, 'output': platform.python_version(),
+              'passed': sys.version_info >= (3, 11)}
+    if not python['passed']:
+        python['error'] = 'Python 3.11+ is required'
+    checks = [python, version_check('cargo', ['--version'], r'^cargo (\d+)\.(\d+)', (1, 88)),
+              version_check('rustc', ['--version'], r'^rustc (\d+)\.(\d+)', (1, 88)),
+              version_check('go', ['version'], r'^go version go(\d+)\.(\d+)', (1, 22)),
+              command_check('cc', ['-x', 'c', '-fsyntax-only', '-'], input='int main(void) { return 0; }\n')]
+    if platform.system() == 'Linux':
+        checks.append(command_check('pkg-config', ['--modversion', 'openssl']))
+    return checks
 
 
 def environment(prefix):
@@ -94,6 +140,39 @@ def graph(prefix, python, env):
     run([prefix / 'bin/skill-search', 'refresh', '--lexical'], env=env)
 
 
+def activation_text(prefix):
+    return ('export PATH=' + shlex.quote(str(prefix / 'bin')) + ':"$PATH"\n'
+            + 'export AGENT_KNOWLEDGE_HOME=' + shlex.quote(str(prefix)) + '\n'
+            + 'export SOURCE_INSIGHTS_INDEX_MODE="${SOURCE_INSIGHTS_INDEX_MODE:-keyword}"\n')
+
+
+def check_activation(prefix):
+    path = prefix / 'env.sh'
+    if not path.exists() and not path.is_symlink():
+        raise ValueError('Missing env.sh; rerun setup with the same source and prefix to restore activation')
+    if path.is_symlink() or not path.is_file() or path.read_text() != activation_text(prefix):
+        raise ValueError('Installed env.sh changed; preserve your changes and choose a fresh prefix')
+
+
+def ensure_activation(prefix):
+    path = prefix / 'env.sh'
+    if not path.exists() and not path.is_symlink():
+        with tempfile.NamedTemporaryFile(mode='w', dir=prefix, prefix='.env-', delete=False) as stream:
+            temporary = Path(stream.name)
+            try:
+                stream.write(activation_text(prefix))
+                stream.close()
+                temporary.replace(path)
+            finally:
+                temporary.unlink(missing_ok=True)
+    check_activation(prefix)
+
+
+def next_steps(prefix):
+    print('Activate explicitly: . ' + shlex.quote(str(prefix / 'env.sh')))
+    print("Then try: skill-search search 'debug a regression' --limit 5")
+
+
 def doctor(prefix, verify=True):
     receipt = prefix / 'installation.json'
     if not receipt.is_file():
@@ -102,7 +181,10 @@ def doctor(prefix, verify=True):
     errors = [rel for rel, sha in data['artifacts'].items()
               if not (prefix / rel).is_file() or digest(prefix / rel) != sha]
     if errors:
+        if errors == ['env.sh'] and not (prefix / 'env.sh').exists():
+            check_activation(prefix)
         raise ValueError('Installed artifacts changed: ' + ', '.join(errors[:10]))
+    check_activation(prefix)
     for command in COMMANDS:
         target = prefix / 'bin' / command
         if not target.is_symlink() or target.resolve() != (prefix / 'libexec/launch.py').resolve():
@@ -134,11 +216,13 @@ def setup(prefix):
     with (prefix / '.setup.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if (prefix / 'installation.json').exists():
+            ensure_activation(prefix)
             doctor(prefix)
+            next_steps(prefix)
             return
-        for command in ('cargo', 'go', 'cc'):
-            if not shutil.which(command):
-                raise ValueError('Missing build prerequisite: ' + command)
+        failed = [check['error'] for check in build_checks() if not check['passed']]
+        if failed:
+            raise ValueError('; '.join(failed))
         for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
         for source, dest in ((PACKAGE / 'skills', prefix / 'skills'),
@@ -172,8 +256,10 @@ def setup(prefix):
         run([prefix / 'bin/source-insights', 'reindex', '--rebuild'], env=env)
         if inputs() != manifest:
             raise ValueError('Source changed during setup; installation not certified')
+        ensure_activation(prefix)
         artifacts = {str(p.relative_to(prefix)): digest(p) for base in ('libexec', 'lib', 'skills', 'engineering-skills')
                      for p in sorted((prefix / base).rglob('*')) if p.is_file() and '__pycache__' not in p.parts}
+        artifacts['env.sh'] = digest(prefix / 'env.sh')
         atomic(prefix / 'installation.json', {'schema': 'knowledge-installation/v1', 'fingerprint': fingerprint,
                                              'profile': 'keyword', 'artifacts': artifacts, 'created': int(time.time())})
         try:
@@ -181,11 +267,7 @@ def setup(prefix):
         except Exception:
             (prefix / 'installation.json').unlink()
             raise
-        envfile = prefix / 'env.sh'
-        envfile.write_text('export PATH=' + shlex.quote(str(prefix / 'bin')) + ':"$PATH"\n'
-                           + 'export AGENT_KNOWLEDGE_HOME=' + shlex.quote(str(prefix)) + '\n'
-                           + 'export SOURCE_INSIGHTS_INDEX_MODE="${SOURCE_INSIGHTS_INDEX_MODE:-keyword}"\n')
-        print('Activate explicitly: . ' + shlex.quote(str(envfile)))
+        next_steps(prefix)
 
 
 def main():
@@ -199,8 +281,10 @@ def main():
             raise ValueError('Installation prefix must not be a symlink')
         prefix = prefix.resolve()
         if args.command == 'plan':
+            checks = build_checks()
             print(json.dumps({'prefix': str(prefix), 'profile': 'keyword', 'tools': COMMANDS,
-                              'build_prerequisites': ['Python 3.11+', 'Rust supporting edition 2024', 'Go 1.22+', 'C compiler', 'OpenSSL development headers on Linux'],
+                              'build_prerequisites': ['Python 3.11+', 'Rust 1.88+ (current locked dependency minimum)', 'Go 1.22+', 'C compiler', 'OpenSSL development headers and pkg-config on Linux'],
+                              'build_checks': checks, 'build_ready': all(check['passed'] for check in checks),
                               'effects': ['download hash-locked dependencies', 'compile sources', 'create owned empty libraries'],
                               'excluded': ['Kindle delivery', 'credentials', 'external skills activation', 'session crawl', 'cloud AI', 'publication']}, indent=2))
         elif args.command == 'setup':

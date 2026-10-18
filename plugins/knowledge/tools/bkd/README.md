@@ -31,6 +31,10 @@ credentials. No connector or database is configured by the portable bootstrap.
 
 ## Search and graph
 
+With the portable keyword-only setup, use `bkd search "topic" --lexical-only --list`.
+Bare search can require the optional BGE model when local bookmarks are present;
+the bootstrap does not change bkd's native ranking default or download that model.
+
 ```sh
 bkd sync --source instapaper,raindrop,neon
 bkd sync --offline
@@ -72,7 +76,7 @@ starts another knowledge tool. No record grants execution or publication approva
 ```sh
 # Stage both successful producer records before starting the consumer.
 set -euo pipefail
-python3 ~/.agents/skills/source-insights/scripts/sources.py export \
+source-insights export \
   --query "skill discovery" > knowledge.jsonl.part
 skill-search export --query "skill discovery" >> knowledge.jsonl.part
 mv knowledge.jsonl.part knowledge.jsonl
