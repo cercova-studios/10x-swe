@@ -47,6 +47,36 @@ through their own skill mechanism.
 
 ## Setup
 
+Clone the repository to run its tools in either environment:
+
+```sh
+git clone https://github.com/cercova-studios/10x-swe.git
+cd 10x-swe
+```
+
+### Run in a recoverable playground
+
+Requires Python 3.11+ and Docker Sandboxes 0.48.0. Complete the
+[one-time host setup](playgrounds/README.md#one-time-host-setup), then create a
+private Linux microVM with Nix-pinned tools and host-held checkpoints:
+
+```sh
+./playground doctor
+./playground up demo
+./playground run demo -- python3 --version
+./playground checkpoint demo baseline
+./playground rewind demo baseline
+./playground review demo
+```
+
+Add `--workspace PATH` to start with a project copy, `--read-only PATH` for
+reference repositories, datasets or skills, or `--writable PATH` for a host project
+covered by checkpoint and rewind. Commands run offline; review returns archives
+for inspection before publication. See the [human and agent guide](playgrounds/README.md)
+for interactive shells, pipes, recovery and teardown.
+
+### Install the tools on your workstation
+
 The knowledge plugin provides skills; build its CLI tools separately.
 
 Requires macOS or Linux/WSL, Python 3.11+, Rust supporting edition 2024, Go 1.22+,
@@ -54,8 +84,6 @@ a C compiler and network access. Linux also needs OpenSSL headers and pkg-config
 The default keyword search runs locally. [Platform requirements](https://github.com/cercova-studios/10x-swe/wiki/Platforms).
 
 ```sh
-git clone https://github.com/cercova-studios/10x-swe.git
-cd 10x-swe
 ./knowledge plan
 ./knowledge setup
 # Run the env.sh activation command printed by setup.

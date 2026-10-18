@@ -2,6 +2,16 @@
 
 ## Portable knowledge bootstrap
 
+For an isolated workspace, use the root `playground` launcher and read
+`playgrounds/README.md`. Run `./playground doctor` before setup. It copies selected
+project data into a local microVM and admits only explicitly declared host shares.
+Use read-only shares for references; writable shares receive host-held checkpoints.
+Pause other host writers during checkpoint, rewind and review. An interrupted host
+restore requires `playground recover` before further work. Keep lifecycle operations
+on the host. Treat guest commands as untrusted, keep host policy outside the guest,
+and return the review archive/digest before any publication. Do not grant network
+access, forward credentials or change global runtime settings implicitly.
+
 Read `ARCHITECTURE.md` and `README.md` before changing package boundaries.
 For a requested fresh setup, run `./knowledge plan`, then `./knowledge setup`;
 use `--prefix /absolute/new/path` for isolation. Activate only the printed env.sh

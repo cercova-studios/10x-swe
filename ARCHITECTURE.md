@@ -10,6 +10,11 @@ registers the independent `10x-swe` and `knowledge` plugin directories.
 Each executable remains independently callable. Producers exchange explicit
 versioned JSONL records and files; discovery never grants execution authority.
 
+`playground` and `playgrounds/` own local microVM lifecycle, pinned Nix development
+inputs and host-held recovery archives. They invoke the knowledge bootstrap without
+changing tool interfaces, store ownership or review authority. Docker Sandboxes
+0.48.0 provides the microVM boundary; the Python launcher runs on the host.
+
 ## Domain types
 
 - Distribution manifest: source/version/digest/license, build inputs and capability checks.
@@ -20,6 +25,11 @@ versioned JSONL records and files; discovery never grants execution authority.
   labeled inferred relationships. Ranking is not approval or truth.
 - Evidence library: immutable source records, exact citations and reviewed analysis.
 - Portable records: independent skills, sessions, insights and bookmark snapshots.
+- Playground identity: owned VM names, the active VM, source hash and Nix lock hash.
+- Host share: explicit canonical directory, read-only or writable mode, root identity and per-user lease.
+- Checkpoint: stopped guest image, writable host-tree archives, SHA-256 hashes and environment identity.
+- Restore journal: staged/replaced host directories, retained original trees and pre-restore VM identity.
+- Workspace review: unextracted guest archive, writable host archives, inventories and digests awaiting human review.
 
 ## Installation and extension points
 
@@ -56,6 +66,31 @@ upgrades an existing installation. Remote publication and delivery remain separa
 Completed setup retries verify readiness without requiring compilers; incomplete
 installs still require the documented build prerequisites.
 
+The playground copies an explicitly selected project into a private guest workspace.
+Explicit read-only shares expose reference repositories, datasets and skills;
+writable shares expose selected host projects. `playgrounds/mounts.py` owns share
+validation, host archives, user-scoped conflict leases and journaled restoration.
+Each shared path is identical on host and guest. A dedicated writable primary leaf
+satisfies the runtime contract without exposing sibling host control metadata. Nix
+pins Python, Rust, Go, native build tools and workflow dependencies. The existing
+bootstrap installs CLIs and mutable stores in the guest's owned knowledge prefix.
+Only the repository bootstrap runs during dependency-download access. Workspace
+commands run after an explicit per-VM deny-all network rule. Host SSH forwarding
+must be disabled, clipboard image access off, and shared agent skills off.
+
+Host metadata/checkpoints never enter the guest. Checkpointing stops writers and
+captures the container filesystem, including workspace Git/untracked/ignored files,
+local database journals and workflow state. Writable shares have separate native
+host tar archives preserving ACLs/xattrs and internal links. Read-only references
+remain live. Other host writers must be paused during snapshot, restore and review;
+leases exclude overlapping writable playgrounds in the same user state namespace.
+Rewind verifies all archives, stages host trees and retains displaced originals,
+then starts/checks a new VM before switching identity. Interrupted host replacement
+blocks work until explicit `recover` stops guests and rolls back host directories
+and VM identity. The stopped previous VM remains recoverable. Review binds both
+guest and writable host archives without extracting guest data or granting publication.
+See [playground operation](playgrounds/README.md) for lifecycle and recovery.
+
 ## Invariants
 
 1. No existing skill, source corpus or conflicting installation is overwritten.
@@ -64,6 +99,9 @@ installs still require the documented build prerequisites.
 4. Artifact hashes bind inspection and installation; paths cannot escape ownership.
 5. Discovery, provenance, review and execution authority remain separate.
 6. Skills retain distinct triggers, conditions, evidence limits and upstream credit.
+7. A failed rewind preserves its checkpoint and previous identity; incomplete host
+   replacement blocks admission until explicit recovery restores both sides.
+8. Guest execution cannot invoke the host launcher or change host review/network policy.
 
 ## Verification
 
@@ -71,6 +109,13 @@ Exercise a fresh isolated installation, repeat setup, interrupted/failed setup,
 malformed and duplicate existing skills, changed resource hashes, portable exports,
 and the session-to-reviewed-insight path. Test Linux and macOS in CI; only executed
 platform checks count as verified. Keep capability-specific prerequisites explicit.
+Playground host tests exercise failed/interrupted recovery, unsafe imports,
+ownership, locks and pipe contracts. The opt-in microVM acceptance test deletes
+guest tools/workspace, restores Git/files/SQLite/workflow state and exercises
+independent evidence preparation through review without publication.
+Host-share tests cover escaping links, ownership, leases, metadata, checksum failures
+before mutation, partial replacement and explicit rollback. A separate microVM
+acceptance test deletes data in two host shares and the guest, then rewinds both.
 
 ## Further reading
 

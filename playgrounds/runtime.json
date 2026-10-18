@@ -1,0 +1,16 @@
+{
+  "schema": "playground-runtime/v1",
+  "sbx_version": "v0.48.0",
+  "image": "docker.io/docker/sandbox-templates@sha256:1560168ac5fb9ce23d413c878349334c5845c07e264cd675d7867f0c78ad1761",
+  "nix_version": "2.31.2",
+  "nix_archives": {
+    "aarch64-linux": "64db528412096d718b4bf8f78f85e5ac2b714b774e5005500dee37d23f560456",
+    "x86_64-linux": "d1f67c86eed016214864ba08bfb9529c307aea7e8fafb74853f96fcc3bfd8a60"
+  },
+  "setup_hosts": [
+    "releases.nixos.org", "cache.nixos.org", "github.com", "api.github.com",
+    "codeload.github.com", "release-assets.githubusercontent.com", "channels.nixos.org", "pypi.org", "files.pythonhosted.org",
+    "index.crates.io", "static.crates.io", "proxy.golang.org", "sum.golang.org",
+    "storage.googleapis.com"
+  ]
+}
