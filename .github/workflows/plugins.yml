@@ -38,7 +38,7 @@ jobs:
           done
       - name: chrome-devtools selector tests
         working-directory: plugins/10x-swe/skills/chrome-devtools/scripts
-        run: node --test __tests__/
+        run: node --test __tests__/*.test.js
   rust-msrv:
     runs-on: ubuntu-latest
     timeout-minutes: 30

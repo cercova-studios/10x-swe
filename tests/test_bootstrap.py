@@ -208,8 +208,8 @@ class BootstrapTests(unittest.TestCase):
         p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'doctor'],
                            env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home)), capture_output=True, text=True)
         self.assertNotEqual(p.returncode, 0)
-        self.assertIn('Checking installation at ' + str(home), p.stderr)
-        self.assertIn('No completed installation receipt at ' + str(home), p.stderr)
+        self.assertIn('Checking installation at ' + str(home.resolve()), p.stderr)
+        self.assertIn('No completed installation receipt at ' + str(home.resolve()), p.stderr)
         self.assertFalse(home.exists())
 
     def test_failed_build_checks_come_with_a_one_line_fix(self):
