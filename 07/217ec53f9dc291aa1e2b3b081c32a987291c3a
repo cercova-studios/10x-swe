@@ -1,0 +1,217 @@
+THIRD_PARTY.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 11-18
+plugins/10x-swe/README.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 7-8,33,44,96,128-130
+plugins/10x-swe/skills/jujutsu-vcs/SKILL.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 8-12
+.github/workflows/portable.yml
+  s_e3121fbece1af6::t_3c222db4a50af7 47-49
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 45-50
+tests/test_shared_skills.py
+  s_e3121fbece1af6::t_3c222db4a50af7 1-59
+plugins/knowledge/skills/skill-graph/references/maintenance.md
+  s_e3121fbece1af6::t_3c222db4a50af7 12,21,28,47
+plugins/10x-swe/skills/turnstile-spin/SKILL.md
+  s_e3121fbece1af6::t_51839cbd5bd183 1-48
+plugins/10x-swe/skills/create-agent-skills/references/evaluation-integrity.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 1-15
+tests/check_distribution.py
+  s_e3121fbece1af6::t_3c222db4a50af7 10
+plugins/10x-swe/skills/create-agent-skills/SKILL.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 42-45,50-51,56-61
+  s_e3121fbece1af6::t_51839cbd5bd183 46-49,52-55
+plugins/10x-swe/skills/brainstorming/SKILL.md
+  s_e3121fbece1af6::t_51839cbd5bd183 3-9,18,36-37,61-64,79,94-96,99-100
+plugins/10x-swe/skills/llm-evaluation/SKILL.md
+  s_e3121fbece1af6::t_b47a3ad9077869 8-11
+  s_e3121fbece1af6::t_ca0a9b7ce4f333 12
+plugins/10x-swe/skills/agent-browser/SKILL.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 9-20
+plugins/10x-swe/skills/turnstile-spin/tests/validation.md
+  s_e3121fbece1af6::t_8b73a461fdffbb 1-64
+plugins/10x-swe/skills/architecture-decision-records/SKILL.md
+  s_e3121fbece1af6::t_f3fad374c97a9c 3-10,452
+plugins/10x-swe/skills/ast-grep/SKILL.md
+  s_e3121fbece1af6::t_9faffb06843d91 3-12,52-53,332-334
+plugins/10x-swe/skills/ast-grep/references/rewriting-examples.md
+  s_e3121fbece1af6::t_910efd62585f3f 1-142
+plugins/10x-swe/skills/async-python-patterns/SKILL.md
+  s_e3121fbece1af6::t_36eb24adbc1db9 3-9,14,16,18-24,26,28,30-34,36,38,40
+plugins/10x-swe/skills/async-python-patterns/references/patterns.md
+  s_e3121fbece1af6::t_74e3ae5a651273 1-756
+plugins/10x-swe/skills/binary-analysis-patterns/SKILL.md
+  s_e3121fbece1af6::t_530e09c19c7b80 3-9,14,16,18-28,30
+plugins/10x-swe/skills/binary-analysis-patterns/references/primer.md
+  s_e3121fbece1af6::t_679cd8ab658a55 1-464
+plugins/10x-swe/skills/browser-use/SKILL.md
+  s_e3121fbece1af6::t_6477a5e864829b 3-5,7-10,15,17,19-21,23,25,28-34,37,39,41,43,45,47,49,51,53,55
+plugins/10x-swe/skills/browser-use/references/cli-reference.md
+  s_e3121fbece1af6::t_c729edf870d1e0 1-855
+plugins/10x-swe/skills/chrome-devtools/SKILL.md
+  s_e3121fbece1af6::t_2ab6a1c5a0f30f 3-5,7-10,17-38,62
+plugins/10x-swe/skills/chrome-devtools/scripts/package-lock.json
+  s_e3121fbece1af6::t_bb976c188be0fe 12,43-45,48,52-53,70-72,76,141-143,155-157,169-171,181,193-196,199-201,204-206,209,214-216,226-228,235-237,262-264,267-268,373-375,597-599,672-674,798-800,808-810,814-815,817-818,829-831,834-837,839-840,865-867,887-889,892,925-927,962-964,976-978,981-993,997-999,1012-1014,1018-1020,1024-1029,1054-1056,1121-1123
+plugins/10x-swe/skills/chrome-devtools/scripts/package.json
+  s_e3121fbece1af6::t_9a56653433115f 8
+plugins/10x-swe/skills/code-research/SKILL.md
+  s_e3121fbece1af6::t_c86f54b60d34d9 3-4,7-8,10,12
+plugins/10x-swe/skills/code-search/SKILL.md
+  s_e3121fbece1af6::t_556f202bcddf44 3-4,7-8,10
+plugins/10x-swe/skills/create-agent-skills/references/resource-patterns.md
+  s_e3121fbece1af6::t_5699babdf485b9 1-25
+plugins/10x-swe/skills/create-agent-skills/references/safe-construction.md
+  s_e3121fbece1af6::t_02692290236470 1-41
+plugins/10x-swe/skills/create-agent-skills/references/skill-creator-LICENSE.txt
+  s_e3121fbece1af6::t_5a5ddbefe021d8 1-202
+plugins/10x-swe/skills/create-agent-skills/scripts/init_skill.py
+  s_e3121fbece1af6::t_4a66c0ca38f561 1-381
+plugins/10x-swe/skills/create-agent-skills/scripts/quick_validate.py
+  s_e3121fbece1af6::t_9e210576cc57b6 1-113
+plugins/10x-swe/skills/diagnose/SKILL.md
+  s_e3121fbece1af6::t_616b72e9ad123a 3-4,7-8,10-11
+plugins/10x-swe/skills/dispatching-parallel-agents/SKILL.md
+  s_e3121fbece1af6::t_2c84c18003aed8 3-4,7-8,10-12
+plugins/10x-swe/skills/frontend-design/LICENSE.txt
+  s_e3121fbece1af6::t_1dab4ecf97c24e 1-177
+plugins/10x-swe/skills/gh-cli/SKILL.md
+  s_e3121fbece1af6::t_26ea604d655318 3-9,12,14,16,18-21,23,25,27-37,39,41,43-48,50
+plugins/10x-swe/skills/gh-cli/references/actions.md
+  s_e3121fbece1af6::t_0f68084fc20dc0 1-166
+plugins/10x-swe/skills/gh-cli/references/api-and-output.md
+  s_e3121fbece1af6::t_e57becf2e99e2f 1-109
+plugins/10x-swe/skills/gh-cli/references/issues.md
+  s_e3121fbece1af6::t_330a977172b798 1-212
+plugins/10x-swe/skills/gh-cli/references/other-commands.md
+  s_e3121fbece1af6::t_c0b64ac2b3cbed 1-398
+plugins/10x-swe/skills/gh-cli/references/projects-and-releases.md
+  s_e3121fbece1af6::t_345c03d15bcdc3 1-156
+plugins/10x-swe/skills/gh-cli/references/pull-requests.md
+  s_e3121fbece1af6::t_207a8081cf6c52 1-327
+plugins/10x-swe/skills/gh-cli/references/repositories.md
+  s_e3121fbece1af6::t_628c734507112c 1-229
+plugins/10x-swe/skills/gh-cli/references/setup.md
+  s_e3121fbece1af6::t_c8077acea80315 1-460
+plugins/10x-swe/skills/gh-cli/references/workflow-examples.md
+  s_e3121fbece1af6::t_d81ba56707363e 1-147
+plugins/10x-swe/skills/ghidra/SKILL.md
+  s_e3121fbece1af6::t_4f006089b2a179 3-8,11,13,15,18-28,31,33,35,37,39,41,43-51,53,55,58-59,62
+plugins/10x-swe/skills/ghidra/scripts/find-ghidra.sh
+  s_e3121fbece1af6::t_9958fe485cbfd1 17,26,32-33
+plugins/10x-swe/skills/ghidra/scripts/ghidra-analyze.sh
+  s_e3121fbece1af6::t_cc62ef3d577cf5 19,26,33,41,64,72-75,89-90,114-118,144,170,179-201,217,262-265,268-269
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportAll.java
+  s_e3121fbece1af6::t_3f5c4171dd2332 1,5-6,8
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportCalls.java
+  s_e3121fbece1af6::t_4e8506d1520081 39-40,46,57,71,130
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportDecompiled.java
+  s_e3121fbece1af6::t_6ab2ea76dd91e3 21-26,35,43,57-61,66-77,80,86,90,95,102-109
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportFunctions.java
+  s_e3121fbece1af6::t_e4843df453a228 49,76,87,97-98
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportStrings.java
+  s_e3121fbece1af6::t_2e677acf86f742 59,67-70
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportSummary.java
+  s_e3121fbece1af6::t_519e3ecffbd93f 1-53
+plugins/10x-swe/skills/ghidra/scripts/ghidra_scripts/ExportSymbols.java
+  s_e3121fbece1af6::t_3e6e82016780bd 65,114
+plugins/10x-swe/skills/ghidra/tests/RepairFixture.java
+  s_e3121fbece1af6::t_45a8df0d2b4d7a 1-21
+plugins/10x-swe/skills/ghidra/tests/check_exports.py
+  s_e3121fbece1af6::t_728c50f16dbaea 1-18
+plugins/10x-swe/skills/ghidra/tests/run_native.py
+  s_e3121fbece1af6::t_efc1b2adca8f2c 1-14
+plugins/10x-swe/skills/ghidra/tests/test_wrapper.py
+  s_e3121fbece1af6::t_b41d5dcef216ce 1-49
+plugins/10x-swe/skills/golang-backend-development/SKILL.md
+  s_e3121fbece1af6::t_022508f987b1fa 3-11,16,18,20-25,27,29-30,32,34,36
+plugins/10x-swe/skills/golang-backend-development/references/patterns.md
+  s_e3121fbece1af6::t_fbd175af6c4635 1-1620
+plugins/10x-swe/skills/jujutsu-vcs/references/coding-agents.md
+  s_e3121fbece1af6::t_6fc7178ac14c95 1-179
+plugins/10x-swe/skills/llm-evaluation/references/coding-agents.md
+  s_e3121fbece1af6::t_af74bea5d5676f 1-66
+plugins/10x-swe/skills/parallel-debugging/SKILL.md
+  s_e3121fbece1af6::t_add348a1465ab6 3-4,7-8,10,12
+plugins/10x-swe/skills/playwright/SKILL.md
+  s_e3121fbece1af6::t_01e167ee3d50be 3-6,8-11,31,34-35,292-298,308-314
+plugins/10x-swe/skills/python-performance-optimization/SKILL.md
+  s_e3121fbece1af6::t_452511fba287cd 3-9,14,16,18-24,26,28,30-34,36,38,40
+plugins/10x-swe/skills/python-performance-optimization/references/patterns.md
+  s_e3121fbece1af6::t_77a87e6a14991c 1-873
+plugins/10x-swe/skills/python-testing-patterns/SKILL.md
+  s_e3121fbece1af6::t_b4cba12f495ac4 3-9,14,16,18-23,25,27,29-33,35,37,39
+plugins/10x-swe/skills/python-testing-patterns/references/patterns.md
+  s_e3121fbece1af6::t_e5d770a4a0e463 1-1049
+plugins/10x-swe/skills/refactor/SKILL.md
+  s_e3121fbece1af6::t_dab580c9477003 3-4,7-8,10-11
+plugins/10x-swe/skills/self-learning/SKILL.md
+  s_e3121fbece1af6::t_76daae2a34f420 3-12,50
+plugins/10x-swe/skills/technical-writing/SKILL.md
+  s_e3121fbece1af6::t_e3d7b613309cee 3-10
+plugins/10x-swe/skills/tmux/SKILL.md
+  s_e3121fbece1af6::t_8a5d18f74c7438 3-4,6-9,59,65,67,81,99,102
+plugins/10x-swe/skills/tmux/scripts/wait-for-text.sh
+  s_e3121fbece1af6::t_058167be7ccf74 11,23,32-36,72-73,77,92
+plugins/10x-swe/skills/tmux/tests/test_private_socket.py
+  s_e3121fbece1af6::t_1ceec85ad4684c 1-37
+plugins/10x-swe/skills/turnstile-spin/LICENSE
+  s_e3121fbece1af6::t_fb60d4b1df798b 1-202
+plugins/10x-swe/skills/turnstile-spin/README.md
+  s_e3121fbece1af6::t_c69947c556bddf 1-19
+plugins/10x-swe/skills/turnstile-spin/references/astro.md
+  s_e3121fbece1af6::t_1ec3fc88fee4d0 1-199
+plugins/10x-swe/skills/turnstile-spin/references/creation-wizard.md
+  s_e3121fbece1af6::t_dc99e0663f9be3 1-143
+plugins/10x-swe/skills/turnstile-spin/references/existing-widget.md
+  s_e3121fbece1af6::t_ee0cb13f4c2232 1-130
+plugins/10x-swe/skills/turnstile-spin/references/hugo.md
+  s_e3121fbece1af6::t_068e5a508ef2c2 1-114
+plugins/10x-swe/skills/turnstile-spin/references/integration.md
+  s_e3121fbece1af6::t_12dcaf2bda4f66 1-55
+plugins/10x-swe/skills/turnstile-spin/references/nextjs-app.md
+  s_e3121fbece1af6::t_c3029a3f4b628f 1-261
+plugins/10x-swe/skills/turnstile-spin/references/nextjs-pages.md
+  s_e3121fbece1af6::t_4ca5df7398ba0d 1-82
+plugins/10x-swe/skills/turnstile-spin/references/sveltekit.md
+  s_e3121fbece1af6::t_7118fabb309826 1-191
+plugins/10x-swe/skills/turnstile-spin/references/vanilla-html.md
+  s_e3121fbece1af6::t_b473db62826ded 1-157
+plugins/10x-swe/skills/turnstile-spin/scripts/auth-probe.sh
+  s_e3121fbece1af6::t_1625f5ee19de6f 1-291
+plugins/10x-swe/skills/turnstile-spin/scripts/persist-skill.sh
+  s_e3121fbece1af6::t_38461cdddb6eaf 1-114
+plugins/10x-swe/skills/turnstile-spin/scripts/validate.sh
+  s_e3121fbece1af6::t_55bb79ad7576fc 1-137
+plugins/10x-swe/skills/turnstile-spin/scripts/widget-create.sh
+  s_e3121fbece1af6::t_e3cc080495e015 1-121
+plugins/10x-swe/skills/turnstile-spin/tests/test_helpers.py
+  s_e3121fbece1af6::t_e53a9bb1078f3c 1-173
+plugins/knowledge/skills/bkd/SKILL.md
+  s_e3121fbece1af6::t_3e30cf2f97e0a8 7-8
+plugins/knowledge/skills/distiller/SKILL.md
+  s_e3121fbece1af6::t_84d770a46321c6 7-8
+plugins/knowledge/skills/knowledge-setup/SKILL.md
+  s_e3121fbece1af6::t_466488ba5a99ad 7-8
+plugins/knowledge/skills/session-search/SKILL.md
+  s_e3121fbece1af6::t_da4e4b0badab32 8-9
+plugins/knowledge/skills/skill-graph/SKILL.md
+  s_e3121fbece1af6::t_9c333a8b5d6aec 7-8
+plugins/knowledge/skills/source-insights/SKILL.md
+  s_e3121fbece1af6::t_5a8c4618455c54 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "07217ec53f9dc291aa1e2b3b081c32a987291c3a",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
