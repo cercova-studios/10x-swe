@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import tempfile
 import unittest
@@ -348,8 +349,9 @@ class NewsletterTests(unittest.TestCase):
         env.chmod(0o600)
         output = self.base/'forwarding.json'
         fake = self.base/'fake-dagu'
-        fake.write_text(f'#!{os.sys.executable}\nimport os,json\nfrom pathlib import Path\n'
-                        f'Path({str(output)!r}).write_text(json.dumps({{k:os.environ.get(k) for k in ["DAGU_HOME","DAGU_DAGS_DIR"]}}))\n')
+        script = ('import os,json\nfrom pathlib import Path\n'
+                  f'Path({str(output)!r}).write_text(json.dumps({{k:os.environ.get(k) for k in ["DAGU_HOME","DAGU_DAGS_DIR"]}}))\n')
+        fake.write_text('#!/bin/sh\nexec '+shlex.join([os.sys.executable, '-c', script])+' "$@"\n')
         fake.chmod(0o700)
         result = subprocess.run([os.sys.executable, str(SKILL/'scripts/host.py'), '--environment', str(env),
                                  '--dagu', str(fake), '--dagu-home', str(self.base/'dagu'),
