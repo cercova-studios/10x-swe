@@ -5,6 +5,11 @@ description: Implement comprehensive evaluation strategies for LLM applications 
 
 # LLM Evaluation
 
+For coding agents, generated applications or code reviewers, read the
+[coding-agent evaluation contract](references/coding-agents.md). Require behavioral
+evidence and unchanged acceptance checks. General text metrics below do not
+establish code correctness or authorize release.
+
 Master comprehensive evaluation strategies for LLM applications, from automated metrics to human evaluation and A/B testing.
 
 ## When to Use This Skill

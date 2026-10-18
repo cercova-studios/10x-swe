@@ -1,11 +1,14 @@
 ---
 name: refactor
-description: Improve code structure while preserving observable behavior, data contracts and error handling through small verified changes.
+description: Improve code structure while preserving observable behavior, data contracts
+  and error handling through small verified changes.
 metadata:
   skill-graph-id: plugin/10x-swe/refactor
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 related:
-  - '[[plugin/10x-swe/improve-codebase-architecture/SKILL]]'
-  - '[[plugin/10x-swe/diagnose/SKILL]]'
+- '[[plugin/10x-swe/improve-codebase-architecture/SKILL]]'
+- '[[plugin/10x-swe/diagnose/SKILL]]'
 ---
 
 # Refactor safely

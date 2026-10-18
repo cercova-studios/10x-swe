@@ -1,11 +1,14 @@
 ---
 name: diagnose
-description: Diagnose reproducible bugs and performance regressions with a bounded feedback loop, falsifiable hypotheses, targeted probes and regression evidence.
+description: Diagnose reproducible bugs and performance regressions with a bounded
+  feedback loop, falsifiable hypotheses, targeted probes and regression evidence.
 metadata:
   skill-graph-id: plugin/10x-swe/diagnose
+  skill-graph-uses: ''
+  skill-graph-used-by: plugin/10x-swe/parallel-debugging
 related:
-  - '[[plugin/10x-swe/parallel-debugging/SKILL]]'
-  - '[[plugin/10x-swe/improve-codebase-architecture/SKILL]]'
+- '[[plugin/10x-swe/parallel-debugging/SKILL]]'
+- '[[plugin/10x-swe/improve-codebase-architecture/SKILL]]'
 ---
 
 # Diagnose

@@ -42,6 +42,12 @@ with the same name remain distinct. Suggested rewrites or activation require rev
 Tool sources and dependency locks ship in the repository. Personal libraries,
 tokens, session transcripts, bookmarks, caches and machine binaries do not.
 Reviewed skill changes use staged proposals, backups and concurrent-change checks.
+Engineering bundles keep canonical workflows and optional references together.
+Skill authoring owns its initializer, basic metadata validator and construction
+checklist. Ghidra's canonical artifacts use address identities, bounded selected
+decompilation and identity-checked read-only reuse; native fixtures never run
+target bytes. Turnstile's mandatory procedures gate credential operations and
+require upstream bundles to pass exact-bundle review before activation.
 Source revisions install into fresh prefixes; an owned receipt never silently
 upgrades an existing installation. Remote publication and delivery remain separate acts.
 Completed setup retries verify readiness without requiring compilers; incomplete

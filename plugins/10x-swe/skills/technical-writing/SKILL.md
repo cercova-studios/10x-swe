@@ -1,6 +1,13 @@
 ---
 name: technical-writing
-description: Writes and reviews project copy, READMEs, developer documentation, tutorials, API and CLI references, UI text, errors, and agent instructions. Use whenever creating or revising project-facing prose; grounds claims in current behavior and preserves meaning while improving clarity.
+description: Writes and reviews project copy, READMEs, developer documentation, tutorials,
+  API and CLI references, UI text, errors, and agent instructions. Use whenever creating
+  or revising project-facing prose; grounds claims in current behavior and preserves
+  meaning while improving clarity.
+metadata:
+  skill-graph-id: plugin/10x-swe/technical-writing
+  skill-graph-uses: ''
+  skill-graph-used-by: plugin/10x-swe/brainstorming
 ---
 
 <objective>

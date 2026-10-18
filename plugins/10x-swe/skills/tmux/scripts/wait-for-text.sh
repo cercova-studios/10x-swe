@@ -8,6 +8,7 @@ Usage: wait-for-text.sh -t target -p pattern [options]
 Poll a tmux pane for text and exit when found.
 
 Options:
+  -S, --socket-path  private tmux socket path (default: tmux default socket)
   -t, --target    tmux target (session:window.pane), required
   -p, --pattern   regex pattern to look for, required
   -F, --fixed     treat pattern as a fixed string (grep -F)
@@ -19,6 +20,7 @@ USAGE
 }
 
 target=""
+socket_path=""
 pattern=""
 grep_flag="-E"
 timeout=15
@@ -27,6 +29,11 @@ lines=1000
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -S|--socket-path|-t|--target|-p|--pattern|-T|--timeout|-i|--interval|-l|--lines)
+      [[ $# -ge 2 && -n "$2" ]] || { echo "Missing value for $1" >&2; exit 1; } ;;
+  esac
+  case "$1" in
+    -S|--socket-path) socket_path="$2"; shift 2 ;;
     -t|--target)   target="${2-}"; shift 2 ;;
     -p|--pattern)  pattern="${2-}"; shift 2 ;;
     -F|--fixed)    grep_flag="-F"; shift ;;
@@ -62,10 +69,12 @@ fi
 # End time in epoch seconds (integer, good enough for polling)
 start_epoch=$(date +%s)
 deadline=$((start_epoch + timeout))
+tmux_cmd=(tmux)
+if [[ -n "$socket_path" ]]; then tmux_cmd+=(-S "$socket_path"); fi
 
 while true; do
   # -J joins wrapped lines, -S uses negative index to read last N lines
-  pane_text="$(tmux capture-pane -p -J -t "$target" -S "-${lines}" 2>/dev/null || true)"
+  pane_text="$("${tmux_cmd[@]}" capture-pane -p -J -t "$target" -S "-${lines}" 2>/dev/null || true)"
 
   if printf '%s\n' "$pane_text" | grep $grep_flag -- "$pattern" >/dev/null 2>&1; then
     exit 0

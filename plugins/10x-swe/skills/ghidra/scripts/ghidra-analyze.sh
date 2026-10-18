@@ -6,9 +6,6 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Find analyzeHeadless
-ANALYZE_HEADLESS=$("$SCRIPT_DIR/find-ghidra.sh")
-GHIDRA_HOME=$(dirname "$(dirname "$ANALYZE_HEADLESS")")
 
 show_help() {
     cat << 'EOF'
@@ -19,20 +16,21 @@ Analyze a binary file using Ghidra's headless analyzer.
 Options:
   -o, --output <dir>       Output directory for results (default: current dir)
   -s, --script <name>      Post-analysis script to run (can be repeated)
-  -a, --script-args <args> Arguments for the last specified script
+  -a, --script-args <args> One literal argument for last script; repeat -a for more
   --script-path <path>     Additional script search path
   -p, --processor <id>     Processor/architecture (e.g., x86:LE:32:default)
   -c, --cspec <id>         Compiler spec (e.g., gcc, windows)
   --no-analysis            Skip auto-analysis
   --timeout <seconds>      Analysis timeout per file
   --keep-project           Keep the Ghidra project after analysis
+  --reuse                  Verify identity; process retained program read-only without analysis
   --project-dir <dir>      Directory for Ghidra project (default: /tmp)
   --project-name <name>    Project name (default: auto-generated)
   -v, --verbose            Verbose output
   -h, --help               Show this help
 
 Built-in Scripts (use with -s):
-  ExportDecompiled.java    Export all functions as decompiled C code
+  ExportDecompiled.java    Selected C: -a name:qualifiedName or -a addr:address; -a all opts in
   ExportFunctions.java     Export function list with addresses and signatures
   ExportStrings.java       Export all strings found in the binary
   ExportCalls.java         Export function call graph
@@ -40,7 +38,7 @@ Built-in Scripts (use with -s):
 
 Examples:
   # Basic analysis with decompilation output
-  ghidra-analyze.sh -s ExportDecompiled.java -o ./output myprogram
+  ghidra-analyze.sh -s ExportDecompiled.java -a name:main -o ./output myprogram
 
   # Analyze with specific architecture
   ghidra-analyze.sh -p ARM:LE:32:v7 firmware.bin
@@ -63,6 +61,7 @@ CSPEC=""
 NO_ANALYSIS=""
 TIMEOUT=""
 KEEP_PROJECT=false
+REUSE=false
 PROJECT_DIR="/tmp"
 PROJECT_NAME=""
 VERBOSE=false
@@ -70,6 +69,10 @@ BINARY=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
+    case $1 in
+        -o|--output|-s|--script|-a|--script-args|--script-path|-p|--processor|-c|--cspec|--timeout|--project-dir|--project-name)
+            [[ $# -ge 2 && -n "$2" ]] || { echo "Error: missing value for $1" >&2; exit 2; } ;;
+    esac
     case $1 in
         -o|--output)
             OUTPUT_DIR="$2"
@@ -83,6 +86,8 @@ while [[ $# -gt 0 ]]; do
             # Associate args with the last script
             if [[ ${#SCRIPTS[@]} -gt 0 ]]; then
                 SCRIPT_ARGS+=("${#SCRIPTS[@]}:$2")
+            else
+                echo "Error: -a requires a preceding -s" >&2; exit 2
             fi
             shift 2
             ;;
@@ -105,6 +110,11 @@ while [[ $# -gt 0 ]]; do
         --timeout)
             TIMEOUT="$2"
             shift 2
+            ;;
+        --reuse)
+            REUSE=true
+            KEEP_PROJECT=true
+            shift
             ;;
         --keep-project)
             KEEP_PROJECT=true
@@ -131,6 +141,7 @@ while [[ $# -gt 0 ]]; do
             exit 1
             ;;
         *)
+            [[ -z "$BINARY" ]] || { echo "Error: only one binary is supported" >&2; exit 2; }
             BINARY="$1"
             shift
             ;;
@@ -156,6 +167,7 @@ if [[ -z "$PROJECT_NAME" ]]; then
     PROJECT_NAME="ghidra_$(basename "$BINARY" | tr '.' '_')_$$"
 fi
 
+[[ "$PROJECT_NAME" != *"/"* && "$PROJECT_NAME" != .* ]] || { echo "Error: invalid project name" >&2; exit 2; }
 # Build script path including our built-in scripts
 BUILTIN_SCRIPTS="$SCRIPT_DIR/ghidra_scripts"
 if [[ -n "$SCRIPT_PATH" ]]; then
@@ -164,8 +176,29 @@ else
     FULL_SCRIPT_PATH="$BUILTIN_SCRIPTS"
 fi
 
-# Build command
-CMD=("$ANALYZE_HEADLESS" "$PROJECT_DIR" "$PROJECT_NAME" -import "$BINARY")
+# Discover only after parsing help and validating the input.
+ANALYZE_HEADLESS=$("$SCRIPT_DIR/find-ghidra.sh")
+GHIDRA_HOME=$(dirname "$(dirname "$ANALYZE_HEADLESS")")
+mkdir -p "$PROJECT_DIR"
+IDENTITY="$PROJECT_DIR/$PROJECT_NAME.identity"
+# Identity includes the exact artifact, engine and import/analysis settings.
+BINARY_HASH=$(shasum -a 256 "$BINARY") || { echo "Error: cannot hash binary" >&2; exit 1; }
+BINARY_HASH=${BINARY_HASH%% *}
+[[ "$BINARY_HASH" =~ ^[a-fA-F0-9]{64}$ ]] || { echo "Error: invalid binary digest" >&2; exit 1; }
+EXPECTED=$(printf '%s\n' "$BINARY_HASH" "$(basename "$BINARY")" "$GHIDRA_HOME" "$(shasum -a 256 "$GHIDRA_HOME/Ghidra/application.properties" 2>/dev/null || true)" "$PROCESSOR" "$CSPEC" "$NO_ANALYSIS" "$TIMEOUT")
+CMD=("$ANALYZE_HEADLESS" "$PROJECT_DIR" "$PROJECT_NAME")
+if [[ "$REUSE" == true ]]; then
+    [[ -f "$PROJECT_DIR/$PROJECT_NAME.gpr" && -f "$IDENTITY" && "$(cat "$IDENTITY")" == "$EXPECTED" ]] || {
+        echo "Error: missing project or artifact/settings identity mismatch" >&2; exit 1;
+    }
+    CMD+=(-process "$(basename "$BINARY")" -noanalysis -readOnly)
+else
+    [[ ! -e "$PROJECT_DIR/$PROJECT_NAME.gpr" && ! -e "$PROJECT_DIR/$PROJECT_NAME.rep" && ! -e "$IDENTITY" ]] || {
+        echo "Error: project already exists; use --reuse or a new name" >&2; exit 1;
+    }
+    CMD+=(-import "$BINARY")
+fi
+if [[ ${#SCRIPTS[@]} -eq 0 ]]; then SCRIPTS=(ExportSummary.java); fi
 
 # Add script path
 CMD+=(-scriptPath "$FULL_SCRIPT_PATH")
@@ -181,7 +214,7 @@ for i in "${!SCRIPTS[@]}"; do
         args="${arg_entry#*:}"
         if [[ "$idx" -eq $((i + 1)) ]]; then
             # Append script arguments
-            CMD+=($args)
+            CMD+=("$args")
         fi
     done
 done
@@ -226,8 +259,14 @@ fi
 "${CMD[@]}" 2>&1 | tee "$OUTPUT_DIR/ghidra_output.log"
 
 exit_code=${PIPESTATUS[0]}
+# Headless may report script/load errors yet exit zero.
+if grep -Eq '^ERROR[[:space:]]' "$OUTPUT_DIR/ghidra_output.log"; then
+    exit_code=1
+fi
 
 if [[ $exit_code -eq 0 ]]; then
+    if [[ "$KEEP_PROJECT" == true && "$REUSE" != true ]]; then printf '%s\n' "$EXPECTED" > "$IDENTITY"; fi
+    printf '%s\n' "$EXPECTED" > "$OUTPUT_DIR/analysis-identity.txt"
     echo ""
     echo "Analysis complete. Output files in: $OUTPUT_DIR"
     ls -la "$OUTPUT_DIR"

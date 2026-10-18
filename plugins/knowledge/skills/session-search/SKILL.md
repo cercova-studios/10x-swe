@@ -5,6 +5,8 @@ description: Recall public session turns with exact provenance, bounded excerpts
 metadata:
   skill-graph-id: global/session-search
   skill-graph-workflows: global/source-insights/workflows/session-to-insight
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Recall prior work

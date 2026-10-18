@@ -18,6 +18,12 @@ public class ExportDecompiled extends GhidraScript {
 
     @Override
     public void run() throws Exception {
+        String[] args = getScriptArgs();
+        if (args.length == 0) throw new IllegalArgumentException("Use name:qualifiedName, addr:entryAddress, or all");
+        for (String arg : args) {
+            if (!arg.equals("all") && !arg.startsWith("name:") && !arg.startsWith("addr:"))
+                throw new IllegalArgumentException("Unknown selector: " + arg);
+        }
         String outputDir = System.getenv("GHIDRA_OUTPUT_DIR");
         if (outputDir == null || outputDir.isEmpty()) {
             outputDir = ".";
@@ -26,7 +32,7 @@ public class ExportDecompiled extends GhidraScript {
         String programName = currentProgram.getName().replaceAll("[^a-zA-Z0-9._-]", "_");
         File outputFile = new File(outputDir, programName + "_decompiled.c");
 
-        println("Decompiling all functions to: " + outputFile.getAbsolutePath());
+        println("Decompiling selected functions to: " + outputFile.getAbsolutePath());
 
         DecompInterface decompiler = new DecompInterface();
         DecompileOptions options = new DecompileOptions();
@@ -34,7 +40,7 @@ public class ExportDecompiled extends GhidraScript {
 
         if (!decompiler.openProgram(currentProgram)) {
             printerr("Failed to initialize decompiler: " + decompiler.getLastMessage());
-            return;
+            throw new IllegalStateException("Decompiler initialization failed");
         }
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputFile))) {
@@ -48,34 +54,59 @@ public class ExportDecompiled extends GhidraScript {
 
             FunctionIterator functions = currentProgram.getFunctionManager().getFunctions(true);
             int count = 0;
-            int failed = 0;
+            int failed = 0, matched = 0, skipped = 0;
+            int[] selectorMatches = new int[args.length];
+            // Overall export budget, separate from auto-analysis timeout.
+            long deadline = System.nanoTime() + 120L * 1000000000L;
+            boolean budgetExceeded = false;
 
             while (functions.hasNext() && !monitor.isCancelled()) {
                 Function func = functions.next();
 
+                boolean selected = false;
+                for (int i = 0; i < args.length; i++) {
+                    String arg = args[i];
+                    if (arg.equals("all") || arg.equals("name:" + func.getName(true)) ||
+                        arg.equals("addr:" + func.getEntryPoint().toString())) {
+                        selected = true;
+                        selectorMatches[i]++;
+                    }
+                }
+                if (!selected) continue;
+                matched++;
+                if (System.nanoTime() >= deadline) { budgetExceeded = true; skipped++; continue; }
                 // Skip external/thunk functions
                 if (func.isExternal() || func.isThunk()) {
+                    skipped++;
                     continue;
                 }
 
                 monitor.setMessage("Decompiling: " + func.getName());
 
-                DecompileResults results = decompiler.decompileFunction(func, 30, monitor);
+                DecompileResults results = decompiler.decompileFunction(func, (int)Math.max(1, Math.min(30, (deadline - System.nanoTime()) / 1000000000L)), monitor);
 
                 if (results.decompileCompleted()) {
                     String decompiledCode = results.getDecompiledFunction().getC();
-                    writer.println("/* Function: " + func.getName() + " @ " + func.getEntryPoint() + " */");
+                    writer.println("/* Function: " + func.getName(true) + " @ " + func.getEntryPoint() + " */");
                     writer.println(decompiledCode);
                     writer.println();
                     count++;
                 } else {
-                    writer.println("/* FAILED TO DECOMPILE: " + func.getName() + " @ " + func.getEntryPoint() + " */");
+                    writer.println("/* FAILED TO DECOMPILE: " + func.getName(true) + " @ " + func.getEntryPoint() + " */");
                     writer.println("/* Error: " + results.getErrorMessage() + " */");
                     writer.println();
                     failed++;
                 }
             }
 
+            writer.println("/* matched=" + matched + " attempted=" + (count + failed) + " succeeded=" + count +
+                " failed=" + failed + " skipped=" + skipped + " cancelled=" + monitor.isCancelled() +
+                " budgetExceeded=" + budgetExceeded + " */");
+            for (int i = 0; i < args.length; i++) {
+                writer.println("/* selector=" + args[i].replace("*/", "* /") + " matches=" + selectorMatches[i] +
+                    " ambiguous=" + (args[i].startsWith("name:") && selectorMatches[i] > 1) + " */");
+            }
+            if (matched == 0) writer.println("/* NO MATCHING FUNCTIONS */");
             println("Decompiled " + count + " functions (" + failed + " failed)");
         } finally {
             decompiler.dispose();

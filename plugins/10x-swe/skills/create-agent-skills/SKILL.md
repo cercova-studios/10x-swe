@@ -39,6 +39,26 @@ Use `references/api-security.md` for credential boundaries and
 `references/executable-code.md` before adding helpers. Do not discover credentials,
 create central secret files or install/configure a harness as an authoring side effect.
 
+Read [safe construction](references/safe-construction.md) before substantive edits.
+Use [resource patterns](references/resource-patterns.md) to split examples and schemas.
+For authorized independent evaluation, read [evaluation integrity](references/evaluation-integrity.md).
+
+Use an existing Python 3 runtime with PyYAML. After knowledge setup, its locked
+runtime is available at `$AGENT_KNOWLEDGE_HOME/runtimes/source-insights/bin/python`.
+Otherwise select an approved runtime explicitly; this skill does not install one.
+For a new skill, resolve the bundled scripts from SKILL_DIR:
+
+```sh
+SKILL_PYTHON=/absolute/path/to/python-with-PyYAML
+"$SKILL_PYTHON" "$SKILL_DIR/scripts/init_skill.py" --help
+"$SKILL_PYTHON" "$SKILL_DIR/scripts/init_skill.py" example-skill --path "$SKILL_ROOT" --resources scripts,references
+"$SKILL_PYTHON" "$SKILL_DIR/scripts/quick_validate.py" "$SKILL_ROOT/example-skill"
+```
+
+Skip initialization for existing skills. Remove unused generated placeholders.
+The basic validator checks authoring metadata; graph checks and behavior tests
+remain separate. Neither formatting nor indexing establishes safe execution.
+
 Stage changes, validate metadata and every referenced resource, exercise a real
 public workflow and failure cases, then promote with a backup and a concurrent-change
 check. For registered roots, optionally use [[global/skill-graph/SKILL]] to generate

@@ -4,6 +4,8 @@ description: Bootstrap an isolated knowledge toolchain and inspect existing skil
   bundles without overwriting or activating them.
 metadata:
   skill-graph-id: global/knowledge-setup
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Bootstrap this clone

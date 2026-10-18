@@ -7,7 +7,7 @@ import yaml
 ROOT=Path(__file__).resolve().parents[1]
 PACKAGE=ROOT/'plugins/knowledge'
 errors=[]
-for path in PACKAGE.rglob('*'):
+for path in (ROOT/'plugins').rglob('*'):
     if not path.is_file() or '__pycache__' in path.parts: continue
     relative=str(path.relative_to(ROOT));raw=path.read_bytes()
     if path.suffix in ('.gguf','.sqlite','.db','.dylib','.so','.exe'):

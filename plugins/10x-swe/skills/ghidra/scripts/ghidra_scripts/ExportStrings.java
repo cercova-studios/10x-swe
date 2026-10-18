@@ -56,7 +56,7 @@ public class ExportStrings extends GhidraScript {
                         writer.println("      \"address\": \"" + data.getAddress() + "\",");
                         writer.println("      \"type\": \"" + data.getDataType().getName() + "\",");
                         writer.println("      \"length\": " + value.length() + ",");
-                        writer.println("      \"value\": \"" + escapeJson(truncate(value, 1000)) + "\"");
+                        writer.println("      \"value\": \"" + escapeJson(value) + "\"");
                         writer.print("    }");
                         count++;
                     }
@@ -64,7 +64,10 @@ public class ExportStrings extends GhidraScript {
             }
 
             writer.println();
-            writer.println("  ]");
+            writer.println("  ],");
+            writer.println("  \"coverage\": \"defined string-like data only\",");
+            writer.println("  \"minimumLength\": 4,");
+            writer.println("  \"cancelled\": " + monitor.isCancelled());
             writer.println("}");
 
             println("Exported " + count + " strings");
@@ -90,12 +93,6 @@ public class ExportStrings extends GhidraScript {
             return repr.substring(1, repr.length() - 1);
         }
         return repr;
-    }
-
-    private String truncate(String s, int maxLen) {
-        if (s == null) return "";
-        if (s.length() <= maxLen) return s;
-        return s.substring(0, maxLen) + "...";
     }
 
     private String escapeJson(String s) {

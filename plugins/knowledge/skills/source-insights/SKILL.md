@@ -5,6 +5,8 @@ description: Prepare inspected source evidence, preserve exact citations, and pu
 metadata:
   skill-graph-id: global/source-insights
   skill-graph-workflows: global/source-insights/workflows/session-to-insight
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Preserve source learning

@@ -1,6 +1,12 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: You MUST use this before any creative work - creating features, building
+  components, adding functionality, or modifying behavior. Explores user intent, requirements
+  and design before implementation.
+metadata:
+  skill-graph-id: plugin/10x-swe/brainstorming
+  skill-graph-uses: plugin/10x-swe/technical-writing
+  skill-graph-used-by: ''
 ---
 
 # Brainstorming Ideas Into Designs
@@ -9,7 +15,7 @@ description: "You MUST use this before any creative work - creating features, bu
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+Reuse requirements and approvals already given in this session. Understand the current project context and ask only for missing information, one question at a time. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
@@ -27,8 +33,8 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` and commit
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Write design doc** — follow the project's wiki/development-archive policy; commit only when authorized
+6. **Transition to implementation** — follow the project's planning workflow; use writing-plans when installed and applicable
 
 ## Process Flow
 
@@ -52,7 +58,10 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+Finish with an approved design and a plan suited to the project's risk. Use the
+writing-plans skill when available; otherwise write the plan directly under the
+project's conventions. A missing optional skill does not require installation.
+Implementation remains gated by the user's design approval.
 
 ## The Process
 
@@ -67,7 +76,7 @@ digraph brainstorming {
 - Propose 2-3 different approaches with trade-offs
 - Present options conversationally with your recommendation and reasoning
 - Lead with your recommended option and explain why
-- When external research surfaces highly relevant sources (prior art, competitor analysis, reference implementations), save them to Readwise:
+- Keep source links with the design. If the user authorizes saving them to an already configured Readwise destination, use:
   ```bash
   readwise reader-create-document --url "https://..." --tags "brainstorming,<topic>"
   ```
@@ -82,13 +91,13 @@ digraph brainstorming {
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
-- Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
+- Write the validated design to the project's wiki or designated development archive. Use a task-owned review artifact until the destination is known.
+- Read [[plugin/10x-swe/technical-writing/SKILL]] for the design document.
+- Commit only when the user or applicable project instructions authorize it.
 
 **Implementation:**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+- Follow the project's planning workflow, using writing-plans if installed.
+- Reuse the user's existing approval; ask again only when scope changes require it.
 
 ## Key Principles
 

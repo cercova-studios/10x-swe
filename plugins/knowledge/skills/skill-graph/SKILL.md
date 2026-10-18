@@ -4,6 +4,8 @@ description: Discover skills and workflows through independent lexical search, r
   paths and a terminal graph.
 metadata:
   skill-graph-id: global/skill-graph
+  skill-graph-uses: ''
+  skill-graph-used-by: plugin/10x-swe/turnstile-spin
 ---
 
 # Discover useful routes

@@ -1,12 +1,15 @@
 ---
 name: code-research
-description: Investigate architecture, library APIs, engineering tradeoffs or unfamiliar behavior using inspected source and current primary evidence.
+description: Investigate architecture, library APIs, engineering tradeoffs or unfamiliar
+  behavior using inspected source and current primary evidence.
 metadata:
   skill-graph-id: plugin/10x-swe/code-research
+  skill-graph-uses: plugin/10x-swe/code-search
+  skill-graph-used-by: ''
 uses:
-  - '[[plugin/10x-swe/code-search/SKILL]]'
+- '[[plugin/10x-swe/code-search/SKILL]]'
 related:
-  - '[[plugin/10x-swe/diagnose/SKILL]]'
+- '[[plugin/10x-swe/diagnose/SKILL]]'
 ---
 
 # Research a code question

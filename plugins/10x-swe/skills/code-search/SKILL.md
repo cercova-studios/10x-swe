@@ -1,10 +1,13 @@
 ---
 name: code-search
-description: 'Routes local code lookup by intent: literal identifiers, syntax, repository layout, or meaning. Use before broad code research.'
+description: 'Routes local code lookup by intent: literal identifiers, syntax, repository
+  layout, or meaning. Use before broad code research.'
 metadata:
   skill-graph-id: plugin/10x-swe/code-search
+  skill-graph-uses: ''
+  skill-graph-used-by: plugin/10x-swe/code-research
 related:
-  - '[[plugin/10x-swe/code-research/SKILL]]'
+- '[[plugin/10x-swe/code-research/SKILL]]'
 ---
 
 # Find code

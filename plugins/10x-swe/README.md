@@ -4,7 +4,8 @@
 claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 ```
 
- A terminal-first AI agent plugin with 70 skills for software engineering, debugging, architecture, and development workflows.
+A terminal-first AI agent plugin with skills for software engineering, debugging,
+architecture and development workflows.
 
 ## Skills
 
@@ -29,7 +30,7 @@ claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 |-------|-------------|
 | ast-grep | Structural code search using AST patterns |
 | browser-use | Automate browser interactions for testing, forms, and data extraction |
-| chrome-devtools | Debug web pages, analyze performance, inspect network via Chrome DevTools MCP |
+| chrome-devtools | Browser automation, performance and network analysis with Puppeteer helpers |
 | cli-developer | Build CLI tools with argument parsing, interactive prompts, and completions |
 | gh-cli | GitHub CLI reference for repos, issues, PRs, Actions, and more |
 | gemini | Gemini CLI for one-shot Q&A, summaries, and generation |
@@ -40,7 +41,7 @@ claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 | playwright | Browser automation for web testing and interaction |
 | tmux | Remote control tmux sessions for interactive CLIs |
 | using-git-worktrees | Isolated git worktrees for feature work |
-| use-jujutsu-vcs | Jujutsu (jj) version control workflows and Git compatibility |
+| jujutsu-vcs | Jujutsu (jj) workflows, isolated agent workspaces and Git compatibility |
 | uv-package-manager | Fast Python dependency management with uv |
 
 ### Python
@@ -92,6 +93,7 @@ claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
 |-------|-------------|
 | bash-defensive-patterns | Defensive Bash for production scripts and CI/CD pipelines |
 | binary-analysis-patterns | Disassembly, decompilation, control flow, and code pattern recognition |
+| turnstile-spin | Add Cloudflare Turnstile with guarded creation, recovery and server-side verification |
 
 ### Frontend & Design
 | Skill | Description |
@@ -123,6 +125,6 @@ CLIs. Discover relevant skills and workflows with `skill-search`; load the
 selected entrypoints for their instructions.
 
 MCP configuration is opt-in at `examples/mcp.optional.json`. Inspect endpoints and
-pin package versions before activating it; the plugin no longer launches MCP
-servers or changes directory environment state by default. Skill authoring uses explicit SKILL_DIR, SKILL_ROOT and optional COMMAND_ROOT paths;
-no per-working-directory state or compatibility links are created.
+pin package versions before activating it. Skill authoring uses explicit SKILL_DIR,
+SKILL_ROOT and optional COMMAND_ROOT paths, with bundled initialization and basic
+validation helpers. Optional specialist references load only when the task needs them.

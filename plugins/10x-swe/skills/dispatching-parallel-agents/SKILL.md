@@ -1,12 +1,15 @@
 ---
 name: dispatching-parallel-agents
-description: Coordinate authorized independent tasks with bounded ownership, explicit handoffs and integrated verification.
+description: Coordinate authorized independent tasks with bounded ownership, explicit
+  handoffs and integrated verification.
 metadata:
   skill-graph-id: plugin/10x-swe/dispatching-parallel-agents
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 related:
-  - '[[plugin/10x-swe/subagent-driven-development/SKILL]]'
-  - '[[plugin/10x-swe/task-coordination-strategies/SKILL]]'
-  - '[[plugin/10x-swe/parallel-debugging/SKILL]]'
+- '[[plugin/10x-swe/subagent-driven-development/SKILL]]'
+- '[[plugin/10x-swe/task-coordination-strategies/SKILL]]'
+- '[[plugin/10x-swe/parallel-debugging/SKILL]]'
 ---
 
 # Dispatch independent work

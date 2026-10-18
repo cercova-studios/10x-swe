@@ -36,14 +36,14 @@ public class ExportCalls extends GhidraScript {
 
         while (functions.hasNext() && !monitor.isCancelled()) {
             Function func = functions.next();
-            String funcName = func.getName();
-            functionAddresses.put(funcName, func.getEntryPoint().toString());
+            String funcName = func.getEntryPoint().toString();
+            functionAddresses.put(funcName, func.getName(true));
 
             Set<String> calls = new TreeSet<>();
             Set<Function> calledFunctions = func.getCalledFunctions(monitor);
 
             for (Function called : calledFunctions) {
-                calls.add(called.getName());
+                calls.add(called.getEntryPoint().toString());
             }
 
             callGraph.put(funcName, calls);
@@ -54,6 +54,7 @@ public class ExportCalls extends GhidraScript {
             writer.println("{");
             writer.println("  \"program\": \"" + escapeJson(currentProgram.getName()) + "\",");
             writer.println("  \"totalFunctions\": " + callGraph.size() + ",");
+            writer.println("  \"cancelled\": " + monitor.isCancelled() + ",");
             writer.println("  \"callGraph\": {");
 
             boolean firstFunc = true;
@@ -67,7 +68,7 @@ public class ExportCalls extends GhidraScript {
                 Set<String> calls = entry.getValue();
 
                 writer.print("    \"" + escapeJson(funcName) + "\": {");
-                writer.print("\"address\": \"" + functionAddresses.get(funcName) + "\", ");
+                writer.print("\"name\": \"" + escapeJson(functionAddresses.get(funcName)) + "\", ");
                 writer.print("\"calls\": [");
 
                 boolean firstCall = true;
@@ -126,7 +127,7 @@ public class ExportCalls extends GhidraScript {
                 if (!first) writer.print(", ");
                 first = false;
                 Map.Entry<String, Integer> e = sorted.get(i);
-                writer.print("{\"name\": \"" + escapeJson(e.getKey()) + "\", \"count\": " + e.getValue() + "}");
+                writer.print("{\"address\": \"" + escapeJson(e.getKey()) + "\", \"count\": " + e.getValue() + "}");
             }
             writer.println("]");
 

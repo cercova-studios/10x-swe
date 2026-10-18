@@ -5,6 +5,11 @@ description: Guide AI agents to use Jujutsu (jj) for version control. Covers cor
 
 <essential_principles>
 
+Before you commit, bookmark, push, or undo, read the
+[coding-agent workflow](references/coding-agents.md). Repository policy takes
+precedence. Use one workspace per agent, inspect open PRs before selecting a
+bookmark, and check the operation log before undoing shared history.
+
 **Jujutsu (jj) is a Git-compatible VCS that eliminates common Git pain points.** It's designed for safety, simplicity, and powerful history manipulation.
 
 **1. Working Copy Is Always a Commit**

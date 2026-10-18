@@ -4,6 +4,8 @@ description: Search bookmarks and explicit piped knowledge records with separate
   ranks, citations and graph navigation.
 metadata:
   skill-graph-id: global/bkd
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Search and review bookmarks

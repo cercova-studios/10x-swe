@@ -4,6 +4,8 @@ description: Convert a selected URL, local HTML or stdin into provenance-preserv
   Markdown/JSON or EPUB without requiring bookmark discovery.
 metadata:
   skill-graph-id: global/distiller
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Extract a selected source

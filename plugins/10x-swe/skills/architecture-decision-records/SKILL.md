@@ -1,6 +1,13 @@
 ---
 name: architecture-decision-records
-description: Write and maintain Architecture Decision Records (ADRs) following best practices for technical decision documentation. Use when documenting significant technical decisions, reviewing past architectural choices, or establishing decision processes.
+description: Write and maintain Architecture Decision Records (ADRs) following best
+  practices for technical decision documentation. Use when documenting significant
+  technical decisions, reviewing past architectural choices, or establishing decision
+  processes.
+metadata:
+  skill-graph-id: plugin/10x-swe/architecture-decision-records
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Architecture Decision Records
@@ -442,7 +449,7 @@ adr link 2 "Complements" 1 "Is complemented by"
 
 ## Saving References to Readwise
 
-When an ADR references external sources (blog posts, docs, RFCs, benchmarks), save them to Readwise Reader for durable retrieval and highlight the specific passages that informed the decision:
+Keep source links and supporting passages in the ADR. If the user authorizes saving those sources to Readwise and the CLI is already configured, save and highlight the relevant passages with the commands below. Check that the URLs and passages may be sent to that destination. Otherwise, retain the citations in the ADR without an external write:
 
 ```bash
 # Save the reference source

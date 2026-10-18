@@ -1,6 +1,15 @@
 ---
 name: self-learning
-description: "Autonomous skill generator that learns new technologies from the web. Use when, users want to learn about a new library/framework/tool, need to create a skill for an unfamiliar technology, want to research and document a technology's usage patterns, or invoke with `/learn <topic>`. This skill uses web search and browser tools to discover, extract, and synthesize documentation into a reusable skill."
+description: Autonomous skill generator that learns new technologies from the web.
+  Use when, users want to learn about a new library/framework/tool, need to create
+  a skill for an unfamiliar technology, want to research and document a technology's
+  usage patterns, or invoke with `/learn <topic>`. This skill uses web search and
+  browser tools to discover, extract, and synthesize documentation into a reusable
+  skill.
+metadata:
+  skill-graph-id: plugin/10x-swe/self-learning
+  skill-graph-uses: ''
+  skill-graph-used-by: ''
 ---
 
 # Self-Learning Skill Generator
@@ -38,7 +47,7 @@ Use web search tool to find authoritative documentation:
 
 Select **3–5 high-quality URLs** maximum.
 
-**Save discovered sources to Readwise Reader** for future retrieval:
+Keep the selected source URLs with the generated skill. If the user authorizes saving those URLs to Readwise and the CLI is already configured, use the command below. Check that the URLs may be sent to that destination; otherwise continue without an external write:
 ```bash
 readwise reader-create-document --url "<source_url>" --tags "self-learning,<topic>"
 ```

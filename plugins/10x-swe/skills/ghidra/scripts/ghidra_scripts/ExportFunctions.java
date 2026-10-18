@@ -46,7 +46,7 @@ public class ExportFunctions extends GhidraScript {
                 first = false;
 
                 writer.println("    {");
-                writer.println("      \"name\": \"" + escapeJson(func.getName()) + "\",");
+                writer.println("      \"name\": \"" + escapeJson(func.getName(true)) + "\",");
                 writer.println("      \"address\": \"" + func.getEntryPoint() + "\",");
                 writer.println("      \"size\": " + func.getBody().getNumAddresses() + ",");
                 writer.println("      \"signature\": \"" + escapeJson(func.getPrototypeString(false, false)) + "\",");
@@ -72,9 +72,8 @@ public class ExportFunctions extends GhidraScript {
                 java.util.Set<Function> called = func.getCalledFunctions(monitor);
                 int callIdx = 0;
                 for (Function calledFunc : called) {
-                    if (callIdx >= 50) break;  // Limit to 50 calls
                     if (callIdx > 0) writer.print(", ");
-                    writer.print("\"" + escapeJson(calledFunc.getName()) + "\"");
+                    writer.print("\"" + escapeJson(calledFunc.getEntryPoint().toString()) + "\"");
                     callIdx++;
                 }
                 writer.println("],");
@@ -84,9 +83,8 @@ public class ExportFunctions extends GhidraScript {
                 java.util.Set<Function> callers = func.getCallingFunctions(monitor);
                 int callerIdx = 0;
                 for (Function caller : callers) {
-                    if (callerIdx >= 50) break;  // Limit to 50 callers
                     if (callerIdx > 0) writer.print(", ");
-                    writer.print("\"" + escapeJson(caller.getName()) + "\"");
+                    writer.print("\"" + escapeJson(caller.getEntryPoint().toString()) + "\"");
                     callerIdx++;
                 }
                 writer.println("]");
@@ -96,7 +94,8 @@ public class ExportFunctions extends GhidraScript {
             }
 
             writer.println();
-            writer.println("  ]");
+            writer.println("  ],");
+            writer.println("  \"cancelled\": " + monitor.isCancelled());
             writer.println("}");
 
             println("Exported " + count + " functions");

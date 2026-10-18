@@ -56,14 +56,13 @@ public class ExportSymbols extends GhidraScript {
             first = true;
             int exportCount = 0;
             // Functions that are potential exports (entry points or exported)
-            FunctionIterator functions = currentProgram.getFunctionManager().getExternalFunctions();
             // Look for functions marked as entry points
             FunctionIterator allFunctions = currentProgram.getFunctionManager().getFunctions(true);
             while (allFunctions.hasNext() && !monitor.isCancelled()) {
                 Function func = allFunctions.next();
                 // Check if function is at an entry point or has export symbol
                 Symbol sym = func.getSymbol();
-                if (sym.isExternalEntryPoint() || sym.getSource() == SourceType.IMPORTED) {
+                if (sym.isExternalEntryPoint()) {
                     if (!first) writer.println(",");
                     first = false;
                     writer.println("    {");
@@ -112,6 +111,7 @@ public class ExportSymbols extends GhidraScript {
             writer.println("  ],");
 
             // Summary
+            writer.println("  \"cancelled\": " + monitor.isCancelled() + ",");
             writer.println("  \"summary\": {");
             writer.println("    \"imports\": " + importCount + ",");
             writer.println("    \"exports\": " + exportCount + ",");

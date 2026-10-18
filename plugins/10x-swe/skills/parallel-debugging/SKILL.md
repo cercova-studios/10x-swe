@@ -1,12 +1,15 @@
 ---
 name: parallel-debugging
-description: Compare independent hypotheses when a reproduced failure spans multiple causes; use parallel investigators only with explicit authorization.
+description: Compare independent hypotheses when a reproduced failure spans multiple
+  causes; use parallel investigators only with explicit authorization.
 metadata:
   skill-graph-id: plugin/10x-swe/parallel-debugging
+  skill-graph-uses: plugin/10x-swe/diagnose
+  skill-graph-used-by: ''
 uses:
-  - '[[plugin/10x-swe/diagnose/SKILL]]'
+- '[[plugin/10x-swe/diagnose/SKILL]]'
 related:
-  - '[[plugin/10x-swe/dispatching-parallel-agents/SKILL]]'
+- '[[plugin/10x-swe/dispatching-parallel-agents/SKILL]]'
 ---
 
 # Compare competing causes
