@@ -2,6 +2,7 @@
 name = "skill-search"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
 description = "Bounded local skill discovery and scan-gated remote loading"
 
 [dependencies]

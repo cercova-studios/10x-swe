@@ -72,13 +72,13 @@ def main():
         </article></body></html>"""
         source.write_text(html)
         # Default EPUB creation must fail closed without credentials or cache.
-        offline = {key: value for key, value in os.environ.items() if key != 'MODEL_API_KEY'}
+        offline = {key: value for key, value in os.environ.items() if key not in ('MODEL_API_KEY', 'DISTILLER_MUSE_API_KEY')}
         offline['DISTILLER_COVER_CACHE'] = str(root/'empty-cover-cache')
         missing_cover = root/'mandatory-cover.epub'
         for inputs in ([str(source)], ['--stdin', '--base-url', 'https://example.test/blog/']):
             inline_html = html.replace('figure.png', 'data:image/png;base64,'+base64.b64encode(PNG).decode()).replace('figure.webp', 'data:image/png;base64,'+base64.b64encode(PNG).decode())
             result = subprocess.run([str(binary), *inputs, '--mode', 'epub', '-o', str(missing_cover)], input=inline_html if inputs[0] == '--stdin' else None, env=offline, capture_output=True, text=True, timeout=45)
-            assert result.returncode != 0 and 'MODEL_API_KEY' in result.stderr and not missing_cover.exists(), result.stderr
+            assert result.returncode != 0 and 'DISTILLER_MUSE_API_KEY' in result.stderr and not missing_cover.exists(), result.stderr
         assert not list((root/'empty-cover-cache').iterdir()), 'No paid reservation without credentials'
         command = [str(binary), str(source), "--mode", "epub", "--base-url", "https://example.test/blog/", "--cover", str(assets/'figure.png'), "-o", str(destination)]
         result = subprocess.run(command, capture_output=True, text=True, timeout=45)

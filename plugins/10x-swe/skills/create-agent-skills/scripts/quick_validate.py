@@ -10,6 +10,11 @@ from pathlib import Path
 import yaml
 
 MAX_SKILL_NAME_LENGTH = 64
+# Agent Skills specification fields (https://agentskills.io/specification).
+SPEC_PROPERTIES = {"name", "description", "license", "allowed-tools", "metadata", "compatibility"}
+# Relationship fields read by the knowledge plugin's skill graph. Hosts that do
+# not understand them ignore unknown top-level keys, so they are accepted here.
+GRAPH_PROPERTIES = {"uses", "used-by", "related", "references", "related-inferred"}
 
 
 def validate_skill(skill_path):
@@ -37,7 +42,7 @@ def validate_skill(skill_path):
     except yaml.YAMLError as e:
         return False, f"Invalid YAML in frontmatter: {e}"
 
-    allowed_properties = {"name", "description", "license", "allowed-tools", "metadata", "compatibility"}
+    allowed_properties = SPEC_PROPERTIES | GRAPH_PROPERTIES
 
     unexpected_keys = set(frontmatter.keys()) - allowed_properties
     if unexpected_keys:
@@ -95,6 +100,13 @@ def validate_skill(skill_path):
     metadata = frontmatter.get("metadata", {})
     if not isinstance(metadata, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in metadata.items()):
         return False, "Metadata must map string keys to string values"
+    for key in GRAPH_PROPERTIES & set(frontmatter):
+        value = frontmatter[key]
+        if not (isinstance(value, str) or (isinstance(value, list) and all(isinstance(item, str) for item in value))):
+            return False, f"'{key}' must be a string or a list of strings"
+    folder = skill_path.resolve().name
+    if name != folder:
+        return False, f"Name '{name}' must match the skill directory name '{folder}'"
     if "compatibility" in frontmatter:
         value = frontmatter["compatibility"]
         if not isinstance(value, str) or not value.strip() or len(value) > 500:
@@ -104,10 +116,13 @@ def validate_skill(skill_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python quick_validate.py <skill_directory>")
+    if len(sys.argv) < 2:
+        print("Usage: python quick_validate.py <skill_directory> [<skill_directory> ...]")
         sys.exit(1)
 
-    valid, message = validate_skill(sys.argv[1])
-    print(message)
-    sys.exit(0 if valid else 1)
+    failed = 0
+    for directory in sys.argv[1:]:
+        valid, message = validate_skill(directory)
+        print(message if len(sys.argv) == 2 else f"{directory}: {message}")
+        failed += not valid
+    sys.exit(1 if failed else 0)

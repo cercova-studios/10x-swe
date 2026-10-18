@@ -66,11 +66,11 @@ def main():
         c.drawString(72,620,'Intelligence Ex-'); c.drawString(72,598,'plosion')
         c.setFont('Times-Roman',12); c.drawString(72,560,'A body sentence retains GPT-3 and curly punctuation.')
         c.showPage(); c.showPage(); c.save()
-        offline = {key: value for key, value in os.environ.items() if key != 'MODEL_API_KEY'}
+        offline = {key: value for key, value in os.environ.items() if key not in ('MODEL_API_KEY', 'DISTILLER_MUSE_API_KEY')}
         offline['DISTILLER_COVER_CACHE'] = str(root/'empty-cover-cache')
         mandatory = root/'mandatory.epub'
         result = subprocess.run([str(args.binary.resolve()),str(source),'--mode','epub','-o',str(mandatory)], env=offline, capture_output=True,text=True,timeout=200)
-        assert result.returncode != 0 and 'MODEL_API_KEY' in result.stderr and not mandatory.exists(), result.stderr
+        assert result.returncode != 0 and 'DISTILLER_MUSE_API_KEY' in result.stderr and not mandatory.exists(), result.stderr
         result = subprocess.run([str(args.binary.resolve()),str(source),'--mode','epub','--cover',str(cover),'-o',str(output)],capture_output=True,text=True,timeout=200)
         assert result.returncode == 0, result.stderr
         names, documents, opf, files = inspect(output)

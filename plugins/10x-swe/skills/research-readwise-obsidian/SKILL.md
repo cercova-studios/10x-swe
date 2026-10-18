@@ -1,6 +1,7 @@
 ---
 name: research-readwise-obsidian
 description: Use the Readwise CLI to run relevance-first research across Reader documents and highlights, then synthesize an Obsidian-ready note with source-linked evidence and explicit confidence gaps. Use when researching topics from Readwise content for PKM workflows in Obsidian.
+compatibility: Requires the Readwise CLI signed in to a Readwise Reader subscription (paid) and an Obsidian vault.
 ---
 
 <objective>

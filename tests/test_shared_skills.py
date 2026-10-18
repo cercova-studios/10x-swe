@@ -47,7 +47,7 @@ class SharedSkills(unittest.TestCase):
         self.assertTrue((SKILLS/'ghidra/scripts/ghidra_scripts/ExportSummary.java').is_file())
         self.assertFalse((SKILLS/'ghidra/references/legacy-exports.md').exists())
         self.assertFalse((SKILLS/'chrome-devtools/scripts/bun.lock').exists())
-        self.assertFalse((SKILLS/'playwright/scripts/playwright_cli.sh').exists())
+        self.assertFalse((SKILLS/'playwright-cli/scripts/playwright_cli.sh').exists())
         self.assertTrue((SKILLS/'frontend-design/LICENSE.txt').is_file())
         self.assertTrue((AUTHOR/'references/skill-creator-LICENSE.txt').is_file())
         wizard = (SKILLS/'turnstile-spin/references/creation-wizard.md').read_text()

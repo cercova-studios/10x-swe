@@ -152,7 +152,7 @@ enum Cmd {
         #[arg(long)]
         relationships: bool,
     },
-    /// Preview and select bookmarks before publishing URL/title to rsnair.tech.
+    /// Preview and select bookmarks before publishing URL/title to the public site (BKD_PUBLIC_SITE, default rsnair.tech).
     Import {
         file: Option<PathBuf>,
         #[command(flatten)]

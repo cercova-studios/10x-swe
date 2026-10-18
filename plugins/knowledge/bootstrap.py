@@ -19,6 +19,16 @@ PACKAGE = Path(__file__).resolve().parent
 REPO = PACKAGE.parents[1]
 MARKER = '.knowledge-owner.json'
 COMMANDS = ('skill-search', 'bkd', 'distiller', 'insights', 'source-insights', 'session-search', 'knowledge-intake')
+IGNORED_PARTS = ('__pycache__', 'target', '.venv', 'node_modules', '.osgrep', '.DS_Store')
+USER_DATA = ('knowledge/sources', 'state')
+# One-line fixes for failed build checks, by OS family and by check.
+FIXES = {
+    'debian': 'sudo apt-get update && sudo apt-get install -y build-essential pkgconf libssl-dev golang && curl https://sh.rustup.rs -sSf | sh',
+    'fedora': 'sudo dnf install -y gcc pkgconf-pkg-config openssl-devel golang && curl https://sh.rustup.rs -sSf | sh',
+    'macos': 'xcode-select --install; brew install pkg-config openssl go rustup && rustup-init',
+    'rust': 'rustup update stable (or install rustup from https://rustup.rs; distro Rust is often older than 1.88)',
+    'go': 'install Go 1.22+ from https://go.dev/dl/ or your package manager',
+}
 # Minimum free disk space for a full source build (cargo target dirs dominate).
 MINIMUM_FREE_BYTES = 3 * 1024**3
 
@@ -31,10 +41,26 @@ def digest(path):
     return h.hexdigest()
 
 
+def source_files():
+    """Files that define an installation: tracked files when this is a git checkout.
+
+    Untracked and ignored files (node_modules from a skill's npm install, editor
+    files, local skill links) must not change the fingerprint, or an unchanged
+    revision would be refused as different source bytes."""
+    bases = (PACKAGE, REPO / 'plugins/10x-swe/skills')
+    git = shutil.which('git')
+    if git and (REPO / '.git').exists():
+        listed = subprocess.run([git, '-C', str(REPO), 'ls-files', '-z', '--cached', '--'] + [str(b.relative_to(REPO)) for b in bases],
+                                capture_output=True)
+        if listed.returncode == 0 and listed.stdout:
+            paths = (REPO / os.fsdecode(name) for name in listed.stdout.split(b'\0') if name)
+            return sorted(p for p in paths if p.is_file() and not p.is_symlink())
+    return sorted(p for base in bases for p in base.rglob('*') if p.is_file()
+                  and not any(part in IGNORED_PARTS for part in p.relative_to(REPO).parts))
+
+
 def inputs():
-    return {str(p.relative_to(REPO)): digest(p) for base in (PACKAGE, REPO / 'plugins/10x-swe/skills')
-            for p in sorted(base.rglob('*')) if p.is_file()
-            and not any(part in ('__pycache__', 'target', '.venv') for part in p.parts)}
+    return {str(p.relative_to(REPO)): digest(p) for p in source_files()}
 
 
 def require_disk_space(prefix):
@@ -102,6 +128,36 @@ def build_checks():
     if platform.system() == 'Linux':
         checks.append(command_check('pkg-config', ['--modversion', 'openssl']))
     return checks
+
+
+def os_family():
+    if platform.system() == 'Darwin':
+        return 'macos'
+    try:
+        release = Path('/etc/os-release').read_text()
+    except OSError:
+        return 'debian'
+    return 'fedora' if re.search(r'^(ID|ID_LIKE)=.*(fedora|rhel|centos)', release, re.M) else 'debian'
+
+
+def fixes(checks):
+    """One-line fixes for failed build_checks(): a version fix where only the version is wrong,
+    otherwise the OS package line."""
+    lines = []
+    for check in checks:
+        if check['passed']:
+            continue
+        if check.get('path') and check['command'] in ('cargo', 'rustc'):
+            line = FIXES['rust']
+        elif check.get('path') and check['command'] == 'go':
+            line = FIXES['go']
+        elif check['command'] == 'python':
+            line = 'install Python 3.11+ and rerun with it'
+        else:
+            line = FIXES[os_family()]
+        if line not in lines:
+            lines.append(line)
+    return lines
 
 
 def environment(prefix):
@@ -185,9 +241,12 @@ def next_steps(prefix):
 
 
 def doctor(prefix, verify=True):
+    print('Checking installation at ' + str(prefix), file=sys.stderr, flush=True)
     receipt = prefix / 'installation.json'
     if not receipt.is_file():
-        raise ValueError('No completed installation receipt; rerun setup after fixing its error')
+        raise ValueError('No completed installation receipt at %s; rerun setup after fixing its error: '
+                         './knowledge setup --prefix %s (set AGENT_KNOWLEDGE_HOME or pass --prefix if you '
+                         'installed elsewhere)' % (prefix, shlex.quote(str(prefix))))
     data = json.loads(receipt.read_text())
     errors = [rel for rel, sha in data['artifacts'].items()
               if not (prefix / rel).is_file() or digest(prefix / rel) != sha]
@@ -214,7 +273,45 @@ def doctor(prefix, verify=True):
                       'optional': capabilities, 'excluded': ['Kindle delivery', 'credentials', 'source-session indexing']}, indent=2))
 
 
-def setup(prefix):
+def carry_over(previous, prefix):
+    """Copy user data (source library, bookmarks, session index) from an older owned prefix."""
+    previous = previous.expanduser().absolute()
+    marker = previous / MARKER
+    if previous.is_symlink() or marker.is_symlink() or not marker.is_file():
+        raise ValueError('--from must name an existing knowledge installation: ' + str(previous))
+    previous = previous.resolve()
+    owner = json.loads(marker.read_text())
+    if not isinstance(owner, dict) or owner.get('schema') != 'knowledge-owner/v1' or not isinstance(owner.get('fingerprint'), str):
+        raise ValueError('--from must name an existing knowledge installation: ' + str(previous))
+    prefix = prefix.resolve()
+    if previous.is_relative_to(prefix) or prefix.is_relative_to(previous):
+        raise ValueError('--from and --prefix must not overlap')
+    # Validate both trees before copying either; retries must never merge user data.
+    for rel in USER_DATA:
+        source, destination = previous / rel, prefix / rel
+        for root, path in ((previous, source), (prefix, destination)):
+            parents = [path, *path.parents]
+            for candidate in parents[:parents.index(root)]:
+                if candidate.is_symlink():
+                    raise ValueError('User data must not contain symlinks: ' + str(candidate))
+        for path in source.rglob('*'):
+            if path.is_symlink():
+                raise ValueError('User data must not contain symlinks: ' + str(path))
+        if source.exists() and not source.is_dir():
+            raise ValueError('User data must be a directory: ' + str(source))
+        if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
+            raise ValueError('--from needs empty destination data directories; choose a fresh prefix: ' + str(destination))
+    pending = prefix / '.migration-pending'
+    with pending.open('x') as stream:
+        stream.write(str(previous) + '\n')
+    for rel in USER_DATA:
+        if (previous / rel).is_dir():
+            print('Carrying over ' + str(previous / rel), flush=True)
+            shutil.copytree(previous / rel, prefix / rel, dirs_exist_ok=True)
+    pending.unlink()
+
+
+def setup(prefix, previous=None):
     if prefix.resolve().is_relative_to(REPO):
         raise ValueError('Keep installation state outside the source repository')
     if platform.system() not in ('Darwin', 'Linux'):
@@ -223,41 +320,60 @@ def setup(prefix):
         raise ValueError('Python 3.11+ is required')
     manifest = inputs()
     fingerprint = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
-    owned(prefix, fingerprint)
+    try:
+        owned(prefix, fingerprint)
+    except ValueError as error:
+        if 'different source' in str(error):
+            raise ValueError('%s was built from a different source revision. Keep it, install the new revision '
+                             'into a fresh prefix and carry your data over:\n  ./knowledge setup --prefix NEW_PREFIX --from %s'
+                             % (prefix, shlex.quote(str(prefix)))) from None
+        raise
     with (prefix / '.setup.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if (prefix / '.migration-pending').exists():
+            raise ValueError('User-data migration was interrupted; preserve this prefix and choose a fresh prefix with --from')
         if (prefix / 'installation.json').exists():
+            if previous is not None:
+                raise ValueError('--from only applies to a fresh prefix; %s is already installed' % prefix)
             ensure_activation(prefix)
             doctor(prefix)
             next_steps(prefix)
             return
-        failed = [check['error'] for check in build_checks() if not check['passed']]
+        checks = build_checks()
+        failed = [check['error'] for check in checks if not check['passed']]
         if failed:
-            raise ValueError('; '.join(failed))
+            raise ValueError('; '.join(failed) + ''.join('\n  fix: ' + line for line in fixes(checks)))
         require_disk_space(prefix)
+        if previous is not None:
+            carry_over(previous, prefix)
         for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
-        for source, dest in ((PACKAGE / 'skills', prefix / 'skills'),
-                             (PACKAGE / 'lib', prefix / 'lib'),
+        included = {REPO / rel for rel in manifest}
+        included.update(parent for path in list(included) for parent in path.parents if parent.is_relative_to(REPO))
+        staged = prefix / 'build/source'
+        for source, dest in ((PACKAGE, staged),
                              (REPO / 'plugins/10x-swe/skills', prefix / 'engineering-skills')):
-            shutil.copytree(source, dest, dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__', 'target'))
+            shutil.copytree(source, dest, dirs_exist_ok=True,
+                            ignore=lambda directory, names: [name for name in names if Path(directory) / name not in included])
+        for folder in ('skills', 'lib'):
+            shutil.copytree(staged / folder, prefix / folder, dirs_exist_ok=True)
         python = prefix / 'runtimes/source-insights/bin/python'
         if not python.exists():
             run([sys.executable, '-m', 'venv', prefix / 'runtimes/source-insights'])
-        run([python, '-m', 'pip', 'install', '--require-hashes', '-r', PACKAGE / 'requirements.lock'])
+        run([python, '-m', 'pip', 'install', '--require-hashes', '-r', staged / 'requirements.lock'])
         runtime = prefix / 'runtimes/skill-graph'
         if not runtime.exists():
             runtime.symlink_to('source-insights', target_is_directory=True)
         env = environment(prefix)
-        for source, command in ((PACKAGE / 'skills/skill-graph/scripts/search-core', 'skill-search'),
-                                (PACKAGE / 'tools/bkd', 'bkd'), (PACKAGE / 'tools/distiller', 'distiller')):
+        for source, command in ((staged / 'skills/skill-graph/scripts/search-core', 'skill-search'),
+                                (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller')):
             run(['cargo', 'build', '--locked', '--release', '--bin', command,
                  '--manifest-path', source / 'Cargo.toml', '--target-dir', prefix / 'build/rust'], env=env)
             shutil.copy2(prefix / 'build/rust/release' / command, prefix / 'libexec/native' / command)
         run(['go', 'build', '-trimpath', '-o', prefix / 'libexec/native/insights', '.'],
-            cwd=PACKAGE / 'tools/insights', env=env)
+            cwd=staged / 'tools/insights', env=env)
         for name in ('launch.py', 'intake.py'):
-            shutil.copy2(PACKAGE / name, prefix / 'libexec' / name)
+            shutil.copy2(staged / name, prefix / 'libexec' / name)
         (prefix / 'libexec/launch.py').chmod(0o755)
         for command in COMMANDS:
             target = prefix / 'bin' / command
@@ -288,7 +404,11 @@ def setup(prefix):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command', choices=('plan', 'setup', 'doctor'))
-    parser.add_argument('--prefix', type=Path, default=Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / '10x-swe/knowledge')
+    default = os.environ.get('AGENT_KNOWLEDGE_HOME') or Path(os.environ.get('XDG_DATA_HOME') or Path.home() / '.local/share') / '10x-swe/knowledge'
+    parser.add_argument('--prefix', type=Path, default=Path(default),
+                        help='installation directory (default: $AGENT_KNOWLEDGE_HOME, else $XDG_DATA_HOME/10x-swe/knowledge)')
+    parser.add_argument('--from', dest='previous', type=Path,
+                        help='setup only: copy knowledge/sources and state from an older installation into the new prefix')
     args = parser.parse_args()
     prefix = args.prefix.expanduser().absolute()
     try:
@@ -300,10 +420,11 @@ def main():
             print(json.dumps({'prefix': str(prefix), 'profile': 'keyword', 'tools': COMMANDS,
                               'build_prerequisites': ['Python 3.11+', 'Rust 1.88+ (current locked dependency minimum)', 'Go 1.22+', 'C compiler', 'OpenSSL development headers and pkg-config on Linux'],
                               'build_checks': checks, 'build_ready': all(check['passed'] for check in checks),
+                              'fix': fixes(checks),
                               'effects': ['download hash-locked dependencies', 'compile sources', 'create owned empty libraries'],
                               'excluded': ['Kindle delivery', 'credentials', 'external skills activation', 'session crawl', 'cloud AI', 'publication']}, indent=2))
         elif args.command == 'setup':
-            setup(prefix)
+            setup(prefix, args.previous)
         else:
             doctor(prefix)
     except (OSError, ValueError, subprocess.CalledProcessError) as error:

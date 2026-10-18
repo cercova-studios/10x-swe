@@ -1,6 +1,6 @@
 # BookmarkDrop
 
-`bookmarkdrop` / `bkd` is a Rust CLI for local bookmark retrieval, relationship maps, and deliberately reviewed publishing to Neon and rsnair.tech. Bare `bkd` opens a minimalist Ratatui capture screen. `bkd ui` opens a Finder-style bookmark viewer with link drops, Quick Look and reader mode. Use explicit subcommands with `--json` for agents or `search --rich` for terminal Markdown.
+`bookmarkdrop` / `bkd` is a Rust CLI for local bookmark retrieval, relationship maps, and deliberately reviewed publishing to Neon and a public reading feed (`BKD_PUBLIC_SITE`, default rsnair.tech; it names the site in confirmation screens, and publication itself goes to `BKD_DATABASE_URL`). Bare `bkd` opens a minimalist Ratatui capture screen. `bkd ui` opens a Finder-style bookmark viewer with link drops, Quick Look and reader mode. Use explicit subcommands with `--json` for agents or `search --rich` for terminal Markdown.
 
 ## Build
 

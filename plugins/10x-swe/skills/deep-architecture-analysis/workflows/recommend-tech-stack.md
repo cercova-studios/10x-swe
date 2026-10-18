@@ -5,8 +5,7 @@ Evaluate the current technology stack and recommend optimal alternatives for rew
 <required_reading>
 Before starting, read:
 - references/first-principles-analysis.md
-- references/tech-stack-evaluation-matrix.md
-- references/architecture-patterns-catalog.md
+- references/bloat-detection-patterns.md
 </required_reading>
 
 <inputs>

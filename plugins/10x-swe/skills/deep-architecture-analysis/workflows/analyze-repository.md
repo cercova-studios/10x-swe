@@ -4,7 +4,6 @@ Perform comprehensive architecture analysis of a GitHub repository to understand
 
 <required_reading>
 Before starting, read:
-- references/repository-analysis-methods.md
 - references/bloat-detection-patterns.md
 - references/first-principles-analysis.md
 </required_reading>

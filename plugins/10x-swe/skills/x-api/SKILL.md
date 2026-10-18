@@ -1,6 +1,7 @@
 ---
 name: x-api
 description: Use when building applications that access X's public data, including posts, users, trends, spaces, and direct messages. Reach for this skill when integrating X data into applications, building search or streaming solutions, managing user interactions, or analyzing X platform data.
+compatibility: Requires an X developer account and API credentials; most X API access tiers are paid.
 metadata:
     mintlify-proj: x
     version: "1.0"

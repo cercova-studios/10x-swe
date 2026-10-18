@@ -72,67 +72,69 @@ describe('parseSelector', () => {
     });
   });
 
+  // The validator uses an allowlist of XPath functions and axes, so injected
+  // calls are rejected as disallowed functions rather than by a blocklist.
   describe('Security Validation', () => {
     it('should block javascript: injection', () => {
       assert.throws(
         () => parseSelector('//button[@onclick="javascript:alert(1)"]'),
-        /XPath injection detected.*javascript:/i
+        /XPath function not allowed: alert/i
       );
     });
 
     it('should block <script tag injection', () => {
       assert.throws(
         () => parseSelector('//div[contains(text(),"<script>alert(1)</script>")]'),
-        /XPath injection detected.*<script/i
+        /XPath function not allowed: alert/i
       );
     });
 
     it('should block onerror= injection', () => {
       assert.throws(
         () => parseSelector('//img[@onerror="alert(1)"]'),
-        /XPath injection detected.*onerror=/i
+        /XPath function not allowed: alert/i
       );
     });
 
     it('should block onload= injection', () => {
       assert.throws(
         () => parseSelector('//body[@onload="malicious()"]'),
-        /XPath injection detected.*onload=/i
+        /XPath function not allowed: malicious/i
       );
     });
 
     it('should block onclick= injection', () => {
       assert.throws(
         () => parseSelector('//a[@onclick="steal()"]'),
-        /XPath injection detected.*onclick=/i
+        /XPath function not allowed: steal/i
       );
     });
 
     it('should block eval( injection', () => {
       assert.throws(
         () => parseSelector('//div[eval("malicious")]'),
-        /XPath injection detected.*eval\(/i
+        /XPath function not allowed: eval/i
       );
     });
 
     it('should block Function( injection', () => {
       assert.throws(
         () => parseSelector('//div[Function("return 1")()]'),
-        /XPath injection detected.*Function\(/i
+        /XPath function not allowed: function/i
       );
     });
 
     it('should block constructor( injection', () => {
       assert.throws(
         () => parseSelector('//div[constructor("alert(1)")()]'),
-        /XPath injection detected.*constructor\(/i
+        /XPath function not allowed: constructor/i
       );
     });
 
     it('should be case-insensitive for security checks', () => {
       assert.throws(
         () => parseSelector('//div[@ONERROR="alert(1)"]'),
-        /XPath injection detected/i
+        /XPath function not allowed/i
       );
     });
 

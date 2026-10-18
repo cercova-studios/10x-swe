@@ -5,6 +5,8 @@ import hashlib
 import io
 import json
 import os
+import shutil
+import sqlite3
 from pathlib import Path
 import subprocess
 import sys
@@ -80,7 +82,7 @@ class BootstrapTests(unittest.TestCase):
     def test_default_prefix_respects_data_home_without_writes(self):
         data_home=self.root/'data home'
         p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan'],
-                         env=dict(os.environ,XDG_DATA_HOME=str(data_home)),capture_output=True)
+                         env=dict({k:v for k,v in os.environ.items() if k!='AGENT_KNOWLEDGE_HOME'},XDG_DATA_HOME=str(data_home)),capture_output=True)
         self.assertEqual(p.returncode,0,p.stderr)
         self.assertEqual(json.loads(p.stdout)['prefix'],str((data_home/'10x-swe/knowledge').resolve()))
         self.assertFalse(data_home.exists())
@@ -191,6 +193,174 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'env.sh'):
                 bootstrap.setup(target)
         self.assertEqual(saved.read_text(), 'retain\n')
+
+
+    def test_default_prefix_prefers_agent_knowledge_home(self):
+        home = self.root / 'agent home'
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan'],
+                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home), XDG_DATA_HOME=str(self.root / 'other')),
+                           capture_output=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(json.loads(p.stdout)['prefix'], str(home))
+        self.assertFalse(home.exists())
+
+    def test_doctor_names_the_prefix_it_checked(self):
+        home = self.root / 'agent home'
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'doctor'],
+                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home)), capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('Checking installation at ' + str(home.resolve()), p.stderr)
+        self.assertIn('No completed installation receipt at ' + str(home.resolve()), p.stderr)
+        self.assertFalse(home.exists())
+
+    def test_failed_build_checks_come_with_a_one_line_fix(self):
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'setup', '--prefix', str(self.root / 'x')],
+                           env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
+        self.assertIn('Missing build prerequisite: cargo', p.stderr)
+        self.assertRegex(p.stderr, r'fix: (sudo apt-get|sudo dnf|xcode-select)')
+        plan = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan', '--prefix', str(self.root / 'y')],
+                              env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
+        self.assertTrue(json.loads(plan.stdout)['fix'])
+
+    def test_old_rust_gets_the_rustup_fix_not_the_package_line(self):
+        checks = [{'command': 'python', 'passed': True},
+                  {'command': 'rustc', 'path': '/usr/bin/rustc', 'passed': False},
+                  {'command': 'cargo', 'path': '/usr/bin/cargo', 'passed': False}]
+        self.assertEqual(bootstrap.fixes(checks), [bootstrap.FIXES['rust']])
+        self.assertEqual(bootstrap.fixes([{'command': 'pkg-config', 'path': None, 'passed': False}]),
+                         [bootstrap.FIXES[bootstrap.os_family()]])
+
+    @unittest.skipUnless((REPO / '.git').exists() and shutil.which('git'), 'needs a git checkout')
+    def test_untracked_and_ignored_files_do_not_change_the_fingerprint(self):
+        before = bootstrap.inputs()
+        skill = REPO / 'plugins/10x-swe/skills/chrome-devtools/scripts'
+        created = [skill / 'node_modules/fingerprint-probe/index.js', skill / 'fingerprint-probe.untracked']
+        try:
+            for path in created:
+                path.parent.mkdir(parents=True, exist_ok=True); path.write_text('probe')
+            self.assertEqual(bootstrap.inputs(), before)
+        finally:
+            for path in created: path.unlink(missing_ok=True)
+            shutil.rmtree(skill / 'node_modules/fingerprint-probe', ignore_errors=True)
+            with contextlib.suppress(OSError): (skill / 'node_modules').rmdir()
+
+    def test_upgrade_carries_user_data_into_a_fresh_prefix(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True); (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        (old / 'state/bookmarks').mkdir(parents=True); (old / 'state/bookmarks/db.json').write_text('{}')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        with contextlib.redirect_stdout(io.StringIO()):
+            bootstrap.carry_over(old, new)
+        self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
+        self.assertTrue((new / 'state/bookmarks/db.json').is_file())
+        self.assertTrue((old / 'knowledge/sources/entries/note.md').is_file())
+        with self.assertRaisesRegex(ValueError, 'existing knowledge installation'):
+            bootstrap.carry_over(self.root / 'nowhere', new)
+
+    def test_changed_source_error_points_at_the_upgrade_path(self):
+        target = self.root / 'old'; bootstrap.owned(target, '0' * 64)
+        with self.assertRaisesRegex(ValueError, '--from'):
+            bootstrap.setup(target)
+        self.assertFalse((target / 'installation.json').exists())
+
+    def test_setup_copies_only_fingerprinted_files(self):
+        skill = REPO / 'plugins/10x-swe/skills/chrome-devtools'
+        extra = skill / 'fingerprint-probe.untracked'
+        extra.write_text('not certified')
+        go_extra = REPO / 'plugins/knowledge/tools/insights/fingerprint_probe.go'
+        go_extra.write_text('package main\n')
+        target = self.root / 'installed'
+        try:
+            with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                    patch.object(bootstrap, 'require_disk_space'), \
+                    patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
+                with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                    bootstrap.setup(target)
+            installed = target / 'engineering-skills/chrome-devtools'
+            self.assertTrue((installed / 'SKILL.md').is_file())
+            self.assertFalse((installed / extra.name).exists())
+            self.assertFalse((target / 'build/source/tools/insights' / go_extra.name).exists())
+            self.assertTrue((target / 'build/source/tools/insights/main.go').is_file())
+        finally:
+            extra.unlink()
+            go_extra.unlink()
+
+    def test_upgrade_rejects_links_and_overlaps_before_copying(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True)
+        (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        (old / 'state').mkdir()
+        (old / 'state/alias').symlink_to(old / 'knowledge/sources')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        with self.assertRaisesRegex(ValueError, 'symlink'):
+            bootstrap.carry_over(old, new)
+        self.assertFalse((new / 'knowledge').exists())
+        (old / 'state/alias').unlink()
+        nested = old / 'state/new'; bootstrap.owned(nested, 'b' * 64)
+        with self.assertRaisesRegex(ValueError, 'overlap'):
+            bootstrap.carry_over(old, nested)
+
+    def test_upgrade_does_not_merge_into_existing_destination_data(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('old')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        (new / 'state').mkdir(); (new / 'state/bookmark').write_text('new')
+        with self.assertRaisesRegex(ValueError, 'empty'):
+            bootstrap.carry_over(old, new)
+        self.assertEqual((new / 'state/bookmark').read_text(), 'new')
+
+    def test_setup_migrates_before_building_and_does_not_recopy_on_retry(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True)
+        (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        new = self.root / 'new'
+        with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                patch.object(bootstrap, 'require_disk_space'), \
+                patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
+            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                bootstrap.setup(new, old)
+            self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
+            with self.assertRaisesRegex(ValueError, 'empty'):
+                bootstrap.setup(new, old)
+            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                bootstrap.setup(new)
+
+    def test_interrupted_migration_cannot_be_certified_by_retrying_setup(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('kept')
+        new = self.root / 'new'
+        with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                patch.object(bootstrap, 'require_disk_space'), \
+                patch.object(bootstrap.shutil, 'copytree', side_effect=OSError('copy interrupted')):
+            with self.assertRaisesRegex(OSError, 'copy interrupted'):
+                bootstrap.setup(new, old)
+        with self.assertRaisesRegex(ValueError, 'migration was interrupted'):
+            bootstrap.setup(new)
+        self.assertFalse((new / 'installation.json').exists())
+        self.assertEqual((old / 'state/bookmark').read_text(), 'kept')
+
+    def test_upgrade_preserves_committed_wal_data_with_writers_paused(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir()
+        database = old / 'state/session-search.sqlite'
+        db = sqlite3.connect(database)
+        try:
+            db.execute('PRAGMA journal_mode=WAL')
+            db.execute('CREATE TABLE sessions (body TEXT)')
+            db.execute("INSERT INTO sessions VALUES ('kept')")
+            db.commit()
+            self.assertTrue(Path(str(database) + '-wal').is_file())
+            new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+            with contextlib.redirect_stdout(io.StringIO()):
+                bootstrap.carry_over(old, new)
+            copied = sqlite3.connect(new / 'state/session-search.sqlite')
+            try:
+                self.assertEqual(copied.execute('SELECT body FROM sessions').fetchall(), [('kept',)])
+                self.assertEqual(copied.execute('PRAGMA integrity_check').fetchone(), ('ok',))
+            finally:
+                copied.close()
+        finally:
+            db.close()
 
 
 if __name__=='__main__': unittest.main()

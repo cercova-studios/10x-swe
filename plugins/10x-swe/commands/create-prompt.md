@@ -1,6 +1,6 @@
 ---
 description: Create a new prompt that another Claude can execute
-argument-hint: [task description]
+argument-hint: "[task description]"
 allowed-tools: [Read, Write, Glob, SlashCommand, AskUserQuestion]
 ---
 

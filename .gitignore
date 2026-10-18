@@ -4,3 +4,8 @@ __pycache__/
 target/
 .venv/
 .DS_Store
+node_modules/
+# Local skill links (scripts/hosts.py link agents --dest .agents) stay untracked;
+# the generated Codex marketplace under .agents/plugins/ is committed.
+/.agents/*
+!/.agents/plugins/

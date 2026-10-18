@@ -331,7 +331,7 @@ Use all analysis outputs as inputs:
 <phase name="9" label="Generate Comprehensive Report">
 **Goal:** Create master analysis document
 
-Use template: `templates/full-analysis-report.md`
+Use template: `templates/architecture-analysis-report.md`
 
 Sections:
 1. **Executive Summary**

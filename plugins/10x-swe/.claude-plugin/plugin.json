@@ -1,7 +1,7 @@
 {
     "name": "10x-swe",
-    "description": "A comprehensive software engineering assistant with code review, architecture guidance, debugging, testing, and best practices",
-    "version": "1.0.0",
+    "description": "Engineering skills and bounded workflows for investigation, implementation and verification",
+    "version": "1.1.0",
     "author": {
         "name": "Rohit Nair",
         "email": "6954311+rnair98@users.noreply.github.com"

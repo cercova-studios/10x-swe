@@ -1,8 +1,10 @@
 ---
 name: gemini
 description: Gemini CLI for one-shot Q&A, summaries, and generation.
-homepage: https://ai.google.dev/
-metadata: {"clawdbot":{"emoji":"♊️","requires":{"bins":["gemini"]},"install":[{"id":"brew","kind":"brew","formula":"gemini-cli","bins":["gemini"],"label":"Install Gemini CLI (brew)"}]}}
+compatibility: Requires the gemini CLI (brew install gemini-cli) and a signed-in Google account or Gemini API key.
+metadata:
+  homepage: https://ai.google.dev/
+  clawdbot: '{"emoji":"♊️","requires":{"bins":["gemini"]},"install":[{"id":"brew","kind":"brew","formula":"gemini-cli","bins":["gemini"],"label":"Install Gemini CLI (brew)"}]}'
 ---
 
 # Gemini CLI

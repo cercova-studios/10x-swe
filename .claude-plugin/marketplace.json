@@ -14,7 +14,7 @@
     {
       "name": "knowledge",
       "source": "./plugins/knowledge",
-      "description": "Portable independent knowledge tools, reviewed evidence pipelines and skill/workflow discovery"
+      "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Build the CLIs once with ./knowledge setup (Rust 1.88+, Go 1.22+)."
     }
   ]
 }
