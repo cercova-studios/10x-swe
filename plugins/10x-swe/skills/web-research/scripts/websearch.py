@@ -5,6 +5,7 @@ Use --raw to retain provider-native evidence, warnings and usage.
 Advanced research APIs are described in ../references/.
 """
 import argparse
+from datetime import date
 import json
 import os
 import sys
@@ -41,7 +42,7 @@ def post(url, body, headers):
         raise RuntimeError("Provider returned invalid JSON") from None
 
 
-def perplexity(q, mode, n, domains, fresh, key):
+def perplexity(q, mode, n, domains, fresh, key, after_date=None):
     body = {"query": q, "max_results": n}
     if mode == "fast":
         body["search_type"] = "fast"
@@ -50,20 +51,24 @@ def perplexity(q, mode, n, domains, fresh, key):
     return post("https://api.perplexity.ai/search", body, {"Authorization": f"Bearer {key}"})
 
 
-def exa(q, mode, n, domains, fresh, key):
+def exa(q, mode, n, domains, fresh, key, after_date=None):
     contents = {"highlights": True}
     if fresh:
         contents["maxAgeHours"] = 0
     body = {"query": q, "type": mode, "numResults": n, "contents": contents}
     if domains:
         body["includeDomains"] = domains
+    if after_date:
+        body["startPublishedDate"] = after_date + "T00:00:00Z"
     return post("https://api.exa.ai/search", body, {"x-api-key": key})
 
 
-def parallel(q, mode, n, domains, fresh, key):
+def parallel(q, mode, n, domains, fresh, key, after_date=None):
     advanced = {"max_results": n}
     if domains:
         advanced["source_policy"] = {"include_domains": domains}
+    if after_date:
+        advanced.setdefault("source_policy", {})["after_date"] = after_date
     if fresh:
         advanced["fetch_policy"] = {"max_age_seconds": 600, "disable_cache_fallback": True}
     body = {"objective": q, "search_queries": [q], "mode": mode, "advanced_settings": advanced}
@@ -92,6 +97,7 @@ def main(argv=None):
     ap.add_argument("-n", type=int, default=5, help="results per provider, 1–20 (default 5)")
     ap.add_argument("-d", "--domain", action="append", help="hard domain allowlist; repeatable")
     ap.add_argument("--fresh", action="store_true", help="Exa live crawl; Parallel <=600s with stale fallback disabled")
+    ap.add_argument("--after-date", help="earliest publication date, YYYY-MM-DD; Exa and Parallel")
     ap.add_argument("--chars", type=int, default=700, help="positive human-display excerpt limit (default 700)")
     output = ap.add_mutually_exclusive_group()
     output.add_argument("--json", action="store_true", help="compact JSON results")
@@ -106,6 +112,14 @@ def main(argv=None):
         ap.error("--mode must be a supported mode for exactly one provider")
     if a.fresh and "perplexity" in providers:
         ap.error("--fresh is supported only for Exa and Parallel")
+    if a.after_date is not None:
+        try:
+            if date.fromisoformat(a.after_date).isoformat() != a.after_date:
+                raise ValueError
+        except ValueError:
+            ap.error("--after-date must be a valid YYYY-MM-DD date")
+        if "perplexity" in providers:
+            ap.error("--after-date is supported only for Exa and Parallel")
     if a.domain and any(not domain.strip() for domain in a.domain):
         ap.error("--domain must be nonempty")
     missing = [KEY[p] for p in providers if not os.environ.get(KEY[p])]
@@ -115,7 +129,7 @@ def main(argv=None):
     def run(provider):
         try:
             response = FN[provider](a.query, a.mode or DEFAULT_MODE[provider], a.n,
-                                    a.domain, a.fresh, os.environ[KEY[provider]])
+                                    a.domain, a.fresh, os.environ[KEY[provider]], a.after_date)
             results = compact(provider, response, a.n)
             return provider, response, results, None
         except RuntimeError as error:

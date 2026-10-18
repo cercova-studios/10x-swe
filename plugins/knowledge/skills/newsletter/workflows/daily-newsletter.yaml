@@ -1,0 +1,34 @@
+description: Research, verify and publish a private local AI reading room.
+type: graph
+schedule: "CRON_TZ=America/Detroit 0 8 * * *"
+catchup_window: 24h
+overlap_policy: latest
+timeout_sec: 2400
+dotenv: []
+working_dir: ..
+params:
+  - ROOT: "~/.agents/newsletters"
+  - CONFIG: "~/.config/10x-swe/newsletter/config.json"
+  - WORK: ""
+env:
+  NEWSLETTER_ROOT: "${params.ROOT}"
+  NEWSLETTER_CONFIG: "${params.CONFIG}"
+  NEWSLETTER_WORK: "${params.WORK}"
+steps:
+  - id: retention
+    run: python3 scripts/newsletter.py cleanup --apply
+  - id: collect
+    depends: [retention]
+    run: python3 scripts/newsletter.py collect
+  - id: draft
+    depends: [collect]
+    run: python3 scripts/newsletter.py draft
+  - id: review
+    depends: [draft]
+    run: python3 scripts/newsletter.py review
+  - id: validate
+    depends: [review]
+    run: python3 scripts/newsletter.py validate
+  - id: publish
+    depends: [validate]
+    run: python3 scripts/newsletter.py publish

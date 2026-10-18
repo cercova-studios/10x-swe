@@ -1,0 +1,177 @@
+{
+  "providers": [
+    "exa"
+  ],
+  "search_command": [
+    "python3",
+    "plugins/10x-swe/skills/web-research/scripts/websearch.py",
+    "-p",
+    "exa",
+    "-n",
+    "6",
+    "--raw",
+    "--after-date",
+    "{window_start_date}"
+  ],
+  "distiller": "distiller",
+  "evidence_commands": [
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "zenml", "--work", "{work}", "--limit", "3"],
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "aietalks", "--work", "{work}", "--limit", "3"],
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "ai-engineer", "--work", "{work}", "--limit", "3"]
+  ],
+  "lookback_hours": 72,
+  "sources_per_topic_provider": 2,
+  "max_sources": 48,
+  "source_chars": 4000,
+  "extracted_chars": 9000,
+  "max_original_pages": 12,
+  "domains": [
+    "zenml.io",
+    "aietalks.com",
+    "ai.engineer",
+    "openai.com",
+    "anthropic.com",
+    "deepmind.google",
+    "blog.google",
+    "research.google",
+    "github.com",
+    "huggingface.co",
+    "arxiv.org",
+    "meta.ai",
+    "microsoft.com",
+    "nvidia.com",
+    "pytorch.org",
+    "vllm.ai",
+    "sglang.ai",
+    "mistral.ai",
+    "deepseek.com",
+    "qwen.ai",
+    "alibabacloud.com",
+    "kimi.com",
+    "moonshot.ai",
+    "x.ai",
+    "apple.com",
+    "amd.com",
+    "intel.com",
+    "aws.amazon.com",
+    "cloud.google.com",
+    "modal.com",
+    "coreweave.com",
+    "baseten.co",
+    "together.ai",
+    "fireworks.ai",
+    "openrouter.ai",
+    "langchain.com",
+    "llamaindex.ai",
+    "pydantic.dev",
+    "cursor.com",
+    "replit.com",
+    "vercel.com",
+    "docker.com",
+    "databricks.com",
+    "datadoghq.com",
+    "bfl.ai",
+    "stability.ai",
+    "runwayml.com",
+    "elevenlabs.io",
+    "suno.com",
+    "figure.ai",
+    "physicalintelligence.company",
+    "nasa.gov",
+    "nature.com",
+    "science.org",
+    "biorxiv.org",
+    "medrxiv.org",
+    "reuters.com",
+    "europa.eu",
+    "nist.gov",
+    "whitehouse.gov",
+    "news.ycombinator.com",
+    "reddit.com",
+    "x.com",
+    "twitter.com",
+    "simonwillison.net",
+    "interconnects.ai",
+    "latent.space",
+    "substack.com",
+    "youtube.com",
+    "gitlab.com",
+    "jetbrains.com",
+    "builder.io",
+    "stackoverflow.blog",
+    "harvard.edu",
+    "arstechnica.com",
+    "thehindu.com",
+    "sedaily.com"
+  ],
+  "topics": [
+    {
+      "name": "Frontier models",
+      "query": "Frontier AI model releases reasoning multimodal OpenAI Anthropic Google Meta xAI Chinese labs"
+    },
+    {
+      "name": "Open models & local AI",
+      "query": "Open weight small language models DeepSeek Qwen Mistral local inference MLX llama.cpp quantization releases"
+    },
+    {
+      "name": "Agents & coding",
+      "query": "AI coding agents software engineering computer use browser agents autonomous workflows releases"
+    },
+    {
+      "name": "Developer tools & protocols",
+      "query": "AI developer SDK IDE MCP A2A agent harness developer tools protocols releases"
+    },
+    {
+      "name": "Research & training",
+      "query": "AI research pretraining post-training reinforcement learning synthetic data datasets architectures papers"
+    },
+    {
+      "name": "Retrieval & memory",
+      "query": "AI retrieval search RAG memory context engineering embeddings reranking knowledge graphs research releases"
+    },
+    {
+      "name": "Evaluation & reliability",
+      "query": "AI evaluation benchmarks leaderboards agent reliability reproducibility model measurement research"
+    },
+    {
+      "name": "Infrastructure & inference",
+      "query": "AI inference serving distributed training GPU kernels sandboxes cloud deployment vLLM SGLang infrastructure"
+    },
+    {
+      "name": "Chips & datacenters",
+      "query": "AI GPU accelerators chips datacenters memory networking energy compute supply announcements"
+    },
+    {
+      "name": "Image & video",
+      "query": "Generative AI image video diffusion models creative tools design animation releases"
+    },
+    {
+      "name": "Voice & music",
+      "query": "AI realtime speech voice audio music transcription text to speech models releases"
+    },
+    {
+      "name": "Robotics & world models",
+      "query": "AI robotics physical intelligence embodied agents world models simulation autonomous systems research"
+    },
+    {
+      "name": "Science & health",
+      "query": "AI science biology chemistry materials mathematics scientific discovery healthcare research original papers"
+    },
+    {
+      "name": "Products & enterprise",
+      "query": "AI consumer enterprise products productivity workflows finance education adoption deployments releases"
+    },
+    {
+      "name": "Business & policy",
+      "query": "AI company funding acquisitions pricing licensing regulation copyright government policy announcements"
+    },
+    {
+      "name": "Safety & security",
+      "query": "AI alignment interpretability safety cybersecurity prompt injection privacy governance security research"
+    },
+    {
+      "name": "Community & open source",
+      "query": "AI developer community open source launches GitHub Hacker News Reddit X discussions tutorials events firsthand reports"
+    }
+  ]
+}

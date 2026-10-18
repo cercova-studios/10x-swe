@@ -44,6 +44,28 @@ class SearchTests(unittest.TestCase):
             "query": "question", "type": "deep", "numResults": 3,
             "contents": {"highlights": True, "maxAgeHours": 0}})
 
+    def test_publication_date_filters_are_native_and_keep_domain_policy(self):
+        for provider in ['exa', 'parallel']:
+            with self.subTest(provider=provider):
+                code, _, _, post = self.invoke(['-p', provider, '--after-date', '2026-10-15',
+                                                '-d', 'example.org', '--raw', 'question'], [{}])
+                self.assertEqual(code, 0)
+                body = post.call_args.args[1]
+                if provider == 'exa':
+                    self.assertEqual(body['startPublishedDate'], '2026-10-15T00:00:00Z')
+                    self.assertEqual(body['includeDomains'], ['example.org'])
+                else:
+                    self.assertEqual(body['advanced_settings']['source_policy'],
+                                     {'include_domains': ['example.org'], 'after_date': '2026-10-15'})
+
+    def test_invalid_or_unsupported_publication_dates_never_request(self):
+        for provider, date in [('exa', '2026-02-30'), ('parallel', '20261015'),
+                               ('exa', '2026-1-5'), ('parallel', '2026-10-15T00:00:00Z'),
+                               ('exa', ''), ('perplexity', '2026-10-15')]:
+            code, _, _, post = self.invoke(['-p', provider, '--after-date', date, 'question'])
+            self.assertEqual(code, 2)
+            post.assert_not_called()
+
     def test_native_response_retains_evidence_and_usage(self):
         response = {"requestId": "fixture-id", "results": [{"url": "https://example.com", "highlights": ["source"]}],
                     "output": {"content": "claim", "grounding": [{"field": "content", "citations": []}]},

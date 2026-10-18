@@ -63,6 +63,12 @@ workflow. Install it separately, verify its version and inspect the workflow bef
 starting it. The native human task binds approval to exact evidence and destination
 hashes. Run Dagu separately when using the coordinated workflow.
 
+The [newsletter recipe](skills/newsletter/workflows/daily-newsletter.md) creates a
+local HTML reading room and Markdown editions from bounded public research. Its
+daily Dagu schedule includes separate editorial review and seven-day retention.
+The supplied adapter pairs Claude copywriting with independent Codex review.
+Configure provider credentials and editorial CLIs independently.
+
 EPUB needs Pandoc 3.12.1 (the CI-pinned version) and an explicitly supplied cover or
 configured cover provider. Older Pandoc releases may lack the required CLI options.
 PDF reconstruction requires PDFium and an external model provider. macOS PDF page rendering uses PDFKit. Media needs
