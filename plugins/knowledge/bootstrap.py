@@ -20,11 +20,6 @@ MARKER = '.knowledge-owner.json'
 COMMANDS = ('skill-search', 'bkd', 'distiller', 'insights', 'source-insights', 'session-search', 'knowledge-intake')
 # Minimum free disk space for a full source build (cargo target dirs dominate).
 MINIMUM_FREE_BYTES = 3 * 1024**3
-PREREQUISITE_HELP = {
-    'cargo': 'install the Rust toolchain from https://rustup.rs',
-    'go': 'install Go 1.22+ from https://go.dev/dl',
-    'cc': 'install a C compiler (e.g. `apt install build-essential` on Debian/Ubuntu, Xcode Command Line Tools on macOS)',
-}
 
 
 def digest(path):
@@ -154,8 +149,7 @@ def setup(prefix):
             return
         for command in ('cargo', 'go', 'cc'):
             if not shutil.which(command):
-                raise ValueError('Missing build prerequisite: ' + command
-                                 + ' — ' + PREREQUISITE_HELP[command])
+                raise ValueError('Missing build prerequisite: ' + command)
         require_disk_space(prefix)
         for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
