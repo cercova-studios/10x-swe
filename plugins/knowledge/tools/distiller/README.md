@@ -31,7 +31,9 @@ Pandoc can normalize terminal code newlines; equation display depends on the rea
 
 Every successful EPUB has a cover. On a cache miss, Muse generates text-free
 artwork and Rust composes exact title/author text using a bundled licensed font.
-Explicitly configure MODEL_API_KEY only when authorizing cloud cover generation:
+Muse is a paid API. Export `DISTILLER_MUSE_API_KEY` only when authorizing cloud cover
+generation (a generic `MODEL_API_KEY` is deliberately ignored, so a key exported
+for another tool is never billed):
 
 ```sh
 distiller article.html --mode epub -o article.epub

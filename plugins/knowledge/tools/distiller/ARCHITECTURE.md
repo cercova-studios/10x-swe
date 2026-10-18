@@ -148,7 +148,7 @@ src/
   requires checking provider history before explicitly removing the named `.pending`
   file. Cache corruption is an error, never a hidden paid regeneration.
   `DISTILLER_COVER_CACHE` defaults to `~/.cache/distiller/covers`; runtime
-  `MODEL_API_KEY` is needed only for a cache miss. No generation enable/disable flag.
+  `DISTILLER_MUSE_API_KEY` is needed only for a cache miss (`MODEL_API_KEY` is ignored with a hint). No generation enable/disable flag.
   EPUB rejects extraction LLM/stdout modes. Multi-article
   books remain unsupported; EPUBCheck verifies packaging, not
   source fidelity or reading-system display.

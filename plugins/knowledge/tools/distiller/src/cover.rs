@@ -105,6 +105,20 @@ fn cached(entry: &Path, spec: &Value) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
+/// Muse cover generation is a paid API, so it reads a key named for this tool only.
+/// A generic MODEL_API_KEY exported for other tools must never be billed by accident.
+pub(crate) const API_KEY_VAR: &str = "DISTILLER_MUSE_API_KEY";
+
+fn muse_api_key() -> Result<String> {
+    if let Some(key) = std::env::var(API_KEY_VAR).ok().filter(|s| !s.trim().is_empty()) {
+        return Ok(key);
+    }
+    if std::env::var("MODEL_API_KEY").is_ok_and(|s| !s.trim().is_empty()) {
+        bail!("MODEL_API_KEY is no longer read for paid Muse cover generation; set {API_KEY_VAR} to authorize it, or pass --cover PATH, or reuse a verified cached cover");
+    }
+    bail!("Mandatory EPUB cover needs explicitly injected {API_KEY_VAR} (paid Muse API), a verified cached cover, or --cover PATH")
+}
+
 pub(crate) async fn resolve(
     title: &str,
     author: &str,
@@ -171,7 +185,7 @@ async fn resolve_using(
     if entry.exists() {
         return cached(&entry, &spec);
     }
-    let api_key = std::env::var("MODEL_API_KEY").ok().filter(|s| !s.trim().is_empty()).context("Mandatory EPUB cover needs explicitly injected MODEL_API_KEY, a verified cached cover, or --cover")?;
+    let api_key = muse_api_key()?;
     let client = reqwest::Client::builder()
         .timeout(timeout)
         .redirect(reqwest::redirect::Policy::none())
@@ -361,7 +375,15 @@ mod tests {
 
     #[tokio::test]
     async fn mandatory_cover_journey_cache_failure_concurrency_and_exact_lettering() {
-        std::env::set_var("MODEL_API_KEY", "fixture-secret");
+        // The journey packages a real EPUB; CI installs the pinned Pandoc.
+        let has_pandoc = std::env::var_os("PATH")
+            .is_some_and(|path| std::env::split_paths(&path).any(|dir| dir.join("pandoc").is_file()));
+        if !has_pandoc {
+            eprintln!("skipping mandatory cover journey: pandoc is not on PATH");
+            return;
+        }
+        std::env::remove_var("MODEL_API_KEY");
+        std::env::set_var(API_KEY_VAR, "fixture-secret");
         let mut png = Vec::new();
         image::DynamicImage::ImageLuma8(GrayImage::from_pixel(16, 16, Luma([128])))
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
@@ -428,7 +450,7 @@ mod tests {
         )
         .await
         .unwrap();
-        std::env::remove_var("MODEL_API_KEY");
+        std::env::remove_var(API_KEY_VAR);
         std::env::set_var("DISTILLER_COVER_CACHE", packaging_cache.path());
         let book = packaging_cache.path().join("book.epub");
         let article = crate::types::DistillerResponse {
@@ -532,9 +554,26 @@ mod tests {
             .await
             .unwrap_err()
         )
-        .contains("MODEL_API_KEY"));
+        .contains(API_KEY_VAR));
+        std::env::set_var("MODEL_API_KEY", "generic-key");
+        let legacy = format!(
+            "{:#}",
+            resolve_using(
+                "Title",
+                "",
+                "source",
+                vec![],
+                missing.path(),
+                &endpoint,
+                Duration::from_secs(5)
+            )
+            .await
+            .unwrap_err()
+        );
+        assert!(legacy.contains("MODEL_API_KEY is no longer read") && legacy.contains(API_KEY_VAR));
+        std::env::remove_var("MODEL_API_KEY");
         assert_eq!(fs::read_dir(missing.path()).unwrap().count(), 0);
-        std::env::set_var("MODEL_API_KEY", "fixture-secret");
+        std::env::set_var(API_KEY_VAR, "fixture-secret");
         for (body, delay, timeout) in [
             (
                 json!({"status":"completed","output":[]}),
@@ -581,6 +620,6 @@ mod tests {
             .is_err());
             assert_eq!(count.load(Ordering::SeqCst), 1);
         }
-        std::env::remove_var("MODEL_API_KEY");
+        std::env::remove_var(API_KEY_VAR);
     }
 }
