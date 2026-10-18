@@ -374,7 +374,7 @@ Optional:
 <phase name="8" label="Synthesize Findings">
 **Goal:** Create comprehensive binary analysis report
 
-Use template: `templates/binary-analysis-report.md`
+Use template: `templates/architecture-analysis-report.md`
 
 Include:
 1. **Binary Profile** - Format, arch, size, stripped status
@@ -473,7 +473,7 @@ sudo apt install qemu-user-static qemu-user
 
 <output_format>
 Create structured markdown report using template:
-`templates/binary-analysis-report.md`
+`templates/architecture-analysis-report.md`
 
 Include:
 - Binary profile table (architecture, format, size, etc.)

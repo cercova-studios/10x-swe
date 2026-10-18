@@ -99,8 +99,8 @@ For symbol-level questions, prefer the targeted subcommands:
 <fallbacks>
 - Structure / AST queries  → `ast-grep`
 - Literal text / identifier → `ripgrep` (`rg`)
-- Repo layout discovery     → `workflows/repo-discovery.md` in the
-  `code-search` skill (if loaded)
+- Repo layout discovery     → the `code-search` skill's repo-discovery
+  workflow (if that skill is installed)
 </fallbacks>
 
 <success_criteria>

@@ -3,6 +3,7 @@ name: web-research
 description: Research current public information using Exa and Parallel search, extraction,
   grounded answers, structured research, entity discovery, batch processing and monitoring.
   Select the appropriate available connector, CLI or API and preserve source evidence.
+compatibility: Requires an EXA_API_KEY, PARALLEL_API_KEY or PERPLEXITY_API_KEY (paid search APIs) or an equivalent connector.
 metadata:
   skill-graph-id: plugin/10x-swe/web-research
   skill-graph-uses: ''

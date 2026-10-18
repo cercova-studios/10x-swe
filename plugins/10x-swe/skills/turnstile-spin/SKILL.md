@@ -7,6 +7,7 @@ description: Set up Cloudflare Turnstile end-to-end in a project. Scan the codeb
   existing backend, validate, and persist the skill. Load this when a user asks to
   add Turnstile, set up CAPTCHA, protect a form or endpoint from bots, or fix a Turnstile
   integration. Uses Cloudflare's documented Turnstile contract.
+compatibility: Requires a Cloudflare account and CLOUDFLARE_API_TOKEN with Turnstile permissions.
 license: Apache-2.0; see LICENSE
 metadata:
   framework-references: vanilla-html, nextjs-app, nextjs-pages, astro, sveltekit,

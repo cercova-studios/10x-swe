@@ -1,6 +1,7 @@
 ---
 name: doppler-secrets
 description: Use the Doppler CLI to access and manage secrets safely in both ad hoc scripts and long-lived projects. Covers CLI install, env injection, project binding via doppler.yaml, environments, service tokens, Docker, Kubernetes, and CI/CD integration. Use when a task touches secrets and must avoid exposing them in logs, prompts, command history, or tool output.
+compatibility: Requires the Doppler CLI and a Doppler account (DOPPLER_TOKEN or doppler login).
 ---
 
 <objective>
