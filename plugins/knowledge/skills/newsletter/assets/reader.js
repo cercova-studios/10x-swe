@@ -80,17 +80,33 @@ function storyArticle(story, view, background) {
 function evidenceNotes(edition) {
   const details = el('details'); details.id = 'evidence';
   details.append(el('summary', '', 'Sources & evidence'));
-  const sources = new Map(edition.research.sources.map(s => [s.id, s]));
   const list = el('ol', 'citations');
   for (const source of edition.reading.references) {
     const row = el('li'); row.id = `source-${source.number}`;
     const link = el('a', '', source.title); link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
     row.append(link, el('div', 'source-coverage', `${source.published_at || 'Date unconfirmed'} · ${source.coverage}`));
-    const quotes = new Set(edition.issue.stories.flatMap(s => s.citations)
-      .filter(c => sources.get(c.source_id).url === source.url).map(c => c.quote));
-    const passages = el('details'); passages.append(el('summary', '', `${quotes.size} supporting passage${quotes.size === 1 ? '' : 's'}`));
-    for (const quote of quotes) passages.append(el('blockquote', '', quote));
-    row.append(passages); list.append(row);
+    const origins = [];
+    if (source.original_url) origins.push(['Original source', source.original_url]);
+    for (const p of source.provenance || []) {
+      origins.push([`${p.provider} catalog`, p.catalog_url], [`${p.provider} evidence`, p.evidence_url]);
+    }
+    for (const [label, url] of origins) {
+      const origin = el('a', 'source-coverage', label); origin.href = url; origin.target = '_blank'; origin.rel = 'noopener noreferrer';
+      const line = el('div'); line.append(origin); row.append(line);
+    }
+    const quotes = source.preview_quotes;
+    const passages = el('details'); passages.append(el('summary', '', 'Supporting excerpt'));
+    for (const quote of quotes) {
+      passages.append(el('blockquote', '', quote));
+      for (const p of source.provenance || []) for (const segment of p.segments || []) {
+        if (!segment.text.includes(quote)) continue;
+        const seconds = Math.floor(segment.startMs / 1000);
+        const link = el('a', '', `Recording at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`); link.href = segment.citation_url;
+        passages.append(link);
+      }
+    }
+    if (quotes.length) row.append(passages);
+    list.append(row);
   }
   details.append(list); return details;
 }
@@ -101,7 +117,10 @@ function coverageTable(edition) {
   const head = el('thead'); head.append(header); table.append(head); const body = el('tbody');
   for (const name of edition.research.topics) {
     const row = el('tr'), label = el('th', '', name); label.scope = 'row'; row.append(label);
-    const providers = [...new Set((edition.research.coverage || []).filter(c => c.topic === name).map(c => c.provider))];
+    const providers = [...new Set([
+      ...(edition.research.coverage || []).filter(c => c.topic === name).map(c => c.provider),
+      ...edition.research.sources.filter(s => (s.topics || []).includes(name)).flatMap(s => (s.provenance || []).map(p => p.provider))
+    ])];
     const sources = edition.research.sources.filter(s => (s.topics || []).includes(name)).length;
     const stories = edition.issue.stories.filter(s => s.topic === name).length;
     for (const value of [providers.join(', ') || 'Not recorded', String(sources), stories ? String(stories) : 'No story published']) row.append(el('td', '', value));

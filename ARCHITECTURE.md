@@ -58,6 +58,13 @@ Engineering bundles keep canonical workflows and optional references together.
 Web research guidance routes to independently available connectors, clients and
 provider APIs. The optional search helper inherits credentials and emits JSON;
 research acquisition, evidence transformation and reviewed publication stay separate.
+The web-research catalog command reads `research-request/v1` from stdin and emits
+`research-source/v1` and `research-coverage/v1` JSONL. It owns bounded ZenML,
+AIETalks and AI Engineer acquisition with response hashes and timestamped evidence.
+The newsletter invokes explicit evidence commands without importing their adapters.
+It reserves their source budget, deduplicates original recording URLs and retains
+both discovery trails while preferring transcripts over secondary summaries.
+Catalog ingestion times and reported years never become publication dates.
 The optional newsletter recipe invokes public search/extraction commands, then a
 Claude CLI copywriter and independent Codex CLI reviewer over frozen JSON files.
 Native event logs retain producer provenance; receipts bind the producer and
@@ -65,6 +72,12 @@ input/output hashes. Writer revisions accept explicit feedback JSON; reviewer
 inputs remain limited to research and the issue. The local renderer validates
 explicit files without opening companion stores. Dagu coordinates those commands under an operator-owned
 environment. Newsletter publication never grants insight-library publication.
+Feedback may select bounded story copy fields. Claude returns only those strings;
+the adapter preserves all other fields and requires review of the complete merge.
+Both editorial stages load one shared rubric. Adapter receipts also bind the
+adapter source and rubric bytes, so policy changes require fresh editorial work.
+An optional synthetic calibration command invokes only the reviewer, keeps expected
+labels outside its input and retains verdicts and rationales for operator inspection.
 Acquisition searches every configured topic and balances source selection across
 topics under explicit source/text limits.
 Acquisition substitutes the frozen start date into explicit search arguments;
@@ -75,7 +88,8 @@ HTML and Markdown share a current-news/background split and first-use source
 numbering by URL. The quick briefing links the first six current stories in
 editorial order; earlier or unconfirmed-date reading stays separate. Briefs show
 self-contained summaries and essential caveats; deep dives retain full analysis.
-Exact supporting passages are grouped once per source behind an evidence disclosure.
+Short exact source excerpts are grouped behind an evidence disclosure; full
+citation records and timestamp provenance remain in the edition's JSON artifacts.
 Its store owns immutable dated editions and marked daily work directories. Seven-day
 retention validates ownership, inventory, hashes and symlinks before journaled
 removal; interrupted removal resumes without adopting unrelated directories.

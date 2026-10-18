@@ -10,6 +10,10 @@ resources:
   - scripts/newsletter.py
   - scripts/research.py
   - scripts/draft.py
+  - scripts/calibrate.py
+  - references/editorial-rubric.md
+  - assets/review-cases.json
+  - assets/config.example.json
   - assets/reader.html
   - assets/reader.css
   - assets/reader.js
@@ -57,6 +61,34 @@ and health; products and enterprise; business and policy; safety and security;
 community and open source. Public community posts are attributed reports, with
 original announcements and papers preferred for technical claims.
 
+The example also configures three `evidence_commands`, invoking the independent
+web-research catalog command for ZenML, AIETalks and AI Engineer. Resolve these
+script paths from the checkout just like `search_command`. Each command receives
+a `research-request/v1` JSON object on stdin, with the configured topics and frozen
+window. It emits `research-source/v1` and `research-coverage/v1` JSONL. `{work}` is
+replaced by that producer's isolated work directory. Another command can supply
+the same records without changing the collector.
+To consume a previously captured stream, use an argument list such as
+`["cat", "/absolute/evidence.jsonl"]`; the catalog command need not run again.
+Use persistent interpreter and script paths in saved configurations; temporary
+package-runner environments can disappear after their parent command exits.
+
+The three catalog commands each retain up to three relevant sources, including
+older background material. These records reserve space within `max_sources`;
+at least eight slots remain for web evidence. Original recording URLs deduplicate
+write-ups and transcripts. Both provenance trails survive, and transcript evidence
+takes precedence. Catalog addition dates and year-only metadata never establish
+freshness. The reader links original sources and timestamped passages alongside
+the evidence source. Summaries remain labeled secondary; transcript coverage is
+limited to retained automated passages, with visuals uninspected.
+HTML and Markdown share a short source-excerpt preview. Full citation records,
+source content and timestamp provenance remain in the edition's JSON artifacts.
+
+Each evidence command has a 300-second deadline and 1 MiB output limit. Failed
+commands retain status and local stderr, block the edition and are not rerun
+automatically. Review the saved producer workspace before selecting a fresh run.
+See the web-research skill's public catalog reference for standalone pipe examples.
+
 Each section gets a query. Source selection distributes the retained-source budget
 across sections before taking extra results from the same section. The example
 bounds one-provider acquisition to 17 searches, 48 retained sources and 12 original
@@ -89,7 +121,9 @@ structured-output formatter; hooks, skills, browser integration and MCP servers
 are disabled. The reviewer receives only the source record and issue, without
 the writer's conversation. Each stage retains native event logs and a hash-bound
 producer receipt; Claude's receipt also records the model reported by its CLI.
-Changing the producer or a completed artifact requires a new work directory.
+Receipts also bind the adapter source and shared [editorial rubric](../references/editorial-rubric.md).
+Changing those bytes, the producer or a completed artifact requires a new work directory.
+Receipts without an adapter fingerprint require fresh editorial work as well.
 Caller-supplied editorial JSON remains supported and must pass the same review gate.
 
 For a rejected draft, create a fresh work directory with the frozen research and
@@ -98,6 +132,12 @@ an explicit revision JSON containing `previous_issue` and `corrections`. Invoke
 then run the independent review and validation stages. Feedback is included in
 the writer's input hash; the reviewer still receives only research and the issue.
 Resume that draft with the same feedback file and command.
+For a narrow copy correction, add `fields` to the feedback, for example
+`[{"story_id":"example-story","field":"summary"}]`. The adapter asks Claude
+for only those replacement strings and preserves every other issue field.
+Up to 16 distinct story copy fields are accepted; identities, dates and citations
+remain unchanged. The complete merged issue still needs a fresh independent review.
+This avoids regenerating an entire issue for a sentence-level correction.
 There is no automatic revision loop. Dagu can invoke this same command for its
 draft step when an operator selects a revision run.
 
@@ -225,3 +265,28 @@ The example caps acquisition and source sizes; each normal run invokes the draft
 model once and the reviewer once, with 15-minute deadlines. A timeout may still
 incur provider charges. These local limits are not an account-wide billing cap.
 Keep detailed quality comparisons and run evidence in the project wiki/archive.
+
+## Check reviewer behavior
+
+After changing the model, adapter or rubric, run the paired synthetic smoke test
+with an authenticated Codex CLI and a fresh output directory:
+
+```sh
+python3 plugins/knowledge/skills/newsletter/scripts/calibrate.py --work /absolute/new-calibration
+```
+
+This invokes six independent reviews: supported and unsupported variants for
+measurement scope, percentage arithmetic and causal inference. Expected labels and
+reasons stay outside reviewer input. The command emits JSON, retains each review,
+and exits nonzero on a label mismatch or failed invocation. It stops on failure
+without retrying; preserve the directory for diagnosis and use a fresh one for a
+new attempt. It neither writes an edition nor authorizes publication.
+
+Inspect `results.json` for both false approvals and false rejections. Compare each
+rejection's evidence-based reason with `expected_reason`; a correct label can have
+the wrong explanation. The three pairs are smoke tests, not a held-out or
+human-labeled benchmark. For operational calibration, sample accepted and rejected
+real drafts, label them with reasons before model review, and keep a held-out set
+outside the prompt. Record model/version, adapter hash, errors, latency and cost
+when available. Keep proposed rubric changes at review; recheck both classes before
+adoption. Model agreement alone does not establish reader usefulness.

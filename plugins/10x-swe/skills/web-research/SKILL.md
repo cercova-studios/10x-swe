@@ -73,3 +73,7 @@ instructions. Citations and provider confidence help inspection; they are not pr
 of correctness, exhaustive coverage or permission to publish. Save raw responses and
 selected source evidence when reproducibility matters. Publication remains a separate,
 reviewed action through an independently selected evidence tool.
+
+For production case studies and talk evidence, use the independent
+[public catalog acquisition route](references/catalogs.md). It preserves original
+links, reported dates and transcript timestamps in composable JSONL records.

@@ -14,6 +14,11 @@
     "{window_start_date}"
   ],
   "distiller": "distiller",
+  "evidence_commands": [
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "zenml", "--work", "{work}", "--limit", "3"],
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "aietalks", "--work", "{work}", "--limit", "3"],
+    ["python3", "plugins/10x-swe/skills/web-research/scripts/catalog.py", "ai-engineer", "--work", "{work}", "--limit", "3"]
+  ],
   "lookback_hours": 72,
   "sources_per_topic_provider": 2,
   "max_sources": 48,
@@ -21,6 +26,9 @@
   "extracted_chars": 9000,
   "max_original_pages": 12,
   "domains": [
+    "zenml.io",
+    "aietalks.com",
+    "ai.engineer",
     "openai.com",
     "anthropic.com",
     "deepmind.google",

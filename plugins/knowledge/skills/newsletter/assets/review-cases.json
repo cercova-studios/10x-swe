@@ -1,0 +1,44 @@
+[
+  {
+    "id": "scope-supported",
+    "approved": true,
+    "reason": "The copy preserves attribution, workload and lack of production evidence.",
+    "evidence": "The vendor reports 18% higher throughput for a new scheduler on two GPUs in a synthetic queue benchmark. It has not measured production workloads or end-to-end application latency.",
+    "copy": "The vendor reports 18% higher throughput for its new scheduler on two GPUs in a synthetic queue benchmark [source]. The result concerns that workload, rather than end-to-end application latency. Production workloads remain unmeasured, so a production deployment would need its own evaluation before assuming the reported improvement applies."
+  },
+  {
+    "id": "scope-overclaim",
+    "approved": false,
+    "reason": "An unmeasured production latency reduction is inferred from synthetic throughput.",
+    "evidence": "The vendor reports 18% higher throughput for a new scheduler on two GPUs in a synthetic queue benchmark. It has not measured production workloads or end-to-end application latency.",
+    "copy": "The vendor reports 18% higher throughput for its new scheduler on two GPUs in a synthetic queue benchmark [source]. The result proves that production application latency falls by 18%. Teams can therefore rely on the same latency reduction when deploying the scheduler, even though production workloads remain unmeasured."
+  },
+  {
+    "id": "arithmetic-supported",
+    "approved": true,
+    "reason": "The copy distinguishes a 15 percentage-point change from a 25% relative change.",
+    "evidence": "The team reports that task success increased from 60% to 75% on the same fixed evaluation set. The experiment did not measure changes in deployment cost or user satisfaction.",
+    "copy": "The team reports task success rising from 60% to 75% on its fixed evaluation set [source]. That is an increase of 15 percentage points, or 25% relative to the initial result. The experiment leaves deployment cost and user satisfaction unmeasured, so it supports the task-success comparison rather than a wider product claim."
+  },
+  {
+    "id": "arithmetic-overclaim",
+    "approved": false,
+    "reason": "The copy labels a 15 percentage-point rise as a 15% relative increase.",
+    "evidence": "The team reports that task success increased from 60% to 75% on the same fixed evaluation set. The experiment did not measure changes in deployment cost or user satisfaction.",
+    "copy": "The team reports task success rising from 60% to 75% on its fixed evaluation set [source]. That is a relative increase of 15%. The experiment leaves deployment cost and user satisfaction unmeasured, so the result describes the task-success comparison and does not establish a wider product improvement."
+  },
+  {
+    "id": "causality-supported",
+    "approved": true,
+    "reason": "The copy reports co-occurring observations without assigning causation.",
+    "evidence": "The team observed fewer timeout errors after deploying a cache and reducing request traffic during the same week. It did not isolate the effect of either change or run a controlled experiment.",
+    "copy": "The team observed fewer timeout errors during a week when it deployed a cache and reduced request traffic [source]. Both changes occurred together, and the team did not isolate their effects. The observation therefore leaves the cause unresolved; a controlled comparison would be needed to attribute the improvement to either change."
+  },
+  {
+    "id": "causality-overclaim",
+    "approved": false,
+    "reason": "The copy assigns the entire improvement to the cache despite the traffic confound.",
+    "evidence": "The team observed fewer timeout errors after deploying a cache and reducing request traffic during the same week. It did not isolate the effect of either change or run a controlled experiment.",
+    "copy": "The team observed fewer timeout errors during a week when it deployed a cache and reduced request traffic [source]. The cache caused the entire improvement, independently of the traffic change. Although the team did not run a controlled experiment, this observation establishes that cache deployment alone fixed the timeout problem."
+  }
+]

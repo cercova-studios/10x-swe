@@ -119,6 +119,26 @@ def validate(issue, research, review):
             raise ValueError('Citations require credential-free HTTPS source URLs')
         if not isinstance(source['content'], str):
             raise ValueError('Source content must be text')
+        provenance = source.get('provenance', [])
+        links = [source['original_url']] if source.get('original_url') else []
+        if not isinstance(provenance, list):
+            raise ValueError('Source provenance must be a list')
+        for origin in provenance:
+            if not isinstance(origin, dict) or any(not isinstance(origin.get(k), str) for k in ('provider', 'catalog_url', 'evidence_url')):
+                raise ValueError('Provenance requires a provider')
+            links.extend(origin[k] for k in ('catalog_url', 'evidence_url'))
+            segments = origin.get('segments', [])
+            if not isinstance(segments, list):
+                raise ValueError('Invalid transcript segments')
+            for segment in segments:
+                if (not isinstance(segment, dict) or type(segment.get('startMs')) is not int or segment['startMs'] < 0
+                        or not isinstance(segment.get('text'), str) or not isinstance(segment.get('citation_url'), str)):
+                    raise ValueError('Invalid transcript segment')
+                links.append(segment['citation_url'])
+        for link in links:
+            p = urlsplit(link)
+            if p.scheme != 'https' or not p.hostname or p.username or p.password or any(ord(c) < 33 for c in link):
+                raise ValueError('Provenance links require credential-free HTTPS URLs')
     for field in ('title', 'standfirst', 'editorial'):
         if not isinstance(issue.get(field), str) or not issue[field].strip() or len(issue[field]) > 12000:
             raise ValueError('Missing or oversized editorial text')
@@ -209,6 +229,10 @@ def reading(issue, research):
         # LaTeXML can leak internal control sequences into a page's own title.
         if '\\__' in source['title']:
             source['title'] = source['url']
+        quote = next((c['quote'] for s in ordered for c in s['citations']
+                      if sources[c['source_id']]['url'] == source['url']), '')
+        words = list(re.finditer(r'\S+', quote))
+        source['preview_quotes'] = [quote[:words[min(19, len(words)-1)].end()]] if words else []
     return {'current': current, 'background': background, 'references': references, 'numbers': numbers}
 
 
@@ -253,10 +277,18 @@ def markdown(issue, research):
         number = source['number']
         text += [f'<a id="source-{number}"></a>', f"### [{number}: {source['title']}]({source['url']})",
                  f"{source.get('published_at') or 'Date unconfirmed'} · {source['coverage']}"]
-        quotes = dict.fromkeys(c['quote'] for s in issue['stories'] for c in s['citations']
-                              if sources[c['source_id']]['url'] == source['url'])
-        for quote in quotes:
+        if source.get('original_url'):
+            text.append(f"[Original source]({source['original_url']})")
+        for provenance in source.get('provenance', []):
+            text.append(f"Discovered via {provenance['provider']}: [catalog]({provenance['catalog_url']}) · "
+                        f"[retained evidence source]({provenance['evidence_url']})")
+        for quote in source['preview_quotes']:
             text.append('\n'.join('  > '+line for line in quote.splitlines()))
+            for provenance in source.get('provenance', []):
+                for segment in provenance.get('segments', []):
+                    if quote in segment['text']:
+                        seconds = segment['startMs']//1000
+                        text.append(f"[Recording at {seconds//60}:{seconds%60:02d}]({segment['citation_url']})")
     text.append('</details>')
     text += ['---', f"Research window: {research['window_start']} to {research['window_end']}. "
              'This newsletter is an editorial synthesis. Source claims and implications need independent evaluation before use.']

@@ -18,6 +18,8 @@ Lead with a short ranked briefing. Keep current news separate from earlier or
 undated reading, briefs concise, deep dives substantive, and source passages
 meaningful and exact. Essential qualifications belong with the claim.
 The supplied adapter uses Claude for copywriting and Codex for independent review.
+Both use the [editorial rubric](references/editorial-rubric.md). Review numerical
+scope, causal claims and rejection reasons, as well as citation integrity.
 
 Local newsletter publication requires an explicitly configured destination and
 provider/model environment. It does not authorize publication into source-insights

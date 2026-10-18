@@ -22,6 +22,7 @@ def module(name):
 
 
 n, research, draft, host = map(module, ['newsletter', 'research', 'draft', 'host'])
+calibrate = module('calibrate')
 
 
 def fixture(work):
@@ -195,6 +196,38 @@ class NewsletterTests(unittest.TestCase):
         receipt = json.loads((self.work/'draft.receipt.json').read_text())
         self.assertEqual(receipt['producer'], 'claude')
         self.assertEqual(receipt['model'], 'claude-fixture')
+        self.assertRegex(receipt['adapter_sha256'], r'^[0-9a-f]{64}$')
+
+    def test_adapter_and_rubric_changes_invalidate_cached_editorial_work(self):
+        for stage in ['draft', 'review']:
+            for changed in ['adapter', 'rubric', 'missing']:
+                with self.subTest(stage=stage, changed=changed):
+                    adapter = self.base/'adapter.py'
+                    rubric = self.base/'rubric.md'
+                    adapter.write_text('adapter version one')
+                    rubric.write_text('rubric version one')
+                    with patch.object(draft, '__file__', str(adapter)), patch.object(draft, 'RUBRIC', rubric):
+                        artifact = self.work/('issue.json' if stage == 'draft' else 'editorial-review.json')
+                        content = {'research': self.research}
+                        if stage == 'review':
+                            content['issue'] = self.issue
+                        receipt = {'producer': 'claude' if stage == 'draft' else 'codex',
+                                   'adapter_sha256': draft.hashlib.sha256(adapter.read_bytes()+b'\0'+rubric.read_bytes()).hexdigest(),
+                                   'input_sha256': draft.hashlib.sha256(json.dumps(content, ensure_ascii=False).encode()).hexdigest(),
+                                   'output_sha256': draft.hashlib.sha256(artifact.read_bytes()).hexdigest()}
+                        (self.work/f'{stage}.receipt.json').write_text(json.dumps(receipt))
+                        with patch.object(draft.subprocess, 'run') as run:
+                            self.assertEqual(draft.generate(self.work, stage), artifact)
+                            if changed == 'adapter':
+                                adapter.write_text('adapter version two')
+                            elif changed == 'rubric':
+                                rubric.write_text('rubric version two')
+                            else:
+                                del receipt['adapter_sha256']
+                                (self.work/f'{stage}.receipt.json').write_text(json.dumps(receipt))
+                            with self.assertRaisesRegex(ValueError, 'adapter'):
+                                draft.generate(self.work, stage)
+                            run.assert_not_called()
 
     def test_codex_review_is_separate_and_revision_bound(self):
         (self.work/'editorial-review.json').unlink()
@@ -215,6 +248,45 @@ class NewsletterTests(unittest.TestCase):
         self.assertEqual(review['issue_sha256'], self.review['issue_sha256'])
         self.assertEqual(review['research_sha256'], self.review['research_sha256'])
         self.assertEqual(json.loads((self.work/'review.receipt.json').read_text())['producer'], 'codex')
+
+    def test_calibration_hides_expected_labels_and_retains_rationales(self):
+        cases = json.loads((SKILL/'assets/review-cases.json').read_text())
+        self.assertEqual(sum(c['approved'] for c in cases), 3)
+        def respond(command, **kwargs):
+            self.assertEqual(command[2], 'review')
+            target = Path(command[command.index('--work')+1])
+            case = cases[int(target.name.removeprefix('case-'))-1]
+            self.assertNotIn(case['id'], str(target))
+            record = json.loads((target/'research.json').read_text())
+            issue = json.loads((target/'issue.json').read_text())
+            self.assertNotIn('approved', record)
+            self.assertNotIn('reason', issue)
+            quote = issue['stories'][0]['citations'][0]['quote']
+            self.assertTrue(40 <= len(quote) <= 400)
+            self.assertIn(quote, record['sources'][0]['content'])
+            # Deliberate disagreement must remain visible in the report.
+            (target/'editorial-review.json').write_text(json.dumps({
+                'approved': not case['approved'], 'problems': ['Fixture mismatch'], 'assessment': 'Fixture review'}))
+            return subprocess.CompletedProcess(command, 0)
+        with patch.object(calibrate.subprocess, 'run', side_effect=respond) as run:
+            report = calibrate.run(self.base/'calibration', 'fixture-codex')
+            self.assertEqual(run.call_count, 6)
+            self.assertEqual(report['label_matches'], 0)
+            self.assertEqual(report['rationale_review'], 'pending human inspection')
+            self.assertTrue(all(r['expected_reason'] and r['problems'] for r in report['results']))
+            with self.assertRaises(FileExistsError):
+                calibrate.run(self.base/'calibration', 'fixture-codex')
+            self.assertEqual(run.call_count, 6)
+
+    def test_calibration_failure_stops_without_retry_or_publication(self):
+        target = self.base/'calibration'
+        with patch.object(calibrate.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'fixture')) as run:
+            with self.assertRaises(subprocess.CalledProcessError):
+                calibrate.run(target, 'fixture-codex')
+            self.assertEqual(run.call_count, 1)
+        self.assertTrue((target/'case-01/research.json').exists())
+        self.assertFalse((target/'results.json').exists())
+        self.assertFalse(self.root.exists())
 
     def test_claude_errors_missing_results_and_tool_activity_hold_output(self):
         (self.work/'issue.json').unlink()
@@ -277,6 +349,40 @@ class NewsletterTests(unittest.TestCase):
                     draft.generate(self.work, 'draft', feedback=feedback)
                 run.assert_not_called()
 
+    def test_selected_copy_revision_preserves_every_other_field_and_needs_fresh_review(self):
+        previous = copy.deepcopy(self.issue)
+        feedback = self.base/'feedback.json'
+        feedback.write_text(json.dumps({'previous_issue': previous, 'corrections': ['Narrow the claim'],
+                                        'fields': [{'story_id': 'story-0', 'field': 'summary'}]}))
+        (self.work/'issue.json').unlink()
+        def respond(command, **kwargs):
+            schema = json.loads(command[command.index('--json-schema')+1])
+            self.assertEqual(set(schema['properties']), {'field_1'})
+            result = {'type': 'result', 'subtype': 'success', 'is_error': False,
+                      'structured_output': {'field_1': 'A narrower supported explanation.'}}
+            kwargs['stdout'].write((json.dumps(result)+'\n').encode())
+            return subprocess.CompletedProcess(command, 0)
+        with patch.object(draft.subprocess, 'run', side_effect=respond):
+            result = json.loads(draft.generate(self.work, 'draft', feedback=feedback).read_text())
+        expected = copy.deepcopy(previous)
+        expected['stories'][0]['summary'] = 'A narrower supported explanation.'
+        self.assertEqual(result, expected)
+        self.assertEqual(json.loads(feedback.read_text())['previous_issue'], previous)
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            n.validate(result, self.research, self.review)
+
+    def test_invalid_selected_fields_fail_before_model_invocation(self):
+        feedback = self.base/'feedback.json'
+        for fields in [[], [{'story_id': 'missing', 'field': 'summary'}],
+                       [{'story_id': 'story-0', 'field': 'citations'}],
+                       [{'story_id': [], 'field': 'summary'}],
+                       [{'story_id': 'story-0', 'field': 'summary'}]*2]:
+            feedback.write_text(json.dumps({'previous_issue': self.issue, 'corrections': ['Fix'], 'fields': fields}))
+            with patch.object(draft.subprocess, 'run') as run:
+                with self.assertRaises(ValueError):
+                    draft.generate(self.work, 'draft', feedback=feedback)
+                run.assert_not_called()
+
     def test_headless_environment_permissions_and_names(self):
         env = self.base/'environment.json'
         env.write_text(json.dumps({'EXA_API_KEY': 'fixture-key'}))
@@ -319,6 +425,74 @@ class NewsletterTests(unittest.TestCase):
                     research.collect(config, self.base/'failed-search')
             self.assertEqual(run.call_count, 1)
 
+    def test_evidence_stream_deduplicates_recordings_and_preserves_dates_and_origins(self):
+        secondary = {'schema': 'research-source/v1', 'provider': 'catalog-one', 'url': 'https://example.org/summary',
+                     'original_url': 'https://www.youtube.com/watch?v=abcdefghijk', 'title': 'Talk',
+                     'content': 'A secondary summary.', 'coverage': 'secondary write-up', 'published_at': '2025-12-02',
+                     'retrieved_at': '2026-10-18T12:00:00+00:00',
+                     'evidence_kind': 'secondary-summary', 'topics': ['Agents'],
+                     'provenance': [{'provider': 'catalog-one', 'catalog_url': 'https://example.org/catalog',
+                                     'evidence_url': 'https://example.org/summary', 'published_at': '2025-12-02'}]}
+        primary = copy.deepcopy(secondary)
+        primary.update(provider='catalog-two', url='https://example.org/transcript', content='An original automated passage.',
+                       coverage='official transcript', published_at=None, evidence_kind='primary-transcript')
+        primary['provenance'] = [{'provider': 'catalog-two', 'catalog_url': 'https://example.org/catalog',
+                                  'evidence_url': 'https://example.org/transcript',
+                                  'segments': [{'startMs': 12050, 'text': primary['content'],
+                                                'citation_url': secondary['original_url']+'&t=12'}]}]
+        config = {'evidence_commands': [['fixture', '--work', '{work}']], 'domains': ['example.org'],
+                  'topics': [{'name': 'Agents', 'query': 'agents'}]}
+        self.work.mkdir(exist_ok=True)
+        output = '\n'.join(json.dumps(r) for r in [secondary, primary]).encode()
+        now = datetime.now(timezone.utc)
+        with patch.object(research.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, output, b'')) as run:
+            sources, _ = research.evidence_inputs(config, self.work, now, now)
+            again, _ = research.evidence_inputs(config, self.work, now, now)
+            self.assertEqual(sources, again)
+            self.assertEqual(run.call_count, 1)
+            self.assertEqual(json.loads(run.call_args.kwargs['input'])['schema'], 'research-request/v1')
+        self.assertEqual(len(sources), 1)
+        source = next(iter(sources.values()))
+        self.assertEqual(source['content'], primary['content'])
+        self.assertEqual(source['published_at'], '2025-12-02')
+        self.assertEqual(len(source['provenance']), 2)
+        self.assertEqual(source['provenance'][1]['segments'][0]['startMs'], 12050)
+        for index, invalid in enumerate([['not an object'], [{'provider': 'catalog-one', 'catalog_url': 'javascript:bad',
+                                                             'evidence_url': 'https://example.org/summary'}]]):
+            bad = dict(secondary, provenance=invalid)
+            target = self.base/f'bad-evidence-{index}'
+            target.mkdir()
+            output = json.dumps(bad).encode()
+            with patch.object(research.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, output, b'')):
+                with self.assertRaises(ValueError):
+                    research.evidence_inputs(config, target, now, now)
+
+    def test_failed_evidence_producer_is_not_retried(self):
+        config = {'evidence_commands': [['fixture']], 'topics': [{'name': 'Agents', 'query': 'agents'}]}
+        now = datetime.now(timezone.utc)
+        with patch.object(research.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, b'', b'Fixture failure')) as run:
+            for _ in range(2):
+                with self.assertRaisesRegex(RuntimeError, 'Evidence command 0 failed'):
+                    research.evidence_inputs(config, self.work, now, now)
+            self.assertEqual(run.call_count, 1)
+        self.assertEqual((self.work/'evidence-0.stderr.log').read_text(), 'Fixture failure')
+
+    def test_provenance_links_and_timestamps_survive_rendering_and_reject_unsafe_links(self):
+        source = self.research['sources'][0]
+        source['original_url'] = 'https://www.youtube.com/watch?v=abcdefghijk'
+        source['provenance'] = [{'provider': 'catalog', 'catalog_url': 'https://example.org/catalog',
+                                 'evidence_url': 'https://example.org/transcript',
+                                 'segments': [{'startMs': 12050, 'text': source['content'],
+                                               'citation_url': source['original_url']+'&t=12'}]}]
+        self.review['research_sha256'] = n.checksum(json.dumps(self.research, ensure_ascii=False, sort_keys=True).encode())
+        n.validate(self.issue, self.research, self.review)
+        text = n.markdown(self.issue, self.research)
+        self.assertIn('[Original source](https://www.youtube.com/watch?v=abcdefghijk)', text)
+        self.assertIn('(https://www.youtube.com/watch?v=abcdefghijk&t=12)', text)
+        source['provenance'][0]['evidence_url'] = 'javascript:alert(1)'
+        with self.assertRaisesRegex(ValueError, 'Provenance links'):
+            n.validate(self.issue, self.research, self.review)
+
     def test_source_budget_cannot_starve_later_topics(self):
         topics = [{'name': str(i)} for i in range(17)]
         sources = {f'{topic}-{i}': {'topics': [str(topic)]} for topic in range(17) for i in range(4)}
@@ -331,7 +505,7 @@ class NewsletterTests(unittest.TestCase):
         config = json.loads((SKILL/'assets/config.example.json').read_text())
         self.assertEqual(len(config['topics']), 17)
         config.update(search_command=['fixture-search'], domains=['example.org'], max_original_pages=0,
-                      max_sources=17)
+                      max_sources=17, evidence_commands=[])
         responses = []
         for index in range(17):
             rows = [{'url': f'https://example.org/{index}/{rank}', 'highlights': ['A source body. '*1000]}
@@ -429,6 +603,19 @@ class NewsletterTests(unittest.TestCase):
         self.assertEqual(view['references'][0]['title'], 'https://example.org/article')
         self.assertNotIn(broken, n.markdown(self.issue, self.research))
         self.assertEqual(self.research['sources'][0]['title'], broken)
+
+    def test_evidence_preview_is_short_exact_and_preserves_full_citations(self):
+        quote = ' '.join(f'word{i}' for i in range(35))
+        self.research['sources'][0]['content'] = quote
+        for story in self.issue['stories']:
+            story['citations'][0]['quote'] = quote
+        before = copy.deepcopy((self.issue, self.research))
+        preview = n.reading(self.issue, self.research)['references'][0]['preview_quotes'][0]
+        self.assertLessEqual(len(preview.split()), 20)
+        self.assertIn(preview, quote)
+        self.assertIn(preview, n.markdown(self.issue, self.research))
+        self.assertNotIn(quote, n.markdown(self.issue, self.research))
+        self.assertEqual((self.issue, self.research), before)
 
     def test_reference_labels_preserve_source_text_and_accept_both_separators(self):
         self.research['sources'].append(dict(self.research['sources'][0], id='other', url='https://example.org/other'))

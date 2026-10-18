@@ -81,6 +81,7 @@ def collect(config, work):
         raise ValueError('Research configuration changed during recovery')
     start, end = datetime.fromisoformat(state['start']), datetime.fromisoformat(state['end'])
     command = [arg.replace('{window_start_date}', start.date().isoformat()) for arg in config['search_command']]
+    supplemental, evidence_coverage = evidence_inputs(config, work, start, end)
     sources, coverage = {}, []
     for index, topic in enumerate(config['topics']):
         raw_path = work/f'search-{index}.json'
@@ -128,13 +129,24 @@ def collect(config, work):
                                 'retrieved_at': saved['retrieved_at'], 'topics': [topic['name']],
                                 'content': content, 'coverage': 'search excerpts', 'provider': provider}
     # Give later topics a first source before earlier topics consume the source budget.
-    sources = balanced_sources(sources, config['topics'], max_sources)
+    sources = balanced_sources(sources, config['topics'], max_sources-len(supplemental))
+    for sid, source in supplemental.items():
+        if sid in sources:
+            sources[sid]['topics'] = sorted(set(sources[sid]['topics']+source['topics']))
+            sources[sid].setdefault('provenance', []).extend(source['provenance'])
+            if source['evidence_kind'] == 'primary-transcript':
+                sources[sid] = dict(source, topics=sources[sid]['topics'], provenance=sources[sid]['provenance'])
+        else:
+            sources[sid] = source
     for row in coverage:
         row['retained_sources'] = sum(row['topic'] in s['topics'] and row['provider'] == s['provider'] for s in sources.values())
+    coverage.extend(evidence_coverage)
     # A bounded selection gets original snapshots and an independent extractor.
     enriched = 0
     attempted = 0
     for sid, source in sources.items():
+        if source.get('provenance'):
+            continue  # Explicit evidence producers own their extraction and coverage labels.
         if attempted >= config.get('max_original_pages', 8):
             break
         attempted += 1
@@ -170,6 +182,78 @@ def collect(config, work):
         raise ValueError('Insufficient source/topic coverage; refusing an empty edition')
     save(target, result)
     return result
+
+
+def evidence_inputs(config, work, start, end):
+    """Invoke independent producers; accept only explicit versioned evidence records."""
+    commands = config.get('evidence_commands', [])
+    if not isinstance(commands, list) or len(commands) > 6:
+        raise ValueError('Evidence command count outside bounds')
+    request = {'schema': 'research-request/v1', 'topics': config['topics'],
+               'window_start': start.isoformat(), 'window_end': end.isoformat()}
+    sources, coverage = {}, []
+    for index, command in enumerate(commands):
+        if not isinstance(command, list) or not command or not all(isinstance(a, str) for a in command):
+            raise ValueError('Evidence command must be an argument list')
+        path = work/f'evidence-{index}.json'
+        if not path.exists():
+            args = [a.replace('{work}', str((work/f'producer-{index}').resolve())) for a in command]
+            result = subprocess.run(args, input=json.dumps(request).encode(), capture_output=True, timeout=300)
+            (work/f'evidence-{index}.stderr.log').write_bytes(result.stderr or b'')
+            if len(result.stdout) > 1024*1024:
+                raise ValueError('Evidence response exceeds 1 MiB')
+            save(path, {'exit_code': result.returncode, 'records': [json.loads(line) for line in result.stdout.splitlines() if line.strip()]})
+        saved = json.loads(path.read_text())
+        if saved['exit_code']:
+            raise RuntimeError(f'Evidence command {index} failed; inspect producer workspace; no automatic retry')
+        for row in saved['records']:
+            if row.get('schema') == 'research-coverage/v1':
+                coverage.append({**row, 'topic': 'Catalog discovery', 'retained_sources': row.get('selected', 0)})
+                continue
+            if row.get('schema') != 'research-source/v1':
+                raise ValueError('Expected research-source/v1 or research-coverage/v1')
+            if any(not isinstance(row.get(k), str) for k in ('url', 'title', 'provider', 'coverage', 'retrieved_at')):
+                raise ValueError('Evidence metadata must be text')
+            admitted(row['url'], config['domains'])
+            original = row.get('original_url', row['url'])
+            admitted(original, [urllib.parse.urlsplit(original).hostname or ''])
+            if (not isinstance(row.get('content'), str) or not row['content'].strip() or len(row['content']) > 8000
+                    or row.get('evidence_kind') not in ('secondary-summary', 'primary-transcript')
+                    or not isinstance(row.get('provenance'), list) or not row['provenance']
+                    or not isinstance(row.get('topics'), list) or not row['topics']
+                    or not all(isinstance(t, str) for t in row['topics'])
+                    or not set(row['topics']) <= {t['name'] for t in config['topics']}):
+                raise ValueError('Invalid evidence content, provenance or topics')
+            for origin in row['provenance']:
+                if not isinstance(origin, dict) or any(not isinstance(origin.get(k), str) for k in ('provider', 'catalog_url', 'evidence_url')):
+                    raise ValueError('Invalid evidence provenance')
+                links = [origin['catalog_url'], origin['evidence_url']]
+                segments = origin.get('segments', [])
+                if not isinstance(segments, list):
+                    raise ValueError('Invalid transcript segments')
+                for segment in segments:
+                    if (not isinstance(segment, dict) or type(segment.get('startMs')) is not int or segment['startMs'] < 0
+                            or not isinstance(segment.get('text'), str) or not isinstance(segment.get('citation_url'), str)):
+                        raise ValueError('Invalid transcript segment')
+                    links.append(segment['citation_url'])
+                for link in links:
+                    admitted(link, [urllib.parse.urlsplit(link).hostname or ''])
+            if row.get('published_at'):
+                datetime.fromisoformat(row['published_at'].replace('Z', '+00:00'))
+            sid = hashlib.sha256(original.encode()).hexdigest()[:16]
+            if sid in sources:
+                old = sources[sid]
+                old['topics'] = sorted(set(old['topics']+row['topics']))
+                old['provenance'].extend(row['provenance'])
+                if row['evidence_kind'] == 'primary-transcript':
+                    # One recording is one source; primary transcript replaces a secondary write-up.
+                    sources[sid] = dict(row, id=sid, topics=old['topics'], provenance=old['provenance'],
+                                        published_at=row.get('published_at') or old.get('published_at'))
+            else:
+                sources[sid] = dict(row, id=sid)
+    if len(sources) > config.get('max_sources', 48)-8:
+        raise ValueError('Evidence inputs leave insufficient web-source budget')
+    return sources, coverage
 
 
 def balanced_sources(sources, topics, limit):
