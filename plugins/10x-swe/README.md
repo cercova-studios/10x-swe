@@ -1,7 +1,8 @@
 # 10x-swe
 
 ```sh
-claude plugin install 10x-swe --marketplace cercova-studios/10x-swe
+claude plugin marketplace add cercova-studios/10x-swe
+claude plugin install 10x-swe@10x-swe
 ```
 
 A terminal-first AI agent plugin with skills for software engineering, debugging,
@@ -24,6 +25,9 @@ architecture and development workflows.
 | task-coordination-strategies | Decompose tasks, design dependency graphs, coordinate multi-agent work |
 | technical-writing | Clear, source-grounded READMEs, developer documentation and project copy |
 | test-driven-development | TDD workflow: write tests before implementation code |
+| diagnose | Diagnose reproducible bugs and regressions with falsifiable hypotheses and targeted probes |
+| grill-me | Relentless plan/design interviews until shared understanding is reached |
+| grill-with-docs | Stress-test plans against the domain model; update docs inline as decisions land |
 
 ### Development Tools
 | Skill | Description |
@@ -43,6 +47,12 @@ architecture and development workflows.
 | using-git-worktrees | Isolated git worktrees for feature work |
 | jujutsu-vcs | Jujutsu (jj) workflows, isolated agent workspaces and Git compatibility |
 | uv-package-manager | Fast Python dependency management with uv |
+| agent-browser | Browser automation CLI for AI agents |
+| code-search | Route local code lookup by intent: literal, syntax, layout, or meaning |
+| doppler-secrets | Manage secrets safely with the Doppler CLI |
+| osgrep-semantic-search | Semantic code search by behavior and intent |
+| web-research | Research current public information with source-linked evidence |
+| x-api | Build on X's public API: posts, users, trends, spaces, DMs |
 
 ### Python
 | Skill | Description |
@@ -70,6 +80,8 @@ architecture and development workflows.
 | memory-safety-patterns | RAII, ownership, smart pointers across Rust, C++, and C |
 | microservices-patterns | Service boundaries, event-driven communication, and resilience |
 | prompt-engineering-patterns | Advanced prompt techniques for production LLM applications |
+| deep-architecture-analysis | Reverse-engineer repos and binaries; surface bloat, vulnerabilities, patterns |
+| improve-codebase-architecture | Find architecture improvements from domain language and ADRs |
 
 ### Backend & Databases
 | Skill | Description |
