@@ -1,7 +1,8 @@
 # Knowledge tools
 
 ```sh
-claude plugin install knowledge --marketplace cercova-studios/10x-swe
+claude plugin marketplace add cercova-studios/10x-swe
+claude plugin install knowledge@10x-swe
 ```
 
 Run the repository's `knowledge plan`, `setup` and `doctor` commands. Tools build
