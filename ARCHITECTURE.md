@@ -65,6 +65,10 @@ Source revisions install into fresh prefixes; an owned receipt never silently
 upgrades an existing installation. Remote publication and delivery remain separate acts.
 Completed setup retries verify readiness without requiring compilers; incomplete
 installs still require the documented build prerequisites.
+Plan and incomplete setup probe compiler versions, C compilation and Linux OpenSSL
+availability before builds. Activation is part of the completed installation:
+retries restore a missing deterministic `env.sh`, but refuse modified or symlinked
+activation files rather than overwriting them.
 
 The playground copies an explicitly selected project into a private guest workspace.
 Explicit read-only shares expose reference repositories, datasets and skills;

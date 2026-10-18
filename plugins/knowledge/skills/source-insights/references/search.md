@@ -10,8 +10,8 @@ The neural profile below is optional. It additionally requires Python built with
 SQLite extension loading, sqlite-vec, the pinned model and `llama-embedding`.
 Explicitly set `SOURCE_INSIGHTS_INDEX_MODE=hybrid`, configure
 `KNOWLEDGE_EMBED_MODEL=/absolute/model.gguf`, and rebuild before switching profiles.
-These steps never download a model automatically. Historical `~/.agents` examples
-below describe the standalone default; use your owned prefix in a portable setup.
+These steps never download a model automatically. Activate the portable
+installation's `env.sh` before running the commands below.
 
 Entry JSON, notes and evidence remain authoritative. `INDEX.md` and `search.sqlite`
 are disposable derivatives. No graph database or graph extraction is installed.
@@ -25,9 +25,13 @@ matches can be irrelevant; neither fusion scores nor distance establish truth.
 
 ## Runtime
 
-The launcher automatically uses `~/.agents/runtimes/source-insights/bin/python`
-for search, publish and reindex. This installation uses Python 3.12 and
-`sqlite-vec==0.1.9`. To create a missing runtime (do not replace an existing one):
+The portable `source-insights` launcher uses the Python runtime created by
+`knowledge setup` at `$AGENT_KNOWLEDGE_HOME/runtimes/source-insights/bin/python`.
+The package includes `sqlite-vec==0.1.9` in its hash-locked requirements.
+
+For a separate standalone installation using the historical `~/.agents` layout,
+create a missing runtime as follows. Do not replace an existing runtime or apply
+these commands to a completed portable installation:
 
 ```sh
 uv venv --python 3.12 ~/.agents/runtimes/source-insights
@@ -54,10 +58,9 @@ UTF-8 bytes, with the BGE retrieval instruction added internally.
 ## Use and recovery
 
 ```sh
-python3 ~/.agents/skills/source-insights/scripts/sources.py search 'prevent scope drift'
-python3 ~/.agents/skills/source-insights/scripts/sources.py search '2609.24974' --mode keyword
-python3 ~/.agents/skills/source-insights/scripts/sources.py reindex --rebuild
-python3 ~/.agents/skills/source-insights/scripts/check.py
+source-insights search 'prevent scope drift'
+source-insights search '2609.24974' --mode keyword
+source-insights reindex --rebuild
 ```
 
 Unchanged entries reuse embeddings. New/changed entries are embedded before the
