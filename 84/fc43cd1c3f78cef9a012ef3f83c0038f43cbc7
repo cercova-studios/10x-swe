@@ -1,0 +1,107 @@
+plugins/knowledge/skills/newsletter/scripts/research.py
+  s_e3121fbece1af6::t_64310c3af3eafa 74-82,135,137,139
+  s_e3121fbece1af6::t_ac22cf13627835 93,95-96
+  s_e3121fbece1af6::t_be402956ffdf1e 121
+  s_e3121fbece1af6::t_6d915daba282f7 164
+  s_e3121fbece1af6::t_d90af56ba1a651 1-5,7-59,66-73,83-92,94,97-117,119-120,122-128,133-134,136,138,140-154,156-163,165,168-171,185-192,197-199
+  s_e3121fbece1af6::t_435bd782fbc61e 6,193-196
+  s_e3121fbece1af6::t_2c5543d0def584 60-65,118,129-132,155,172-184
+  s_e3121fbece1af6::t_20bcaa40216571 166-167
+plugins/knowledge/skills/newsletter/scripts/newsletter.py
+  s_e3121fbece1af6::t_e2f2196efd3618 402,404,406-412
+  s_e3121fbece1af6::t_60befad501dc43 160-185,188-189,193-196,198,200,206-238,245
+  s_e3121fbece1af6::t_ab8fd7e4224a11 186-187,190-192
+  s_e3121fbece1af6::t_37b310d81b7d19 398-400,403
+  s_e3121fbece1af6::t_ef99a856f9ef36 397,405
+  s_e3121fbece1af6::t_ffc3427a2b8c65 204
+  s_e3121fbece1af6::t_0f26cce403376c 1-59,61-63,66-67,70-79,84-100,103-114,117-134,137-144,146,148-152,157-159,197,199,239-240,242-244,246-301,304-305,307-309,315-322,324-325,331-336,386-396,401,413-414,424-449
+  s_e3121fbece1af6::t_32c3c8e2f39346 135-136
+  s_e3121fbece1af6::t_15ee00f1dc34b5 147
+  s_e3121fbece1af6::t_6d915daba282f7 101-102,153-156,337-353,358-359,415-423
+  s_e3121fbece1af6::t_2c5543d0def584 115-116
+  s_e3121fbece1af6::t_841d9c484fafe1 145
+  s_e3121fbece1af6::t_f4361b9b9d7523 201-202,205,241
+  s_e3121fbece1af6::t_108ed8497c23b1 60,64-65,68-69,80-83,302-303,306,310-314,323,326-330,354-357,360-385
+  s_e3121fbece1af6::t_46d4d9832ef57d 203
+  s_e3121fbece1af6::t_447e65e3ff3d37 450-467
+plugins/knowledge/skills/newsletter/assets/reader.html
+  s_e3121fbece1af6::t_7c016b1571d8d9 1-5,10,14
+  s_e3121fbece1af6::t_790795ea47cfa7 11
+  s_e3121fbece1af6::t_7e29edd2abe789 6-9,13
+  s_e3121fbece1af6::t_6cc0fc8318813f 12
+plugins/knowledge/README.md
+  s_e3121fbece1af6::t_a98260481e5af4 64-68
+tests/test_newsletter.py
+  s_e3121fbece1af6::t_5b9b02894deb48 1-53,55-177,252,335-337
+  s_e3121fbece1af6::t_37b310d81b7d19 54
+  s_e3121fbece1af6::t_15ee00f1dc34b5 263-268,320-334
+  s_e3121fbece1af6::t_fbf5ff1d546ef7 274-296,302-312
+  s_e3121fbece1af6::t_20bcaa40216571 210-217,237-245
+  s_e3121fbece1af6::t_468f4f557a91f8 269-273
+  s_e3121fbece1af6::t_f89812057e6530 178-181
+  s_e3121fbece1af6::t_46d4d9832ef57d 313,315-319
+  s_e3121fbece1af6::t_e2f2196efd3618 253-256,260-262
+  s_e3121fbece1af6::t_dcb89be5ce2355 218-236
+  s_e3121fbece1af6::t_fddaddfc39008c 297-301
+  s_e3121fbece1af6::t_7baf02744ed7c0 314
+  s_e3121fbece1af6::t_ef99a856f9ef36 257-259
+  s_e3121fbece1af6::t_435bd782fbc61e 182-209,246-251
+  s_e3121fbece1af6::t_7ffb7918cf5b0f 338-362
+plugins/knowledge/skills/newsletter/scripts/host.py
+  s_e3121fbece1af6::t_1fec05b7a84855 1-33
+plugins/knowledge/skills/newsletter/assets/reader.js
+  s_e3121fbece1af6::t_a71994700d8c89 2-145
+  s_e3121fbece1af6::t_7c016b1571d8d9 1,146
+  s_e3121fbece1af6::t_89ec44881298d1 147-175
+plugins/knowledge/skills/newsletter/assets/reader.css
+  s_e3121fbece1af6::t_f21cade7ae0624 13,41-49,61-62,64-71,73-74,93-97,100-103
+  s_e3121fbece1af6::t_1b1072b64409bc 72
+  s_e3121fbece1af6::t_e4fbdc06f8b4cc 1-12,14-15,17-40,50-54,57-60,63,75-92,98-99,104-113
+  s_e3121fbece1af6::t_790795ea47cfa7 16,55-56
+plugins/knowledge/skills/newsletter/SKILL.md
+  s_e3121fbece1af6::t_84ad507df6ff99 17-19
+  s_e3121fbece1af6::t_1fec05b7a84855 1-16,20-30
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_a98260481e5af4 28-29,61-64,73-75,140-142
+  s_e3121fbece1af6::t_85e23314452696 68-72
+  s_e3121fbece1af6::t_18e9d628d96b2c 65-67
+plugins/knowledge/skills/newsletter/workflows/daily-newsletter.yaml
+  s_e3121fbece1af6::t_ef99a856f9ef36 10-11
+  s_e3121fbece1af6::t_1fec05b7a84855 1-9,13-15,17-34
+  s_e3121fbece1af6::t_37b310d81b7d19 12,16
+plugins/knowledge/skills/newsletter/workflows/daily-newsletter.md
+  s_e3121fbece1af6::t_0c4d7863ef49bb 91-96,135-158
+  s_e3121fbece1af6::t_1fec05b7a84855 1-44,59-89,98,102-122,128,160-164,166-195
+  s_e3121fbece1af6::t_50de23ed65760d 90
+  s_e3121fbece1af6::t_e2f2196efd3618 99-101,129-134,159,165
+  s_e3121fbece1af6::t_18e9d628d96b2c 45-58,97,123-127
+plugins/knowledge/skills/newsletter/assets/config.example.json
+  s_e3121fbece1af6::t_1fec05b7a84855 1-5,12,30-31
+  s_e3121fbece1af6::t_2c5543d0def584 6-11,13-29
+  s_e3121fbece1af6::t_622c49dcbe494c 32-167
+plugins/knowledge/skills/newsletter/scripts/draft.py
+  s_e3121fbece1af6::t_e385a772800b0e 18-19
+  s_e3121fbece1af6::t_6d915daba282f7 83-87
+  s_e3121fbece1af6::t_2068f3f9eab35b 59
+  s_e3121fbece1af6::t_841d9c484fafe1 44-48
+  s_e3121fbece1af6::t_be402956ffdf1e 55
+  s_e3121fbece1af6::t_c4c4fd5943e2c4 56-57,60-61,63
+  s_e3121fbece1af6::t_2808229088a94f 1-17,20-43,49-54,58,62,64,66-75,80-82,88-104
+  s_e3121fbece1af6::t_a98260481e5af4 65,76-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "84fc43cd1c3f78cef9a012ef3f83c0038f43cbc7",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
