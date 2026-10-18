@@ -1,5 +1,11 @@
 # Papers, PDFs, articles and technical blogs
 
+Examples that use `SKILL_DIR` run from this skill's directory with
+`SKILL_DIR="$PWD"`. From a marketplace checkout, preparation and validation also
+work through `python3 plugins/knowledge/skills/source-insights/scripts/sources.py`
+at the repository root. An activated knowledge installation provides the
+`source-insights` command.
+
 ## Paper discovery with hf papers
 
 ```sh
@@ -107,6 +113,26 @@ interactive demo or other omitted material, inspect it through available browser
 image tools and explicitly record the limitation; the helper currently retains no
 article screenshot evidence. Prefer text-backed insights until that visual evidence
 can be preserved. Mark partial coverage, not a complete multimodal review.
+
+## Article analysis
+
+Use the [complete article example](analysis-format.md#article-and-technical-blog-evidence)
+after inspecting the frozen `document.md`. All common analysis fields appear in
+that example; article coverage and citations use 1-based inclusive line ranges.
+
+Each prepared source has its own analysis. The quote must come from the retained
+text, not a search snippet or another version of the page. Select evidence within
+the ranges you actually reviewed. The validator checks hashes, bounds and quote
+integrity; the reviewer remains responsible for entailment and honest coverage.
+
+From the marketplace root, validate without publishing:
+
+```sh
+python3 plugins/knowledge/skills/source-insights/scripts/sources.py \
+  validate /absolute/article-work /absolute/analysis.json
+```
+
+A valid result is a reviewable packet, not publication approval.
 
 Official interfaces: [hf CLI](https://huggingface.co/docs/huggingface_hub/en/guides/cli),
 [Xberg CLI](https://docs.xberg.io/cli/usage/). Use installed `--help` before changing

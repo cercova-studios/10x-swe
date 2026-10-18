@@ -67,11 +67,12 @@ Use files/stdin/stdout and documented formats. Save the provider-native JSON plu
 selected source text, original URL/title, retrieval time and citation locations.
 Keep acquisition separate from transformations, summaries and publication.
 
-For example, a search command writes `search.json`; a caller selects URLs; an
-extractor or `distiller` reads those URLs and emits prepared evidence. Pass that
-artifact to `source-insights` using its documented prepared-evidence contract when
-installed. A provider's raw search response is not automatically an insight or a
-`knowledge-snapshot` record. Verify the consumer's schema before piping records.
+Follow [the runnable evidence handoff](evidence.md) to retain an original HTML
+snapshot, pipe its extraction into preparation, and stop at citation validation.
+The recipe includes the Python entrypoint for a clone without a `source-insights`
+command on `PATH`. A provider's raw search response is not automatically an insight,
+an original page snapshot or a `knowledge-snapshot` record. Verify the consumer's
+schema before piping records.
 Neither the search helper nor the skill imports another tool's runtime, reads its
 private database or automatically publishes to a knowledge library.
 

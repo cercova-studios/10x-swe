@@ -20,6 +20,9 @@ retrieval operation that can answer it; escalate when a specific evidence gap re
 2. Inspect the actual tool schema or CLI help. Provider APIs, hosted MCP servers and
    app connectors expose different capabilities. Use [access and composition](references/access.md)
    to choose an available surface, and load only the relevant provider reference below.
+   For a bounded technical question, start with Search and selected URL reads, then
+   synthesize the cited answer yourself. A comparison does not by itself require a
+   generated-answer API or long-running job. Escalate for a specific remaining gap.
 3. Search for one objective at a time. Batch query variants for that objective;
    run independent objectives concurrently within the authorized request budget.
    Choose modes by depth, latency and output needs, not a universal provider ranking.
@@ -48,7 +51,8 @@ retrieval operation that can answer it; escalate when a specific evidence gap re
 
 [Exa controls and lifecycle](references/exa.md) ·
 [Parallel controls and lifecycle](references/parallel.md) ·
-[Tools, pipes and evidence handoff](references/access.md)
+[Tools and access](references/access.md) ·
+[Citations and piped evidence handoff](references/evidence.md)
 
 ## Scope and evidence
 

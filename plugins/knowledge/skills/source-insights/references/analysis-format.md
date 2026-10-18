@@ -61,14 +61,33 @@ These checks verify reference integrity, not claim truth or actual agent attenti
 
 ## Article and technical blog evidence
 
-Use stable line numbers from the prepared document.md, not the live website:
+Use stable line numbers from the prepared `document.md`, not the live website.
+This complete example illustrates the required fields. Replace its claim,
+ranges, quote and limitations with evidence you actually inspected; it is not
+ready to validate against an arbitrary source.
 
 ```json
-{"line_ranges": [[1, 45]], "limitations": ["Text only; diagrams not inspected."]}
-```
-
-```json
-[{"line_start": 12, "line_end": 15, "quote": "A short exact passage within these lines."}]
+{
+  "title": "A source-specific technical lesson",
+  "summary": "The mechanism and conditions supported by the reviewed passage.",
+  "tags": ["topic"],
+  "coverage": {
+    "line_ranges": [[12, 25]],
+    "limitations": ["Only these text passages reviewed; diagrams and runtime behavior not checked."]
+  },
+  "insights": [
+    {
+      "claim": "A concrete claim supported by the cited passage.",
+      "status": "source-claim",
+      "why_it_matters": "The decision this evidence helps make.",
+      "application": "The conditions under which it can be applied.",
+      "caveats": "Source version, assumptions and untested implications.",
+      "evidence": [
+        {"line_start": 12, "line_end": 15, "quote": "A short exact passage within these lines."}
+      ]
+    }
+  ]
+}
 ```
 
 Quotes must be 1–500 characters and occur within cited lines. Evidence must fall

@@ -167,7 +167,7 @@ stores knowledge, or reviews claims. Use shell `pipefail` when composing produce
 From the repository root:
 
 ```bash
-cargo install --path extensions/distiller --locked
+cargo install --path plugins/knowledge/tools/distiller --locked
 distiller "https://example.com/article" --stdout
 ```
 
