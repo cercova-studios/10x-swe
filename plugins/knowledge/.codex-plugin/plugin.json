@@ -1,0 +1,18 @@
+{
+  "name": "knowledge",
+  "version": "0.1.0",
+  "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Run the source bootstrap before using CLIs.",
+  "author": {
+    "name": "Rohit Nair"
+  },
+  "repository": "https://github.com/cercova-studios/10x-swe",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "knowledge",
+    "shortDescription": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Run the source bootstrap before using CLIs.",
+    "developerName": "Rohit Nair",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/cercova-studios/10x-swe"
+  }
+}

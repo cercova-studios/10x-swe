@@ -18,6 +18,8 @@ This installs guidance, not the CLI binaries. Follow the root
 user scope; use `--scope local` for only the current repository. See the root
 [Claude Code guidance](../../README.md#engineering-skills-only) for version and
 activation checks.
+For Codex, Grok Build, Copilot CLI, opencode and pi, see
+[other agents](../../README.md#other-agents).
 
 After activating the printed `env.sh`:
 

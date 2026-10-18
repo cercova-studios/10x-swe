@@ -30,6 +30,40 @@ Expect a reproduced failure and regression evidence for diagnosis, behavior chec
 for refactoring, or scoped findings for review. These are agent instructions;
 loading a skill does not execute or verify the task by itself.
 
+Codex, Grok Build, GitHub Copilot CLI, opencode and pi load the same skills; see
+[other agents](../../README.md#other-agents) for their install and verify steps and
+what each host supports. The skills need no build step.
+
+## Choosing between similar skills
+
+| You want to… | Use |
+|---|---|
+| Understand a codebase, library or API from source and primary docs | `code-research` (or `/research`) |
+| Find code by identifier, syntax or meaning in a local repo | `code-search` (routes to `ast-grep`, `rg` or `osgrep-semantic-search`) |
+| Search the live web with citations (needs a search API key) | `web-research` |
+| Research your own Readwise library into an Obsidian note | `research-readwise-obsidian` |
+| Drive a browser from the terminal with a ready-made CLI | `agent-browser` or `playwright-cli` |
+| Script a browser from Python | `browser-use` |
+| Debug performance, network or console issues in Chrome | `chrome-devtools` |
+
+<!-- BEGIN GENERATED REQUIREMENTS: scripts/hosts.py sync -->
+
+## Skills that need accounts, keys or external tools
+
+Every other skill runs with only your agent and the tools your task already uses.
+
+| Skill | Needs |
+|---|---|
+| [doppler-secrets](skills/doppler-secrets/SKILL.md) | Requires the Doppler CLI and a Doppler account (DOPPLER_TOKEN or doppler login). |
+| [gemini](skills/gemini/SKILL.md) | Requires the gemini CLI (brew install gemini-cli) and a signed-in Google account or Gemini API key. |
+| [obsidian-cli](skills/obsidian-cli/SKILL.md) | Requires the Obsidian desktop app with its CLI enabled. |
+| [research-readwise-obsidian](skills/research-readwise-obsidian/SKILL.md) | Requires the Readwise CLI signed in to a Readwise Reader subscription (paid) and an Obsidian vault. |
+| [turnstile-spin](skills/turnstile-spin/SKILL.md) | Requires a Cloudflare account and CLOUDFLARE_API_TOKEN with Turnstile permissions. |
+| [web-research](skills/web-research/SKILL.md) | Requires an EXA_API_KEY, PARALLEL_API_KEY or PERPLEXITY_API_KEY (paid search APIs) or an equivalent connector. |
+| [x-api](skills/x-api/SKILL.md) | Requires an X developer account and API credentials; most X API access tiers are paid. |
+
+<!-- END GENERATED REQUIREMENTS -->
+
 ## Skills
 
 ### Workflow & Process
@@ -71,7 +105,7 @@ loading a skill does not execute or verify the task by itself.
 | [obsidian-cli](skills/obsidian-cli/SKILL.md) | Interact with Obsidian vaults via CLI |
 | [obsidian-markdown](skills/obsidian-markdown/SKILL.md) | Create Obsidian-flavored Markdown with wikilinks, callouts, and embeds |
 | [research-readwise-obsidian](skills/research-readwise-obsidian/SKILL.md) | Research topics with Readwise CLI and produce Obsidian-ready notes with source-linked evidence |
-| [playwright](skills/playwright/SKILL.md) | Browser automation for web testing and interaction |
+| [playwright-cli](skills/playwright-cli/SKILL.md) | Browser automation for web testing and interaction |
 | [tmux](skills/tmux/SKILL.md) | Remote control tmux sessions for interactive CLIs |
 | [using-git-worktrees](skills/using-git-worktrees/SKILL.md) | Isolated git worktrees for feature work |
 | [jujutsu-vcs](skills/jujutsu-vcs/SKILL.md) | Jujutsu (jj) workflows, isolated agent workspaces and Git compatibility |
@@ -143,7 +177,9 @@ loading a skill does not execute or verify the task by itself.
 ## Agents
 
 Ask Claude to use an agent by its scoped name, such as `10x-swe:code-reviewer`.
-Agents are delegated specialists, rather than slash commands.
+Agents are delegated specialists, rather than slash commands. They load in Claude
+Code and Grok Build, and in opencode through `scripts/hosts.py link opencode`, which
+writes opencode-format copies. Codex and pi have no plugin subagent format.
 
 | Agent | Use it for |
 |---|---|
@@ -168,7 +204,7 @@ name for your Claude Code version.
 | [create-prompt](commands/create-prompt.md) | Prepare a task prompt for another context |
 | [research](commands/research.md) | Start a code research task |
 | [research-readwise-obsidian](commands/research-readwise-obsidian.md) | Research with Readwise and prepare Obsidian notes |
-| [run_prompt](commands/run_prompt.md) | Run selected saved prompts in fresh contexts |
+| [run-prompt](commands/run-prompt.md) | Run selected saved prompts in fresh contexts |
 
 ## Maintaining the catalog
 
@@ -178,6 +214,8 @@ type, and catalog coverage:
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_plugin_metadata.py' -v
+python3 scripts/hosts.py sync      # regenerate host adapters and the requirements table
+python3 scripts/validate.py        # spec, referenced-file and adapter checks run in CI
 ```
 
 Run this from the repository root with PyYAML installed, or use the Python runtime
@@ -201,7 +239,24 @@ Use the root source bootstrap for independent discovery, evidence and bookmark
 CLIs. Discover relevant skills and workflows with `skill-search`; load the
 selected entrypoints for their instructions.
 
-MCP configuration is opt-in at `examples/mcp.optional.json`. Inspect endpoints and
-pin package versions before activating it. Skill authoring uses explicit SKILL_DIR,
+`examples/mcp.optional.json` lists MCP servers that complement the research
+skills. Nothing is activated automatically. Review each entry, then copy the
+ones you want into your host's MCP configuration
+([Claude Code](https://code.claude.com/docs/en/mcp),
+[Codex](https://developers.openai.com/codex/mcp),
+[opencode](https://opencode.ai/docs/mcp-servers/),
+[pi](https://pi.dev/docs/latest/mcp),
+[Grok Build](https://docs.x.ai/build/features/mcp-servers),
+[Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli)).
+
+| Server | What it is | Install | Key needed |
+|---|---|---|---|
+| `grep` | GitHub code search (grep.app), remote HTTP | none | no |
+| `deepwiki` | Repository Q&A (DeepWiki), remote HTTP | none | no |
+| `exa` | Exa web and code search, remote HTTP | none | no for the listed tools; rate limited |
+| `context7` | Library documentation lookup | `npx` (Node.js 18+), pinned version | no (optional `CONTEXT7_API_KEY` raises limits) |
+| `fff` | Fast local file finder | install `fff-mcp` from [dmtrKovalenko/fff.nvim](https://github.com/dmtrKovalenko/fff.nvim) | no |
+
+Skill authoring uses explicit SKILL_DIR,
 SKILL_ROOT and optional COMMAND_ROOT paths, with bundled initialization and basic
 validation helpers. Optional specialist references load only when the task needs them.
