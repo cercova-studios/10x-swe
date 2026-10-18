@@ -1,7 +1,7 @@
 {
   "name": "knowledge",
-  "version": "0.1.0",
-  "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Run the source bootstrap before using CLIs.",
+  "version": "0.2.0",
+  "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Build the CLIs once with ./knowledge setup (Rust 1.88+, Go 1.22+).",
   "author": {
     "name": "Rohit Nair"
   },
@@ -10,7 +10,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "knowledge",
-    "shortDescription": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Run the source bootstrap before using CLIs.",
+    "shortDescription": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Build the CLIs once with ./knowledge setup (Rust 1.88+, Go 1.22+).",
     "developerName": "Rohit Nair",
     "category": "Productivity",
     "websiteURL": "https://github.com/cercova-studios/10x-swe"

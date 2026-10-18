@@ -11,7 +11,7 @@ metadata:
 # Bootstrap this clone
 
 Read the root README and ARCHITECTURE.md. Run `./knowledge plan --prefix NEW_DIR`
-and fix anything it lists under `missing_prerequisites` (it prints a one-line fix),
+and fix any failed `build_checks` (its `fix` field gives a one-line command),
 then `./knowledge setup --prefix NEW_DIR`. Builds use locked source dependencies.
 Source the printed env.sh explicitly; setup never edits shell profiles or global
 instructions. Run `./knowledge doctor` to verify installed artifacts; it checks

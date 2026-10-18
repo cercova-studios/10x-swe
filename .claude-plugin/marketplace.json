@@ -14,7 +14,7 @@
     {
       "name": "knowledge",
       "source": "./plugins/knowledge",
-      "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Run the source bootstrap before using CLIs."
+      "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Build the CLIs once with ./knowledge setup (Rust 1.88+, Go 1.22+)."
     }
   ]
 }

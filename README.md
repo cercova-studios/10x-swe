@@ -27,6 +27,7 @@ Use it to:
 |---|---|---|
 | [Engineering skills only](#engineering-skills-only) | Debugging, review, testing and refactoring. **Start here.** | Install the `10x-swe` plugin |
 | [Knowledge CLI tools](#knowledge-cli-tools) | Search skills and sessions, convert articles and keep reviewed insights | Build tools separately; optionally install the `knowledge` instruction plugin |
+| [Other agents](#other-agents) | The same skills in Codex, Grok Build, Copilot CLI, opencode (free models) or pi | One install command per host |
 | [Optional playground](#optional-recoverable-playground) | Run work in a recoverable local microVM | Docker Sandboxes and the host setup guide |
 
 ### Engineering skills only
@@ -65,9 +66,125 @@ its work. Engineering-only setup is complete here. Optional tools used by indivi
 skills have their own prerequisites; Rust, Go and Docker are for the routes below.
 See the linked [skill, agent and command catalog](plugins/10x-swe/README.md).
 
-For other harnesses, use their documented skill-loading mechanism or explicitly
-ask the agent to read a selected `SKILL.md` from this checkout. Preserve its sibling
-resources. This is manual integration, not automatic plugin registration.
+Running Claude Code sessions needs a paid Claude plan or an Anthropic API key. To use
+another agent, or to try the skills for free with opencode, see [other agents](#other-agents).
+
+### Other agents
+
+The skills are plain [Agent Skills](https://agentskills.io/specification) folders, so
+other agents load the same files. Install for your agent, then run its verify step
+before giving it a task like the diagnose example above.
+
+| Agent | Cost to run a session | Loads |
+|---|---|---|
+| OpenAI Codex CLI | ChatGPT plan sign-in or OpenAI API key | skills |
+| Grok Build | xAI sign-in or `XAI_API_KEY` | skills, agents, commands |
+| GitHub Copilot CLI | GitHub Copilot plan | skills (agents and commands unverified) |
+| opencode | **Free models available, no key** | skills, commands, agents (translated) |
+| pi | Your own provider key, or a local model | skills, commands as prompt templates |
+| Any other Agent Skills host | Varies | skills |
+
+#### OpenAI Codex CLI
+
+```sh
+codex plugin marketplace add cercova-studios/10x-swe
+codex plugin add 10x-swe@10x-swe
+codex plugin add knowledge@10x-swe        # optional
+```
+
+Verify: `codex plugin list` shows the plugins as installed, and `/skills` in a session
+lists `10x-swe:diagnose` and friends. Codex plugins carry skills and MCP servers only,
+so the agents and slash commands are not available; the main commands have skill
+equivalents (for example `/research` → the `code-research` skill). Codex reads the
+generated [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json).
+Running a session needs a ChatGPT sign-in or `OPENAI_API_KEY`.
+[Plugins](https://developers.openai.com/codex/plugins) ·
+[Skills](https://developers.openai.com/codex/skills)
+
+#### Grok Build
+
+```sh
+grok plugin marketplace add cercova-studios/10x-swe
+grok plugin install 10x-swe --trust
+grok plugin enable 10x-swe
+```
+
+Verify: `grok inspect --json` lists the 10x-swe skills, agents and commands. Plugins
+are off until installed with `--trust` and enabled. Grok Build reads the Claude Code
+marketplace directly. Running a session needs an xAI sign-in or `XAI_API_KEY`.
+[Plugins](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/09-plugins.md)
+
+#### GitHub Copilot CLI
+
+```sh
+copilot plugin marketplace add cercova-studios/10x-swe
+copilot plugin install 10x-swe@10x-swe
+```
+
+Verify: `copilot plugin list` shows the plugin and `copilot skill list` (or `/skills list`)
+shows its skills. Copilot reads the same marketplace through
+`.github/plugin/marketplace.json`. Agents and commands use Claude Code's file layout and
+have not been verified in Copilot. Running a session needs a GitHub Copilot plan.
+[Plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference)
+
+#### opencode (free)
+
+opencode has no skill marketplace, so link the bundles into a project (or into
+`~/.config/opencode` for every project). Needs Python 3 and PyYAML (`pip install pyyaml`).
+
+```sh
+git clone https://github.com/cercova-studios/10x-swe.git ~/src/10x-swe
+cd your-project
+python3 ~/src/10x-swe/scripts/hosts.py link opencode --dest .opencode
+opencode models opencode               # pick a model marked free
+opencode run -m opencode/MODEL "Use the diagnose skill: ..."
+```
+
+Verify: `opencode debug skill` lists the 72 skills and `opencode debug agent
+code-reviewer` prints the translated agent. The link step symlinks skills and
+commands and writes opencode-format copies of the agents (opencode rejects Claude
+colour names and model aliases). Rerun it after `git pull`; `--unlink` removes only
+what it created. [Skills](https://opencode.ai/docs/skills/) ·
+[Agents](https://opencode.ai/docs/agents/) · [Commands](https://opencode.ai/docs/commands/)
+
+#### pi
+
+```sh
+pi install git:github.com/cercova-studios/10x-swe       # add -l for this project only
+```
+
+Verify: start `pi` and type `/skill:` to see the skills, or `/` for the prompt
+templates (`/research`, `/create-prompt`, ...). The root `package.json` is a
+[pi package](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md)
+listing both plugins' skills and the 10x-swe commands. pi has no subagents, so the
+agents are not loaded. Bring your own provider key or a local model.
+[Skills](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md)
+
+#### Any other Agent Skills host
+
+Most hosts scan `.agents/skills` (project) or `~/.agents/skills` (user):
+
+```sh
+python3 ~/src/10x-swe/scripts/hosts.py link agents --dest ~/.agents      # or .agents in a project
+```
+
+Or point your host at `plugins/10x-swe/skills` directly. Commands and agents are
+host-specific and are not linked.
+
+### Accounts, keys and costs
+
+- **Running an agent** costs whatever that agent costs (table above). opencode's free
+  models are the zero-cost path; nothing in this repository needs a paid account.
+- **Skills that call paid services or external tools** are listed in the plugin's
+  [requirements table](plugins/10x-swe/README.md#skills-that-need-accounts-keys-or-external-tools)
+  (for example `web-research` needs a search API key, `x-api` needs X API credentials,
+  `gemini` needs a Google sign-in). Everything else runs locally.
+- **Optional MCP servers** are listed in [examples/mcp.optional.json](plugins/10x-swe/examples/mcp.optional.json);
+  some need their own keys.
+- **The playground** needs a Docker account: Docker Sandboxes requires a Docker
+  sign-in for local use (`./playground doctor` tells you if it is missing).
+- **distiller EPUB covers** call the paid Muse image API only when you export
+  `DISTILLER_MUSE_API_KEY`; pass `--cover PATH` to avoid it.
 
 ## Setup
 
@@ -87,6 +204,14 @@ headers and pkg-config. The [CI toolchain pins](.github/workflows/portable.yml)
 are a reproducible starting point. Rust 1.88 is the declared minimum in current
 locked dependencies; use the CI-pinned toolchain for the tested version. Future
 dependency updates may raise that minimum. See [platform requirements](https://github.com/cercova-studios/10x-swe/wiki/Platforms).
+When a build check fails, `plan` and `setup` print a one-line `fix`:
+
+| OS | Fix |
+|---|---|
+| Debian/Ubuntu | `sudo apt-get update && sudo apt-get install -y build-essential pkgconf libssl-dev golang` |
+| Fedora | `sudo dnf install -y gcc pkgconf-pkg-config openssl-devel golang` |
+| macOS | `xcode-select --install; brew install pkg-config openssl go rustup` |
+| Rust older than 1.88 (distro packages often are) | install [rustup](https://rustup.rs), then `rustup update stable` |
 
 ```sh
 git clone https://github.com/cercova-studios/10x-swe.git
@@ -107,28 +232,40 @@ without a model, pass `--lexical-only` to `bkd search`; its native default can r
 the optional BGE model. Success means doctor reports
 `"status": "passed"` and `command -v skill-search` points into your chosen prefix.
 
-For isolation, append `--prefix "/absolute/new/path"` to plan, setup and doctor.
-Use the same path for all three. Activate its `env.sh` in each new shell; setup
+The default prefix is `$AGENT_KNOWLEDGE_HOME` when set, otherwise
+`~/.local/share/10x-swe/knowledge`; `doctor` prints the path it checked. For isolation,
+append `--prefix "/absolute/new/path"` to plan, setup and doctor. Use the same path for
+all three. Activate its `env.sh` in each new shell; setup
 does not edit shell profiles or configure your agent harness.
 
 | Symptom | Next step |
 |---|---|
-| Missing build prerequisite or dependency build failure | Install the stated prerequisite, then rerun setup against the same prefix and unchanged checkout |
-| No completed installation receipt | Fix the original setup error and rerun setup; doctor does not install tools |
+| Missing build prerequisite or dependency build failure | Run the printed `fix:` command (or install the stated prerequisite), then rerun setup against the same prefix and unchanged checkout |
+| No completed installation receipt | Check the path doctor printed; point `--prefix` or `AGENT_KNOWLEDGE_HOME` at the prefix you set up, or fix the original setup error and rerun setup |
 | `skill-search` is not found | Source the printed `env.sh` in the current shell, then check `command -v skill-search` |
 | `env.sh` is missing | Rerun setup with the same source and prefix; it restores activation and prints the next step |
-| Prefix belongs to different source bytes | Keep the old prefix and build this revision into a fresh prefix |
+| Prefix was built from a different source revision | Keep the old prefix and build this revision into a fresh one with `--from OLD_PREFIX` (see below) |
 | Local graph is stale after an intentional skill change | Run `skill-search refresh --lexical` and retry discovery |
 
-Default data stores live inside the prefix. A fresh-prefix upgrade starts with new
-stores; preserve your old prefix and any explicitly configured library/index paths.
-Reactivate the old `env.sh` to switch back. See [setup and recovery](https://github.com/cercova-studios/10x-swe/wiki/Getting-started)
-before moving existing data.
+Default data stores live inside the prefix. To upgrade after `git pull`, build into a
+fresh prefix and carry your library, bookmarks and session index over, then activate
+the new `env.sh`:
+
+```sh
+./knowledge setup --prefix ~/.local/share/10x-swe/knowledge-NEW --from "$AGENT_KNOWLEDGE_HOME"
+```
+
+`--from` copies only `knowledge/sources` and `state`; the old prefix is left intact,
+so reactivating its `env.sh` switches back. Untracked and ignored files in your clone
+(for example a skill's `node_modules`) do not count as source changes. Explicitly
+configured library or index paths outside the prefix are not moved. See
+[setup and recovery](https://github.com/cercova-studios/10x-swe/wiki/Getting-started).
 
 ### Optional recoverable playground
 
 Choose this route when you want a private Linux microVM with Nix-pinned tools and
-host-held checkpoints. It requires Python 3.11+ and Docker Sandboxes 0.48.0.
+host-held checkpoints. It requires Python 3.11+, Docker Sandboxes 0.48.0 and a Docker
+account sign-in.
 Complete the [one-time host setup](playgrounds/README.md#one-time-host-setup), then
 run these commands from the checkout:
 
@@ -194,6 +331,29 @@ Check each export succeeds before consuming its file; use `pipefail` when stream
 For [session to insight](plugins/knowledge/skills/source-insights/workflows/session-to-insight.md),
 select a session, prepare evidence, write an analysis, review it and publish with
 approval. Dagu can optionally coordinate the same shell workflow.
+
+## Host compatibility
+
+| Host | Status | Skills | Agents | Commands | Hooks/MCP | How it loads |
+|---|---|---|---|---|---|---|
+| [Claude Code](https://code.claude.com/docs/en/plugins-reference) | Supported | ✓ | ✓ | ✓ | MCP example only | `.claude-plugin/` (canonical) |
+| [Codex CLI](https://developers.openai.com/codex/plugins) | Supported (skills) | ✓ | – not supported by Codex plugins | – | MCP example only | generated `.agents/plugins/marketplace.json` + `.codex-plugin/` |
+| [Grok Build](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/09-plugins.md) | Supported | ✓ | ✓ | ✓ | MCP example only | reads `.claude-plugin/` |
+| [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) | Partial | ✓ | unverified | unverified | MCP example only | `.github/plugin/marketplace.json` → `.claude-plugin/` |
+| [opencode](https://opencode.ai/docs/skills/) | Supported via link | ✓ | ✓ translated | ✓ | manual | `scripts/hosts.py link opencode` |
+| [pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) | Partial | ✓ | – no subagents | ✓ prompt templates | manual | root `package.json` |
+| [Agent Skills hosts](https://agentskills.io/specification) | Skills | ✓ | – | – | – | `scripts/hosts.py link agents` |
+
+### For maintainers
+
+`.claude-plugin/marketplace.json`, each `plugins/*/.claude-plugin/plugin.json` and the
+skill frontmatter are the source of truth. After adding or renaming a skill, agent or
+command, link it in the [plugin catalog](plugins/10x-swe/README.md#maintaining-the-catalog)
+and run `python3 scripts/hosts.py sync`; it regenerates the Codex and pi adapters and
+the skill-requirements table. `python3 scripts/validate.py` and
+`tests/test_plugin_metadata.py` run the same checks as CI. Bump the plugin
+`version` with every user-visible change: Claude Code, Codex and Grok only update
+installed plugins when it changes.
 
 ## Documentation
 
