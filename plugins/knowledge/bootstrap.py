@@ -19,6 +19,8 @@ PACKAGE = Path(__file__).resolve().parent
 REPO = PACKAGE.parents[1]
 MARKER = '.knowledge-owner.json'
 COMMANDS = ('skill-search', 'bkd', 'distiller', 'insights', 'source-insights', 'session-search', 'knowledge-intake')
+# Minimum free disk space for a full source build (cargo target dirs dominate).
+MINIMUM_FREE_BYTES = 3 * 1024**3
 
 
 def digest(path):
@@ -33,6 +35,15 @@ def inputs():
     return {str(p.relative_to(REPO)): digest(p) for base in (PACKAGE, REPO / 'plugins/10x-swe/skills')
             for p in sorted(base.rglob('*')) if p.is_file()
             and not any(part in ('__pycache__', 'target', '.venv') for part in p.parts)}
+
+
+def require_disk_space(prefix):
+    probe = prefix if prefix.exists() else prefix.parent
+    free = shutil.disk_usage(probe).free
+    if free < MINIMUM_FREE_BYTES:
+        raise ValueError(
+            'Not enough free disk space for setup: %d MiB available at %s, need at least %d MiB'
+            % (free // 1024**2, probe, MINIMUM_FREE_BYTES // 1024**2))
 
 
 def atomic(path, value):
@@ -223,6 +234,7 @@ def setup(prefix):
         failed = [check['error'] for check in build_checks() if not check['passed']]
         if failed:
             raise ValueError('; '.join(failed))
+        require_disk_space(prefix)
         for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
         for source, dest in ((PACKAGE / 'skills', prefix / 'skills'),
@@ -267,6 +279,9 @@ def setup(prefix):
         except Exception:
             (prefix / 'installation.json').unlink()
             raise
+        # Build scratch is no longer needed; installed binaries live in libexec/native.
+        # Pruning keeps the owned prefix small (a full cargo target dir is ~1.4 GiB).
+        shutil.rmtree(prefix / 'build', ignore_errors=True)
         next_steps(prefix)
 
 
