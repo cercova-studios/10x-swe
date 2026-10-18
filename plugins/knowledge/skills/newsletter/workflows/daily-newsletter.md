@@ -23,15 +23,17 @@ short downtime; it does not recreate every missed edition. Use an always-on host
 if delivery at a specific wall-clock time is essential.
 
 The steps are ordinary commands. Acquisition calls an explicit search command and
-distiller's public stdin interface. Drafting and review use an optional Codex CLI
-adapter; another producer can write the same JSON files. Rendering, validation and
+distiller's public stdin interface. Claude CLI writes the copy; a separate Codex
+CLI invocation reviews the issue against its frozen evidence. Another producer
+can write the same JSON files. Rendering, validation and
 retention have no model, search-provider or companion-tool imports. Nothing invokes
 source-insights publication or reads a private knowledge database.
 
 ## Setup and first run
 
-Requirements: Python 3.11+, Dagu 2.19.2, distiller, and an authenticated Codex CLI
-supporting `exec --ignore-user-config --output-schema`. Provider keys belong in an
+Requirements: Python 3.11+, Dagu 2.19.2, distiller, an authenticated Claude CLI
+supporting `--print --json-schema --no-session-persistence`, and an authenticated
+Codex CLI supporting `exec --ignore-user-config --output-schema`. Provider keys belong in an
 operator-owned local environment, outside Git. Inspect the configured public source
 domains, search command, lookback and request limits before acquisition.
 
@@ -41,6 +43,11 @@ the helper is owned by the independent web-research skill. The example uses Exa;
 Parallel can be added to `providers` and the helper's `-p` argument after a live
 credential preflight. Missing or rejected keys fail visibly; there is no secret
 discovery or implicit provider substitution.
+
+The collector replaces `{window_start_date}` in search arguments with the frozen
+window's UTC start date. The example passes it to the helper's `--after-date`
+filter. Provider date metadata can be incomplete; the editorial gate and reader
+still separate current events from older or unconfirmed-date context.
 
 The example searches 17 sections: frontier models; open models and local AI;
 agents and coding; developer tools and protocols; research and training; retrieval
@@ -73,7 +80,26 @@ without the coordinator:
 python3 plugins/knowledge/skills/newsletter/scripts/research.py \
   --config /absolute/config.json --work /absolute/work > research.json
 python3 plugins/knowledge/skills/newsletter/scripts/draft.py draft --work /absolute/work
+python3 plugins/knowledge/skills/newsletter/scripts/draft.py review --work /absolute/work
 ```
+
+The adapter accepts `--claude` and `--codex` executable paths. Both calls disable
+execution tools and ambient project instructions. Claude's only tool is its
+structured-output formatter; hooks, skills, browser integration and MCP servers
+are disabled. The reviewer receives only the source record and issue, without
+the writer's conversation. Each stage retains native event logs and a hash-bound
+producer receipt; Claude's receipt also records the model reported by its CLI.
+Changing the producer or a completed artifact requires a new work directory.
+Caller-supplied editorial JSON remains supported and must pass the same review gate.
+
+For a rejected draft, create a fresh work directory with the frozen research and
+an explicit revision JSON containing `previous_issue` and `corrections`. Invoke
+`draft.py draft --work /absolute/new-work --feedback /absolute/feedback.json`,
+then run the independent review and validation stages. Feedback is included in
+the writer's input hash; the reviewer still receives only research and the issue.
+Resume that draft with the same feedback file and command.
+There is no automatic revision loop. Dagu can invoke this same command for its
+draft step when an operator selects a revision run.
 
 Artifacts are `research.json` (`newsletter-research/v1`), `issue.json`, and
 `editorial-review.json` (`newsletter-review/v1`). A review contains `approved`,
@@ -132,6 +158,9 @@ with an owner-only mode (0600); keep values out of shell arguments and logs.
 The supervisor invokes Python and `host.py` by absolute path. Shell startup files
 are not a credential source for a LaunchAgent. Updating this file takes effect
 when the scheduler restarts.
+The supervisor's `PATH` must resolve both editorial CLIs. Their authenticated
+sessions must work as that user in a scheduled child process; an interactive
+shell alone does not establish readiness.
 
 ### Doppler
 
@@ -167,6 +196,9 @@ An interrupted model invocation leaves a `.pending.json` marker: inspect its log
 and candidate output before explicitly moving the marker aside to authorize another
 attempt. There is no automatic paid/model retry. A failed editorial review holds
 publication; correct it in a fresh work directory and obtain a matching new review.
+Provider refusals and malformed structured output also hold publication. Preserve
+the failed attempt; an operator must select the revised scope and authorize a
+new work directory. The adapter does not substitute another writer or retry a refusal.
 
 If publication stops after installing the edition but before updating the reader,
 retry the same unchanged publication or run `refresh`. Different content for an

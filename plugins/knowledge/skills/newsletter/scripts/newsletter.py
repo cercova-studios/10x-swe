@@ -205,6 +205,10 @@ def reading(issue, research):
                 by_url[source['url']] = len(references) + 1
                 references.append({**source, 'number': len(references) + 1})
             numbers[source['id']] = by_url.get(source['url'])
+    for source in references:
+        # LaTeXML can leak internal control sequences into a page's own title.
+        if '\\__' in source['title']:
+            source['title'] = source['url']
     return {'current': current, 'background': background, 'references': references, 'numbers': numbers}
 
 

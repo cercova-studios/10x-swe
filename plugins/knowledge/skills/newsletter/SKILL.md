@@ -17,6 +17,7 @@ retain exact evidence and dates, and distinguish recent events from context.
 Lead with a short ranked briefing. Keep current news separate from earlier or
 undated reading, briefs concise, deep dives substantive, and source passages
 meaningful and exact. Essential qualifications belong with the claim.
+The supplied adapter uses Claude for copywriting and Codex for independent review.
 
 Local newsletter publication requires an explicitly configured destination and
 provider/model environment. It does not authorize publication into source-insights

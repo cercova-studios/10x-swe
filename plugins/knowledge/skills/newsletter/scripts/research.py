@@ -80,13 +80,14 @@ def collect(config, work):
     if state['config_sha256'] != fingerprint:
         raise ValueError('Research configuration changed during recovery')
     start, end = datetime.fromisoformat(state['start']), datetime.fromisoformat(state['end'])
+    command = [arg.replace('{window_start_date}', start.date().isoformat()) for arg in config['search_command']]
     sources, coverage = {}, []
     for index, topic in enumerate(config['topics']):
         raw_path = work/f'search-{index}.json'
         query = (f"{topic['query']}. Primary sources published {start.date()} through {end.date()}. "
                  'Prefer official announcements, papers, source repositories and technical engineering blogs.')
         if not raw_path.exists():
-            result = subprocess.run([*config['search_command'], query], capture_output=True, timeout=150)
+            result = subprocess.run([*command, query], capture_output=True, timeout=150)
             if len(result.stdout) > 5 * 1024 * 1024:
                 raise ValueError('Search response exceeds 5 MiB')
             parsed = json.loads(result.stdout)

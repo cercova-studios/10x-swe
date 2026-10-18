@@ -168,6 +168,115 @@ class NewsletterTests(unittest.TestCase):
                 draft.generate(self.work, 'draft')
             run.assert_not_called()
 
+    def test_claude_drafts_neutral_json_and_records_its_identity(self):
+        (self.work/'issue.json').unlink()
+        def respond(command, **kwargs):
+            self.assertEqual(command[0], 'fixture-claude')
+            self.assertEqual(command[command.index('--tools')+1], '')
+            self.assertIn('--strict-mcp-config', command)
+            self.assertIn('--no-session-persistence', command)
+            self.assertEqual(json.loads(command[command.index('--settings')+1]), {'disableAllHooks': True})
+            self.assertEqual(kwargs['cwd'], self.work.resolve())
+            self.assertEqual(kwargs['env']['CLAUDE_CODE_DISABLE_CLAUDE_MDS'], '1')
+            self.assertEqual(kwargs['env']['MAX_STRUCTURED_OUTPUT_RETRIES'], '1')
+            self.assertEqual(json.loads(kwargs['input'].decode().split('SOURCE DATA:\n', 1)[1]),
+                             {'research': self.research})
+            for event in [
+                    {'type': 'system', 'subtype': 'init', 'model': 'claude-fixture', 'tools': ['StructuredOutput']},
+                    {'type': 'assistant', 'message': {'content': [{'type': 'tool_use', 'name': 'StructuredOutput'}]}},
+                    {'type': 'result', 'subtype': 'success', 'is_error': False, 'structured_output': self.issue}]:
+                kwargs['stdout'].write((json.dumps(event)+'\n').encode())
+            return subprocess.CompletedProcess(command, 0)
+        with patch.object(draft.subprocess, 'run', side_effect=respond) as run:
+            output = draft.generate(self.work, 'draft', claude='fixture-claude')
+            self.assertEqual(json.loads(output.read_text()), self.issue)
+            self.assertEqual(output, draft.generate(self.work, 'draft', claude='fixture-claude'))
+            self.assertEqual(run.call_count, 1)
+        receipt = json.loads((self.work/'draft.receipt.json').read_text())
+        self.assertEqual(receipt['producer'], 'claude')
+        self.assertEqual(receipt['model'], 'claude-fixture')
+
+    def test_codex_review_is_separate_and_revision_bound(self):
+        (self.work/'editorial-review.json').unlink()
+        def respond(command, **kwargs):
+            self.assertEqual(command[:2], ['fixture-codex', 'exec'])
+            self.assertIn('shell_tool', command)
+            self.assertIn('multi_agent', command)
+            self.assertIn('web_search="disabled"', command)
+            self.assertEqual(json.loads(kwargs['input'].decode().split('SOURCE DATA:\n', 1)[1]),
+                             {'research': self.research, 'issue': self.issue})
+            candidate = Path(command[command.index('--output-last-message')+1])
+            candidate.write_text(json.dumps({'approved': True, 'problems': [], 'assessment': 'Fixture review'}))
+            kwargs['stdout'].write(b'{"type":"item.completed","item":{"type":"agent_message"}}\n')
+            return subprocess.CompletedProcess(command, 0)
+        with patch.object(draft.subprocess, 'run', side_effect=respond):
+            output = draft.generate(self.work, 'review', codex='fixture-codex')
+        review = json.loads(output.read_text())
+        self.assertEqual(review['issue_sha256'], self.review['issue_sha256'])
+        self.assertEqual(review['research_sha256'], self.review['research_sha256'])
+        self.assertEqual(json.loads((self.work/'review.receipt.json').read_text())['producer'], 'codex')
+
+    def test_claude_errors_missing_results_and_tool_activity_hold_output(self):
+        (self.work/'issue.json').unlink()
+        success = {'type': 'result', 'subtype': 'success', 'is_error': False, 'structured_output': self.issue}
+        for events in [[], [{'type': 'result', 'subtype': 'error', 'is_error': True}],
+                       [{'type': 'result', 'subtype': 'success', 'is_error': True, 'result': 'Fixture provider refusal'}],
+                       [{'type': 'result', 'subtype': 'success', 'is_error': False}],
+                       [{'type': 'system', 'subtype': 'init', 'tools': ['Bash']}, success],
+                       [{'type': 'assistant', 'message': {'content': [{'type': 'tool_use', 'name': 'Bash'}]}}, success]]:
+            with self.subTest(events=events):
+                def respond(command, **kwargs):
+                    for event in events:
+                        kwargs['stdout'].write((json.dumps(event)+'\n').encode())
+                    return subprocess.CompletedProcess(command, 0)
+                with patch.object(draft.subprocess, 'run', side_effect=respond) as run:
+                    with self.assertRaises((ValueError, RuntimeError)):
+                        draft.generate(self.work, 'draft')
+                    with self.assertRaisesRegex(ValueError, 'already started'):
+                        draft.generate(self.work, 'draft')
+                    self.assertEqual(run.call_count, 1)
+                self.assertFalse((self.work/'issue.json').exists())
+                (self.work/'draft.pending.json').unlink()
+
+    def test_writer_change_cannot_reuse_a_previous_producer_receipt(self):
+        (self.work/'draft.receipt.json').write_text(json.dumps({
+            'producer': 'codex',
+            'input_sha256': draft.hashlib.sha256(json.dumps({'research': self.research}, ensure_ascii=False).encode()).hexdigest(),
+            'output_sha256': draft.hashlib.sha256((self.work/'issue.json').read_bytes()).hexdigest()}))
+        with patch.object(draft.subprocess, 'run') as run:
+            with self.assertRaisesRegex(ValueError, 'producer'):
+                draft.generate(self.work, 'draft')
+            run.assert_not_called()
+
+    def test_explicit_feedback_is_bound_to_writer_input_and_excluded_from_review(self):
+        feedback = self.base/'feedback.json'
+        feedback.write_text(json.dumps({'previous_issue': self.issue, 'corrections': ['Qualify a claim']}))
+        (self.work/'issue.json').unlink()
+        def respond(command, **kwargs):
+            payload = json.loads(kwargs['input'].decode().split('SOURCE DATA:\n', 1)[1])
+            self.assertEqual(payload['revision'], json.loads(feedback.read_text()))
+            result = {'type': 'result', 'subtype': 'success', 'is_error': False, 'structured_output': self.issue}
+            kwargs['stdout'].write((json.dumps(result)+'\n').encode())
+            return subprocess.CompletedProcess(command, 0)
+        with patch.object(draft.subprocess, 'run', side_effect=respond) as run:
+            draft.generate(self.work, 'draft', feedback=feedback)
+            feedback.write_text(json.dumps({'previous_issue': self.issue, 'corrections': ['Changed feedback']}))
+            with self.assertRaisesRegex(ValueError, 'input/output changed'):
+                draft.generate(self.work, 'draft', feedback=feedback)
+            with self.assertRaisesRegex(ValueError, 'only by the copywriter'):
+                draft.generate(self.work, 'review', feedback=feedback)
+            self.assertEqual(run.call_count, 1)
+
+    def test_malformed_feedback_fails_before_model_invocation(self):
+        feedback = self.base/'feedback.json'
+        for value in [[], {}, {'previous_issue': {}, 'corrections': []},
+                      {'previous_issue': {}, 'corrections': ['']}]:
+            feedback.write_text(json.dumps(value))
+            with patch.object(draft.subprocess, 'run') as run:
+                with self.assertRaisesRegex(ValueError, 'Revision JSON'):
+                    draft.generate(self.work, 'draft', feedback=feedback)
+                run.assert_not_called()
+
     def test_headless_environment_permissions_and_names(self):
         env = self.base/'environment.json'
         env.write_text(json.dumps({'EXA_API_KEY': 'fixture-key'}))
@@ -182,7 +291,7 @@ class NewsletterTests(unittest.TestCase):
             host.environment(env)
 
     def test_research_reuses_responses_and_rejects_changed_configuration(self):
-        config = {'search_command': ['fixture-search'], 'providers': ['exa'],
+        config = {'search_command': ['fixture-search', '--after-date', '{window_start_date}'], 'providers': ['exa'],
                   'topics': [{'name': t, 'query': t} for t in ['Research', 'Agents', 'Retrieval']],
                   'domains': ['example.org'], 'sources_per_topic_provider': 3, 'max_original_pages': 0}
         responses = []
@@ -194,6 +303,8 @@ class NewsletterTests(unittest.TestCase):
         with patch.object(research.subprocess, 'run', side_effect=responses) as run:
             first = research.collect(config, work)
             self.assertEqual(run.call_count, 3)
+            start = datetime.fromisoformat(first['window_start']).date().isoformat()
+            self.assertTrue(all(call.args[0][1:3] == ['--after-date', start] for call in run.call_args_list))
             self.assertEqual(first, research.collect(config, work))
             self.assertEqual(run.call_count, 3)
             with self.assertRaisesRegex(ValueError, 'configuration changed'):
@@ -310,6 +421,14 @@ class NewsletterTests(unittest.TestCase):
         text = n.markdown(self.issue, self.research)
         self.assertEqual(text.count('  > '+quote), 1)
         self.assertEqual(text.count('### [1: Original source]'), 1)
+
+    def test_broken_source_title_uses_url_without_changing_evidence(self):
+        broken = r'0.64314C\__color_backend_reset: broken title'
+        self.research['sources'][0]['title'] = broken
+        view = n.reading(self.issue, self.research)
+        self.assertEqual(view['references'][0]['title'], 'https://example.org/article')
+        self.assertNotIn(broken, n.markdown(self.issue, self.research))
+        self.assertEqual(self.research['sources'][0]['title'], broken)
 
     def test_reference_labels_preserve_source_text_and_accept_both_separators(self):
         self.research['sources'].append(dict(self.research['sources'][0], id='other', url='https://example.org/other'))

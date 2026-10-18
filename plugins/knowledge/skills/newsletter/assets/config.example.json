@@ -9,7 +9,9 @@
     "exa",
     "-n",
     "6",
-    "--raw"
+    "--raw",
+    "--after-date",
+    "{window_start_date}"
   ],
   "distiller": "distiller",
   "lookback_hours": 72,

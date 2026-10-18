@@ -59,12 +59,18 @@ Web research guidance routes to independently available connectors, clients and
 provider APIs. The optional search helper inherits credentials and emits JSON;
 research acquisition, evidence transformation and reviewed publication stay separate.
 The optional newsletter recipe invokes public search/extraction commands, then a
-separate writer and reviewer. The local renderer validates explicit files without
-opening companion stores. Dagu coordinates those commands under an operator-owned
+Claude CLI copywriter and independent Codex CLI reviewer over frozen JSON files.
+Native event logs retain producer provenance; receipts bind the producer and
+input/output hashes. Writer revisions accept explicit feedback JSON; reviewer
+inputs remain limited to research and the issue. The local renderer validates
+explicit files without opening companion stores. Dagu coordinates those commands under an operator-owned
 environment. Newsletter publication never grants insight-library publication.
 Acquisition searches every configured topic and balances source selection across
-topics under explicit source/text limits. The local publication reader exposes
-topic-level search/evidence/story coverage separately from editorial content.
+topics under explicit source/text limits.
+Acquisition substitutes the frozen start date into explicit search arguments;
+the independent search helper owns provider-specific publication-date filters.
+The local publication reader exposes topic-level search/evidence/story coverage
+separately from editorial content.
 HTML and Markdown share a current-news/background split and first-use source
 numbering by URL. The quick briefing links the first six current stories in
 editorial order; earlier or unconfirmed-date reading stays separate. Briefs show

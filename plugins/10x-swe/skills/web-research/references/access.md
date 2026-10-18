@@ -61,6 +61,12 @@ Unsupported flag/provider combinations fail before a request. Errors exit 2; fan
 can still emit other providers' successful results. Check the exit status before
 consuming a saved response. The helper does not retry requests or discover credentials.
 
+`--after-date YYYY-MM-DD` requests a publication-date lower bound from Exa and
+Parallel. It maps to Exa's `startPublishedDate` at UTC midnight and Parallel's
+`advanced_settings.source_policy.after_date`. This differs from cache freshness:
+newly fetched pages can contain old news. Check returned dates before describing
+a result as current. Perplexity does not accept this helper option.
+
 ## Keep research tools independent
 
 Use files/stdin/stdout and documented formats. Save the provider-native JSON plus
