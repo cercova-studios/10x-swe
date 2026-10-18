@@ -177,7 +177,12 @@ pub fn run(
             match u.path() {
                 "/" => {
                     kind = "text/html; charset=utf-8";
-                    return Ok(INDEX.as_bytes().to_vec());
+                    let site = crate::state::public_site()
+                        .replace('&', "&amp;")
+                        .replace('<', "&lt;")
+                        .replace('>', "&gt;")
+                        .replace('"', "&quot;");
+                    return Ok(INDEX.replace("{{PUBLIC_SITE}}", &site).into_bytes());
                 }
                 "/app.js" => {
                     kind = "text/javascript; charset=utf-8";

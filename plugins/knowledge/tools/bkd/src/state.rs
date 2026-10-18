@@ -16,6 +16,27 @@ pub fn home() -> PathBuf {
                 .join(".local/share/bookmarkdrop")
         })
 }
+/// Public site shown wherever bkd asks you to confirm publication.
+/// Publication itself goes to BKD_DATABASE_URL; this only names where that feed appears.
+pub const DEFAULT_PUBLIC_SITE: &str = "rsnair.tech";
+pub fn public_site() -> String {
+    site_or_default(std::env::var("BKD_PUBLIC_SITE").ok())
+}
+fn site_or_default(value: Option<String>) -> String {
+    value
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| DEFAULT_PUBLIC_SITE.to_string())
+}
+#[cfg(test)]
+mod public_site_tests {
+    #[test]
+    fn public_site_defaults_and_overrides() {
+        assert_eq!(super::site_or_default(None), "rsnair.tech");
+        assert_eq!(super::site_or_default(Some("  ".into())), "rsnair.tech");
+        assert_eq!(super::site_or_default(Some(" example.org ".into())), "example.org");
+    }
+}
 pub fn prepare(path: &Path) -> Result<()> {
     ensure!(!path.is_symlink(), "State directory cannot be a symlink");
     fs::create_dir_all(path)?;

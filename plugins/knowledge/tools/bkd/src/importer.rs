@@ -102,7 +102,8 @@ pub fn preview(
 pub fn review(plan: &mut Plan, input: &mut impl BufRead, output: &mut impl Write) -> Result<bool> {
     writeln!(
         output,
-        "Public destination: rsnair.tech reading feed\nURLs and titles will be published. Notes and tags remain metadata.\nCriteria: {}\n{} unique candidate URLs",
+        "Public destination: {} reading feed\nURLs and titles will be published. Notes and tags remain metadata.\nCriteria: {}\n{} unique candidate URLs",
+        crate::state::public_site(),
         plan.criteria,
         plan.candidates.len()
     )?;
