@@ -1,0 +1,61 @@
+tests/test_newsletter.py
+  s_e3121fbece1af6::t_9ac630b78b38a7 294,306-307,425-431
+  s_e3121fbece1af6::t_02f5c39c3e7bf4 182-183,206-207,225
+  s_e3121fbece1af6::t_fa0ddd960d1568 171-181,184-205,208-222,224,226-250
+  s_e3121fbece1af6::t_874fffdf9de0bc 251-262,264-268,279
+  s_e3121fbece1af6::t_a1c154c22f01eb 223
+  s_e3121fbece1af6::t_772a1a1c87c7a1 263,269-278
+  s_e3121fbece1af6::t_278f438d1c85cb 432
+plugins/10x-swe/skills/web-research/tests/test_websearch.py
+  s_e3121fbece1af6::t_9ac630b78b38a7 47-63,65-68
+  s_e3121fbece1af6::t_4a4dd5db4a68ca 64
+plugins/knowledge/skills/newsletter/assets/config.example.json
+  s_e3121fbece1af6::t_e06524345f4533 12-14
+plugins/knowledge/skills/newsletter/workflows/daily-newsletter.md
+  s_e3121fbece1af6::t_e06524345f4533 47-51
+  s_e3121fbece1af6::t_e49ab1c48ca474 26-28,34-36,83,86-94,161-163
+  s_e3121fbece1af6::t_874fffdf9de0bc 95-99,101-103
+  s_e3121fbece1af6::t_177f58746f9a52 100
+  s_e3121fbece1af6::t_a1c154c22f01eb 199-201
+plugins/10x-swe/skills/web-research/references/access.md
+  s_e3121fbece1af6::t_e06524345f4533 64-69
+plugins/knowledge/skills/newsletter/SKILL.md
+  s_e3121fbece1af6::t_e49ab1c48ca474 20
+plugins/knowledge/skills/newsletter/scripts/draft.py
+  s_e3121fbece1af6::t_874fffdf9de0bc 28-30,34,71-72,146,149
+  s_e3121fbece1af6::t_772a1a1c87c7a1 35-40
+  s_e3121fbece1af6::t_e49ab1c48ca474 109-112
+  s_e3121fbece1af6::t_36e150516545d8 2,6,31,52-54,79-95,97-99,101,104-108,113-117,119-124,134-135
+  s_e3121fbece1af6::t_5b40e795772fc1 144-145
+plugins/knowledge/skills/newsletter/scripts/newsletter.py
+  s_e3121fbece1af6::t_e06524345f4533 208-211
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_c1b8e98e8af4ff 69,72-73
+  s_e3121fbece1af6::t_e49ab1c48ca474 62-63
+  s_e3121fbece1af6::t_e06524345f4533 70-71
+  s_e3121fbece1af6::t_3679012f1b3878 64
+  s_e3121fbece1af6::t_bf04ab4e33771e 65-66
+plugins/knowledge/README.md
+  s_e3121fbece1af6::t_329a47f9cce733 67-68
+plugins/10x-swe/skills/web-research/scripts/websearch.py
+  s_e3121fbece1af6::t_e06524345f4533 8,45,54,61-62,66,70-71,100,116-122,132
+  s_e3121fbece1af6::t_4a4dd5db4a68ca 115
+plugins/knowledge/skills/newsletter/scripts/research.py
+  s_e3121fbece1af6::t_e06524345f4533 83,90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "59c326014cec8d19d9806fc8d4577e057c5fc2f3",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
