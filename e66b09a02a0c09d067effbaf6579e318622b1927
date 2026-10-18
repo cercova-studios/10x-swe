@@ -1,0 +1,19 @@
+README.md
+  s_e3121fbece1af6::t_e05f7b61eec3c1 3,5-7,9-19,21-22,24-30,37-44,46,48-50,57,61-64,66,74,76-80,82-87,95-100,102,104-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e66b09a02a0c09d067effbaf6579e318622b1927",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

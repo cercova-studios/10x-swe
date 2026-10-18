@@ -1,0 +1,40 @@
+plugins/10x-swe/skills/web-research/references/access.md
+  s_e3121fbece1af6::t_594afcebd86666 1-83
+plugins/10x-swe/skills/web-research/references/exa.md
+  s_e3121fbece1af6::t_512d4ad7fb3b29 37-40
+  s_e3121fbece1af6::t_594afcebd86666 1-36,41-91
+.github/workflows/portable.yml
+  s_e3121fbece1af6::t_512d4ad7fb3b29 50
+plugins/10x-swe/skills/web-research/references/parallel.md
+  s_e3121fbece1af6::t_594afcebd86666 1-123
+plugins/10x-swe/skills/web-research/scripts/websearch.py
+  s_e3121fbece1af6::t_80111128a48003 36
+  s_e3121fbece1af6::t_d24c48c6fbb4eb 1-35,37-147
+plugins/10x-swe/skills/web-research/tests/test_websearch.py
+  s_e3121fbece1af6::t_512d4ad7fb3b29 1-132
+plugins/10x-swe/skills/code-research/SKILL.md
+  s_e3121fbece1af6::t_d24c48c6fbb4eb 7,11,23-24
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_d24c48c6fbb4eb 46-48
+plugins/10x-swe/skills/self-learning/SKILL.md
+  s_e3121fbece1af6::t_d24c48c6fbb4eb 11,13-14,39-40
+  s_e3121fbece1af6::t_1f59bdd58c539b 41
+plugins/10x-swe/skills/web-research/SKILL.md
+  s_e3121fbece1af6::t_594afcebd86666 1-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8b82f61c63f5b5cbc66324e50a8a98db9a69645c",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

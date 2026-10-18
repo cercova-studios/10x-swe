@@ -1,0 +1,23 @@
+README.md
+  s_467129469abcc4::t_58178994a31953 1-2,7-12,24,48,69-70,102,106-109
+plugins/10x-swe/skills/technical-writing/references/readme-template.md
+  s_467129469abcc4::t_cda2a469156f33 1-58
+plugins/10x-swe/skills/technical-writing/references/readmes.md
+  s_467129469abcc4::t_e5c0de39729283 6-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "be4e50f24329b1a7d2e2f46d71764999be11b293",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_df2badc9fd4292 26-29
+plugins/knowledge/README.md
+  s_e3121fbece1af6::t_6be18e3d48ada2 33,36,40
+plugins/knowledge/skills/knowledge-setup/SKILL.md
+  s_e3121fbece1af6::t_4b8deddf20a52d 23-25
+plugins/knowledge/skills/skill-graph/references/remote-loading.md
+  s_e3121fbece1af6::t_84b786c51dad4e 3
+plugins/knowledge/skills/skill-graph/scripts/search-core/ARCHITECTURE.md
+  s_e3121fbece1af6::t_56856e6506241e 28,36,46,48,62,66
+plugins/knowledge/skills/source-insights/ARCHITECTURE.md
+  s_e3121fbece1af6::t_ac8211d9c211af 97-98
+plugins/knowledge/tools/bkd/ARCHITECTURE.md
+  s_e3121fbece1af6::t_3659c1d5e553c9 21,29,35,47,67,78
+plugins/knowledge/tools/bkd/README.md
+  s_467129469abcc4::t_874484b8165e8c 13,55,92-93,107,117-118,166,172,174,182,191
+plugins/knowledge/tools/distiller/ARCHITECTURE.md
+  s_e3121fbece1af6::t_f98972b3b444f3 94,103
+plugins/knowledge/tools/distiller/README.md
+  s_467129469abcc4::t_89b4573d494f51 106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e4aa5f47a616e0b04005b6dfcf4bd2767cf279c3",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

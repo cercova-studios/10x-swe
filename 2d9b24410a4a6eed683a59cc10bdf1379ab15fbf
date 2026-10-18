@@ -1,0 +1,25 @@
+README.md
+  s_e3121fbece1af6::t_5804011d3f194b 114-115
+docs/reports/docs-only-agent.md
+  s_e3121fbece1af6::t_5804011d3f194b 88-100
+  s_e3121fbece1af6::t_03d2bcb2b5ce5f 65-77,82-86
+  s_e3121fbece1af6::t_dadf79f939dd45 87
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_5804011d3f194b 69-70,75-76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2d9b24410a4a6eed683a59cc10bdf1379ab15fbf",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

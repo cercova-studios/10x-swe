@@ -1,0 +1,60 @@
+plugins/knowledge/skills/skill-graph/ARCHITECTURE.md
+  s_e3121fbece1af6::t_24dcdf8ff3e73c 59-61
+.github/workflows/portable.yml
+  s_e3121fbece1af6::t_197692d1d4003b 32-34,39,42,50-52,90
+tests/test_bootstrap.py
+  s_e3121fbece1af6::t_17b5b424a70f34 4,45-52
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/topics.rs
+  s_e3121fbece1af6::t_1a64f197366865 436-448
+  s_e3121fbece1af6::t_24dcdf8ff3e73c 364-366
+  s_e3121fbece1af6::t_ed42dc957a6332 449-453
+plugins/knowledge/bootstrap.py
+  s_e3121fbece1af6::t_51b743ca4c7c6d 139-141
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_51b743ca4c7c6d 43-44
+  s_e3121fbece1af6::t_371c3903ea7284 69-70
+  s_e3121fbece1af6::t_24dcdf8ff3e73c 30-33
+plugins/knowledge/skills/source-insights/workflows/session-to-insight.md
+  s_e3121fbece1af6::t_6bdf4857a71ede 16-17,41,43-45,48,51-102,106,119,147,167,180
+plugins/knowledge/skills/source-insights/references/composable-workflow.md
+  s_e3121fbece1af6::t_6bdf4857a71ede 16
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/main.rs
+  s_e3121fbece1af6::t_24dcdf8ff3e73c 314
+docs/reports/fresh-agent.md
+  s_e3121fbece1af6::t_371c3903ea7284 73-80
+  s_e3121fbece1af6::t_1600c9fd3852d9 1-72,81-90
+plugins/knowledge/skills/source-insights/ARCHITECTURE.md
+  s_e3121fbece1af6::t_10eeba4e6a5391 150-151
+tests/acceptance.py
+  s_e3121fbece1af6::t_07fe89db797a15 36-39
+  s_e3121fbece1af6::t_b51eb3cb123daa 44-48,55-56
+  s_e3121fbece1af6::t_4d604373ceb068 15,17
+  s_e3121fbece1af6::t_24dcdf8ff3e73c 33-35,40
+docs/reports/hosted-ci.md
+  s_e3121fbece1af6::t_371c3903ea7284 39-41
+README.md
+  s_e3121fbece1af6::t_51b743ca4c7c6d 31-32
+  s_e3121fbece1af6::t_6bdf4857a71ede 68-70,87-89
+  s_e3121fbece1af6::t_371c3903ea7284 109-110
+  s_e3121fbece1af6::t_ee86ea04d1e298 90
+plugins/knowledge/skills/source-insights/scripts/sources.py
+  s_e3121fbece1af6::t_10eeba4e6a5391 22
+plugins/knowledge/skills/source-insights/scripts/check_workflow.py
+  s_e3121fbece1af6::t_10eeba4e6a5391 7,25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "42c31bf57ba0c6eba7cb14af61119998e7800e4f",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+README.md
+  s_e3121fbece1af6::t_cd26f82f1005c7 97-100
+docs/plans/knowledge-ecosystem.md
+  s_e3121fbece1af6::t_3b87a723f6718a 17-20
+docs/reports/hosted-ci.md
+  s_e3121fbece1af6::t_cd26f82f1005c7 2-20,42-46
+  s_e3121fbece1af6::t_3b87a723f6718a 1,21-41
+docs/reports/acceptance.md
+  s_e3121fbece1af6::t_3b87a723f6718a 4-7,92-95
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_3b87a723f6718a 58-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "52b89fe525ff24b8776b563d72b1c49439465d1b",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

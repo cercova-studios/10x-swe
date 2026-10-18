@@ -1,0 +1,29 @@
+plugins/10x-swe/skills/code-search/SKILL.md
+  s_075a27424b2a54::t_e25b769ca69af9 19
+plugins/10x-swe/skills/osgrep-semantic-search/SKILL.md
+  s_8f7a1a990b0211::t_1ff3fb320339cf 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "9ac5a243c70de4e4bc84b55c6d3aa1e544874fed",
+  "prompts": {},
+  "sessions": {
+    "s_075a27424b2a54": {
+      "agent_id": {
+        "tool": "amp",
+        "id": "TU-033N3njx5PHR39DtQH9HZ9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_8f7a1a990b0211": {
+      "agent_id": {
+        "tool": "amp",
+        "id": "TU-033N3muumiJJmSMdvMVMxu",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
