@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -80,7 +81,7 @@ class BootstrapTests(unittest.TestCase):
     def test_default_prefix_respects_data_home_without_writes(self):
         data_home=self.root/'data home'
         p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan'],
-                         env=dict(os.environ,XDG_DATA_HOME=str(data_home)),capture_output=True)
+                         env=dict({k:v for k,v in os.environ.items() if k!='AGENT_KNOWLEDGE_HOME'},XDG_DATA_HOME=str(data_home)),capture_output=True)
         self.assertEqual(p.returncode,0,p.stderr)
         self.assertEqual(json.loads(p.stdout)['prefix'],str((data_home/'10x-swe/knowledge').resolve()))
         self.assertFalse(data_home.exists())
@@ -191,6 +192,75 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'env.sh'):
                 bootstrap.setup(target)
         self.assertEqual(saved.read_text(), 'retain\n')
+
+
+    def test_default_prefix_prefers_agent_knowledge_home(self):
+        home = self.root / 'agent home'
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan'],
+                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home), XDG_DATA_HOME=str(self.root / 'other')),
+                           capture_output=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(json.loads(p.stdout)['prefix'], str(home))
+        self.assertFalse(home.exists())
+
+    def test_doctor_names_the_prefix_it_checked(self):
+        home = self.root / 'agent home'
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'doctor'],
+                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home)), capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('Checking installation at ' + str(home), p.stderr)
+        self.assertIn('No completed installation receipt at ' + str(home), p.stderr)
+        self.assertFalse(home.exists())
+
+    def test_failed_build_checks_come_with_a_one_line_fix(self):
+        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'setup', '--prefix', str(self.root / 'x')],
+                           env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
+        self.assertIn('Missing build prerequisite: cargo', p.stderr)
+        self.assertRegex(p.stderr, r'fix: (sudo apt-get|sudo dnf|xcode-select)')
+        plan = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan', '--prefix', str(self.root / 'y')],
+                              env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
+        self.assertTrue(json.loads(plan.stdout)['fix'])
+
+    def test_old_rust_gets_the_rustup_fix_not_the_package_line(self):
+        checks = [{'command': 'python', 'passed': True},
+                  {'command': 'rustc', 'path': '/usr/bin/rustc', 'passed': False},
+                  {'command': 'cargo', 'path': '/usr/bin/cargo', 'passed': False}]
+        self.assertEqual(bootstrap.fixes(checks), [bootstrap.FIXES['rust']])
+        self.assertEqual(bootstrap.fixes([{'command': 'pkg-config', 'path': None, 'passed': False}]),
+                         [bootstrap.FIXES[bootstrap.os_family()]])
+
+    @unittest.skipUnless((REPO / '.git').exists() and shutil.which('git'), 'needs a git checkout')
+    def test_untracked_and_ignored_files_do_not_change_the_fingerprint(self):
+        before = bootstrap.inputs()
+        skill = REPO / 'plugins/10x-swe/skills/chrome-devtools/scripts'
+        created = [skill / 'node_modules/fingerprint-probe/index.js', skill / 'fingerprint-probe.untracked']
+        try:
+            for path in created:
+                path.parent.mkdir(parents=True, exist_ok=True); path.write_text('probe')
+            self.assertEqual(bootstrap.inputs(), before)
+        finally:
+            for path in created: path.unlink(missing_ok=True)
+            shutil.rmtree(skill / 'node_modules/fingerprint-probe', ignore_errors=True)
+            with contextlib.suppress(OSError): (skill / 'node_modules').rmdir()
+
+    def test_upgrade_carries_user_data_into_a_fresh_prefix(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True); (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        (old / 'state/bookmarks').mkdir(parents=True); (old / 'state/bookmarks/db.json').write_text('{}')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        with contextlib.redirect_stdout(io.StringIO()):
+            bootstrap.carry_over(old, new)
+        self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
+        self.assertTrue((new / 'state/bookmarks/db.json').is_file())
+        self.assertTrue((old / 'knowledge/sources/entries/note.md').is_file())
+        with self.assertRaisesRegex(ValueError, 'existing knowledge installation'):
+            bootstrap.carry_over(self.root / 'nowhere', new)
+
+    def test_changed_source_error_points_at_the_upgrade_path(self):
+        target = self.root / 'old'; bootstrap.owned(target, '0' * 64)
+        with self.assertRaisesRegex(ValueError, '--from'):
+            bootstrap.setup(target)
+        self.assertFalse((target / 'installation.json').exists())
 
 
 if __name__=='__main__': unittest.main()

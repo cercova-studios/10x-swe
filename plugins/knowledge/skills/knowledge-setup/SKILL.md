@@ -10,10 +10,14 @@ metadata:
 
 # Bootstrap this clone
 
-Read the root README and ARCHITECTURE.md. Run `./knowledge plan --prefix NEW_DIR`,
+Read the root README and ARCHITECTURE.md. Run `./knowledge plan --prefix NEW_DIR`
+and fix anything it lists under `missing_prerequisites` (it prints a one-line fix),
 then `./knowledge setup --prefix NEW_DIR`. Builds use locked source dependencies.
 Source the printed env.sh explicitly; setup never edits shell profiles or global
-instructions. Run `./knowledge doctor --prefix DIR` to verify installed artifacts.
+instructions. Run `./knowledge doctor` to verify installed artifacts; it checks
+`$AGENT_KNOWLEDGE_HOME` (or `--prefix DIR`) and prints the path it checked.
+After pulling a new revision, install into a fresh prefix and carry the user's
+library and state over with `./knowledge setup --prefix NEW_DIR --from OLD_DIR`.
 
 `knowledge-intake --root harness=/absolute/skills` inspects metadata, full-bundle
 hashes, aliases, conflicts and limitations without executing helpers. Review its
