@@ -1,0 +1,33 @@
+plugins/10x-swe/skills/web-research/references/access.md
+  s_e3121fbece1af6::t_6f5c765d8f9ca3 70-75
+plugins/knowledge/skills/source-insights/references/documents.md
+  s_e3121fbece1af6::t_fefc8cc663bfe9 119-121
+  s_e3121fbece1af6::t_6f5c765d8f9ca3 3-8,117-118,122-135
+  s_e3121fbece1af6::t_0cc855fc78d84f 136
+plugins/10x-swe/skills/web-research/SKILL.md
+  s_e3121fbece1af6::t_6f5c765d8f9ca3 23-25,54-55
+plugins/knowledge/tools/distiller/README.md
+  s_e3121fbece1af6::t_6f5c765d8f9ca3 170
+plugins/10x-swe/skills/web-research/references/evidence.md
+  s_e3121fbece1af6::t_26826aa29d4215 23-25
+  s_e3121fbece1af6::t_6f5c765d8f9ca3 1-22,26-47,50-104
+  s_e3121fbece1af6::t_f4fdfe130b2b1b 48-49
+plugins/knowledge/skills/source-insights/references/analysis-format.md
+  s_e3121fbece1af6::t_fefc8cc663bfe9 64-67,70-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aa004a3b07a10a6114d6a8adb12b4b768e7f159d",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
