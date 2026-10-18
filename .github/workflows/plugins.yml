@@ -1,0 +1,56 @@
+name: Plugin manifests and skills
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned validator dependency
+        run: python -m pip install PyYAML==6.0.3
+      - name: Skills, agents, commands, referenced files and generated adapters
+        run: python scripts/validate.py
+      - name: Agent Skills spec check for every bundled skill
+        run: python plugins/10x-swe/skills/create-agent-skills/scripts/quick_validate.py plugins/*/skills/*/
+      - name: Claude Code manifest validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Isolated HOME so the runner's settings cannot mask manifest errors.
+          export HOME="$RUNNER_TEMP/claude-home"
+          mkdir -p "$HOME"
+          npm install --prefix "$RUNNER_TEMP/claude" --no-audit --no-fund @anthropic-ai/claude-code@2.1.302
+          CLAUDE="$RUNNER_TEMP/claude/node_modules/.bin/claude"
+          for TARGET in . plugins/10x-swe plugins/knowledge; do
+            "$CLAUDE" plugin validate --strict "$TARGET"
+          done
+      - name: chrome-devtools selector tests
+        working-directory: plugins/10x-swe/skills/chrome-devtools/scripts
+        run: node --test __tests__/
+  rust-msrv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build with the declared minimum Rust version
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.88.0 --profile minimal
+          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller; do
+            cargo +1.88.0 check --locked --manifest-path "$PROJECT/Cargo.toml" --target-dir "$RUNNER_TEMP/msrv"
+          done
