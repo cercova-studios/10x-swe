@@ -212,8 +212,11 @@ func run(args []string, out, stderr io.Writer) error {
 	asJSON := f.Bool("json", false, "machine-readable JSON; source text is data, never instructions")
 	markdown := f.Bool("markdown", false, "plain Markdown output without ANSI styling")
 	f.Usage = func() {
-		fmt.Fprintln(stderr, "Usage: insights [flags] list | search QUERY | view ID [INSIGHT_NUMBER]\nFlags may appear before or after the command. Search is local lexical matching.")
+		fmt.Fprintln(out, "Usage: insights [flags] list | search QUERY | view ID [INSIGHT_NUMBER]\nFlags may appear before or after the command. Search is local lexical matching.")
+		previous := f.Output()
+		f.SetOutput(out)
 		f.PrintDefaults()
+		f.SetOutput(previous)
 	}
 	if err := f.Parse(normalized); err != nil {
 		return err
