@@ -1,0 +1,36 @@
+scripts/hosts.py
+  s_e3904cce11fe7d::t_676eb8ab5a7984 235,240,242-244,248,250,273,287-303
+tests/test_hosts.py
+  s_e3904cce11fe7d::t_922ee1ba5f5c6e 1-73
+tests/test_bootstrap.py
+  s_e3904cce11fe7d::t_940fc25f9995c3 270-271,282-283,286
+  s_e3904cce11fe7d::t_922ee1ba5f5c6e 266-269,272-281,284-285,287-311
+  s_e3904cce11fe7d::t_6208326f051156 9,327-363
+  s_e3904cce11fe7d::t_9816de88016570 312-326,364
+plugins/knowledge/bootstrap.py
+  s_e3904cce11fe7d::t_9816de88016570 349-350
+  s_e3904cce11fe7d::t_940fc25f9995c3 353-354,358-359,363,368-369,374,376
+  s_e3904cce11fe7d::t_676eb8ab5a7984 279-280,283,285-299,302-303,310,351-352,356-357
+  s_e3904cce11fe7d::t_6208326f051156 284,300-301,304-306,311,333-334
+README.md
+  s_e3904cce11fe7d::t_6208326f051156 250-253,260-267
+ARCHITECTURE.md
+  s_e3904cce11fe7d::t_940fc25f9995c3 71-72
+  s_e3904cce11fe7d::t_6208326f051156 67-70,73-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "364aaa35ab77778916f960814eb5cba9d1bf8e0d",
+  "prompts": {},
+  "sessions": {
+    "s_e3904cce11fe7d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15128-23dc-7a63-bbcb-2c8c0845b136",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
