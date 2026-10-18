@@ -8,8 +8,10 @@ description: Autonomous skill generator that learns new technologies from the we
   skill.
 metadata:
   skill-graph-id: plugin/10x-swe/self-learning
-  skill-graph-uses: ''
+  skill-graph-uses: plugin/10x-swe/web-research
   skill-graph-used-by: ''
+uses:
+- '[[plugin/10x-swe/web-research/SKILL]]'
 ---
 
 # Self-Learning Skill Generator
@@ -33,6 +35,9 @@ Normalize to **kebab-case** for filenames.
 ### 2. Discover Sources (Web Search)
 
 Use web search tool to find authoritative documentation:
+
+Use [[plugin/10x-swe/web-research/SKILL]] for provider selection, extraction and
+evidence handling. Research routes do not authorize skill installation or publication.
 
 **Search queries to try:**
 1. `<topic> official documentation`

@@ -47,6 +47,7 @@ jobs:
           "$RUNTIME" plugins/10x-swe/skills/turnstile-spin/tests/test_helpers.py
           "$RUNTIME" plugins/10x-swe/skills/ghidra/tests/test_wrapper.py
           "$RUNTIME" plugins/10x-swe/skills/tmux/tests/test_private_socket.py
+          "$RUNTIME" plugins/10x-swe/skills/web-research/tests/test_websearch.py
           "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_graph.py
           "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_concepts.py
           "$RUNTIME" plugins/knowledge/skills/session-search/tests/check.py

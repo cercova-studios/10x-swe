@@ -4,10 +4,11 @@ description: Investigate architecture, library APIs, engineering tradeoffs or un
   behavior using inspected source and current primary evidence.
 metadata:
   skill-graph-id: plugin/10x-swe/code-research
-  skill-graph-uses: plugin/10x-swe/code-search
+  skill-graph-uses: plugin/10x-swe/code-search, plugin/10x-swe/web-research
   skill-graph-used-by: ''
 uses:
 - '[[plugin/10x-swe/code-search/SKILL]]'
+- '[[plugin/10x-swe/web-research/SKILL]]'
 related:
 - '[[plugin/10x-swe/diagnose/SKILL]]'
 ---
@@ -19,6 +20,8 @@ related:
    callers, tests and authoritative architecture before inferring behavior.
 3. For external behavior, consult official documentation and source at the relevant
    version. Use issues and articles to generate hypotheses, not override contracts.
+   Use [[plugin/10x-swe/web-research/SKILL]] to select search, extraction or structured
+   research when current web evidence is needed; inspect only its relevant provider route.
 4. Record observations, inferences, contradictions and unknowns separately. Cite
    exact files/lines or source URLs. Expand the search only for a concrete gap.
 5. Answer with the conclusion, supporting evidence, applicability and limitations.

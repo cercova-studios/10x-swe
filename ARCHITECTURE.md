@@ -43,6 +43,9 @@ Tool sources and dependency locks ship in the repository. Personal libraries,
 tokens, session transcripts, bookmarks, caches and machine binaries do not.
 Reviewed skill changes use staged proposals, backups and concurrent-change checks.
 Engineering bundles keep canonical workflows and optional references together.
+Web research guidance routes to independently available connectors, clients and
+provider APIs. The optional search helper inherits credentials and emits JSON;
+research acquisition, evidence transformation and reviewed publication stay separate.
 Skill authoring owns its initializer, basic metadata validator and construction
 checklist. Ghidra's canonical artifacts use address identities, bounded selected
 decompilation and identity-checked read-only reuse; native fixtures never run
