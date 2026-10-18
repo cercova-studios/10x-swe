@@ -64,8 +64,14 @@ require upstream bundles to pass exact-bundle review before activation.
 Source revisions install into fresh prefixes; an owned receipt never silently
 upgrades an existing installation. `setup --from OLD` copies only user data
 (`knowledge/sources`, `state`) into the new prefix before indexing. The source
-fingerprint covers tracked files only, so untracked and ignored files (such as a
-skill's node_modules) never make an unchanged revision look different. Remote publication and delivery remain separate acts.
+and destination must not overlap; migration rejects symlinks and nonempty destination
+data directories before copying. Users must stop source writers during migration.
+An interrupted copy blocks setup certification; use a fresh destination. After a
+completed copy, build retries omit `--from` and retain the copied data.
+In Git checkouts, the source fingerprint, staged build inputs and installed
+skill/library resources use the same tracked-file inventory. Untracked and ignored files (such as a skill's
+node_modules) are neither certified nor installed. Remote publication and delivery
+remain separate acts.
 Completed setup retries verify readiness without requiring compilers; incomplete
 installs still require the documented build prerequisites.
 Plan and incomplete setup probe compiler versions, C compilation and Linux OpenSSL

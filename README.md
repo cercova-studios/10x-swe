@@ -247,17 +247,24 @@ does not edit shell profiles or configure your agent harness.
 | Prefix was built from a different source revision | Keep the old prefix and build this revision into a fresh one with `--from OLD_PREFIX` (see below) |
 | Local graph is stale after an intentional skill change | Run `skill-search refresh --lexical` and retry discovery |
 
-Default data stores live inside the prefix. To upgrade after `git pull`, build into a
-fresh prefix and carry your library, bookmarks and session index over, then activate
-the new `env.sh`:
+Default data stores live inside the prefix. To upgrade after `git pull`, stop setup
+and tool processes that write to the old prefix. Keep them stopped during migration.
+Build into a fresh prefix, carry your library, bookmarks and session index over,
+then activate the new `env.sh`:
 
 ```sh
 ./knowledge setup --prefix ~/.local/share/10x-swe/knowledge-NEW --from "$AGENT_KNOWLEDGE_HOME"
 ```
 
 `--from` copies only `knowledge/sources` and `state`; the old prefix is left intact,
-so reactivating its `env.sh` switches back. Untracked and ignored files in your clone
-(for example a skill's `node_modules`) do not count as source changes. Explicitly
+so reactivating its `env.sh` switches back. The prefixes must not overlap, copied
+data must contain no symlinks, and destination data directories must be empty.
+If copying is interrupted, preserve that destination and choose another fresh prefix.
+If copying completed but a later build failed, retry the same prefix without `--from`.
+Bookmark credentials remain bound to the old cache directory; authenticate explicitly
+for the new directory when needed.
+In a Git checkout, untracked and ignored files (for example a skill's `node_modules`)
+are excluded from both the source fingerprint and installed skill resources. Explicitly
 configured library or index paths outside the prefix are not moved. See
 [setup and recovery](https://github.com/cercova-studios/10x-swe/wiki/Getting-started).
 

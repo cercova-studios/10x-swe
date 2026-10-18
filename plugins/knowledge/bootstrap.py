@@ -276,15 +276,39 @@ def doctor(prefix, verify=True):
 def carry_over(previous, prefix):
     """Copy user data (source library, bookmarks, session index) from an older owned prefix."""
     previous = previous.expanduser().absolute()
-    if previous.is_symlink() or not (previous / MARKER).is_file():
+    marker = previous / MARKER
+    if previous.is_symlink() or marker.is_symlink() or not marker.is_file():
         raise ValueError('--from must name an existing knowledge installation: ' + str(previous))
     previous = previous.resolve()
-    if previous == prefix:
-        raise ValueError('--from must differ from --prefix')
+    owner = json.loads(marker.read_text())
+    if not isinstance(owner, dict) or owner.get('schema') != 'knowledge-owner/v1' or not isinstance(owner.get('fingerprint'), str):
+        raise ValueError('--from must name an existing knowledge installation: ' + str(previous))
+    prefix = prefix.resolve()
+    if previous.is_relative_to(prefix) or prefix.is_relative_to(previous):
+        raise ValueError('--from and --prefix must not overlap')
+    # Validate both trees before copying either; retries must never merge user data.
+    for rel in USER_DATA:
+        source, destination = previous / rel, prefix / rel
+        for root, path in ((previous, source), (prefix, destination)):
+            parents = [path, *path.parents]
+            for candidate in parents[:parents.index(root)]:
+                if candidate.is_symlink():
+                    raise ValueError('User data must not contain symlinks: ' + str(candidate))
+        for path in source.rglob('*'):
+            if path.is_symlink():
+                raise ValueError('User data must not contain symlinks: ' + str(path))
+        if source.exists() and not source.is_dir():
+            raise ValueError('User data must be a directory: ' + str(source))
+        if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
+            raise ValueError('--from needs empty destination data directories; choose a fresh prefix: ' + str(destination))
+    pending = prefix / '.migration-pending'
+    with pending.open('x') as stream:
+        stream.write(str(previous) + '\n')
     for rel in USER_DATA:
         if (previous / rel).is_dir():
             print('Carrying over ' + str(previous / rel), flush=True)
-            shutil.copytree(previous / rel, prefix / rel, dirs_exist_ok=True, symlinks=True)
+            shutil.copytree(previous / rel, prefix / rel, dirs_exist_ok=True)
+    pending.unlink()
 
 
 def setup(prefix, previous=None):
@@ -306,6 +330,8 @@ def setup(prefix, previous=None):
         raise
     with (prefix / '.setup.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if (prefix / '.migration-pending').exists():
+            raise ValueError('User-data migration was interrupted; preserve this prefix and choose a fresh prefix with --from')
         if (prefix / 'installation.json').exists():
             if previous is not None:
                 raise ValueError('--from only applies to a fresh prefix; %s is already installed' % prefix)
@@ -318,31 +344,36 @@ def setup(prefix, previous=None):
         if failed:
             raise ValueError('; '.join(failed) + ''.join('\n  fix: ' + line for line in fixes(checks)))
         require_disk_space(prefix)
-        for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
-            (prefix / folder).mkdir(parents=True, exist_ok=True)
         if previous is not None:
             carry_over(previous, prefix)
-        for source, dest in ((PACKAGE / 'skills', prefix / 'skills'),
-                             (PACKAGE / 'lib', prefix / 'lib'),
+        for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
+            (prefix / folder).mkdir(parents=True, exist_ok=True)
+        included = {REPO / rel for rel in manifest}
+        included.update(parent for path in list(included) for parent in path.parents if parent.is_relative_to(REPO))
+        staged = prefix / 'build/source'
+        for source, dest in ((PACKAGE, staged),
                              (REPO / 'plugins/10x-swe/skills', prefix / 'engineering-skills')):
-            shutil.copytree(source, dest, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*IGNORED_PARTS))
+            shutil.copytree(source, dest, dirs_exist_ok=True,
+                            ignore=lambda directory, names: [name for name in names if Path(directory) / name not in included])
+        for folder in ('skills', 'lib'):
+            shutil.copytree(staged / folder, prefix / folder, dirs_exist_ok=True)
         python = prefix / 'runtimes/source-insights/bin/python'
         if not python.exists():
             run([sys.executable, '-m', 'venv', prefix / 'runtimes/source-insights'])
-        run([python, '-m', 'pip', 'install', '--require-hashes', '-r', PACKAGE / 'requirements.lock'])
+        run([python, '-m', 'pip', 'install', '--require-hashes', '-r', staged / 'requirements.lock'])
         runtime = prefix / 'runtimes/skill-graph'
         if not runtime.exists():
             runtime.symlink_to('source-insights', target_is_directory=True)
         env = environment(prefix)
-        for source, command in ((PACKAGE / 'skills/skill-graph/scripts/search-core', 'skill-search'),
-                                (PACKAGE / 'tools/bkd', 'bkd'), (PACKAGE / 'tools/distiller', 'distiller')):
+        for source, command in ((staged / 'skills/skill-graph/scripts/search-core', 'skill-search'),
+                                (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller')):
             run(['cargo', 'build', '--locked', '--release', '--bin', command,
                  '--manifest-path', source / 'Cargo.toml', '--target-dir', prefix / 'build/rust'], env=env)
             shutil.copy2(prefix / 'build/rust/release' / command, prefix / 'libexec/native' / command)
         run(['go', 'build', '-trimpath', '-o', prefix / 'libexec/native/insights', '.'],
-            cwd=PACKAGE / 'tools/insights', env=env)
+            cwd=staged / 'tools/insights', env=env)
         for name in ('launch.py', 'intake.py'):
-            shutil.copy2(PACKAGE / name, prefix / 'libexec' / name)
+            shutil.copy2(staged / name, prefix / 'libexec' / name)
         (prefix / 'libexec/launch.py').chmod(0o755)
         for command in COMMANDS:
             target = prefix / 'bin' / command

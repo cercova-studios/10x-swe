@@ -6,6 +6,7 @@ import io
 import json
 import os
 import shutil
+import sqlite3
 from pathlib import Path
 import subprocess
 import sys
@@ -261,6 +262,105 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '--from'):
             bootstrap.setup(target)
         self.assertFalse((target / 'installation.json').exists())
+
+    def test_setup_copies_only_fingerprinted_files(self):
+        skill = REPO / 'plugins/10x-swe/skills/chrome-devtools'
+        extra = skill / 'fingerprint-probe.untracked'
+        extra.write_text('not certified')
+        go_extra = REPO / 'plugins/knowledge/tools/insights/fingerprint_probe.go'
+        go_extra.write_text('package main\n')
+        target = self.root / 'installed'
+        try:
+            with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                    patch.object(bootstrap, 'require_disk_space'), \
+                    patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
+                with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                    bootstrap.setup(target)
+            installed = target / 'engineering-skills/chrome-devtools'
+            self.assertTrue((installed / 'SKILL.md').is_file())
+            self.assertFalse((installed / extra.name).exists())
+            self.assertFalse((target / 'build/source/tools/insights' / go_extra.name).exists())
+            self.assertTrue((target / 'build/source/tools/insights/main.go').is_file())
+        finally:
+            extra.unlink()
+            go_extra.unlink()
+
+    def test_upgrade_rejects_links_and_overlaps_before_copying(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True)
+        (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        (old / 'state').mkdir()
+        (old / 'state/alias').symlink_to(old / 'knowledge/sources')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        with self.assertRaisesRegex(ValueError, 'symlink'):
+            bootstrap.carry_over(old, new)
+        self.assertFalse((new / 'knowledge').exists())
+        (old / 'state/alias').unlink()
+        nested = old / 'state/new'; bootstrap.owned(nested, 'b' * 64)
+        with self.assertRaisesRegex(ValueError, 'overlap'):
+            bootstrap.carry_over(old, nested)
+
+    def test_upgrade_does_not_merge_into_existing_destination_data(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('old')
+        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+        (new / 'state').mkdir(); (new / 'state/bookmark').write_text('new')
+        with self.assertRaisesRegex(ValueError, 'empty'):
+            bootstrap.carry_over(old, new)
+        self.assertEqual((new / 'state/bookmark').read_text(), 'new')
+
+    def test_setup_migrates_before_building_and_does_not_recopy_on_retry(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'knowledge/sources/entries').mkdir(parents=True)
+        (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        new = self.root / 'new'
+        with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                patch.object(bootstrap, 'require_disk_space'), \
+                patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
+            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                bootstrap.setup(new, old)
+            self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
+            with self.assertRaisesRegex(ValueError, 'empty'):
+                bootstrap.setup(new, old)
+            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
+                bootstrap.setup(new)
+
+    def test_interrupted_migration_cannot_be_certified_by_retrying_setup(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('kept')
+        new = self.root / 'new'
+        with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                patch.object(bootstrap, 'require_disk_space'), \
+                patch.object(bootstrap.shutil, 'copytree', side_effect=OSError('copy interrupted')):
+            with self.assertRaisesRegex(OSError, 'copy interrupted'):
+                bootstrap.setup(new, old)
+        with self.assertRaisesRegex(ValueError, 'migration was interrupted'):
+            bootstrap.setup(new)
+        self.assertFalse((new / 'installation.json').exists())
+        self.assertEqual((old / 'state/bookmark').read_text(), 'kept')
+
+    def test_upgrade_preserves_committed_wal_data_with_writers_paused(self):
+        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+        (old / 'state').mkdir()
+        database = old / 'state/session-search.sqlite'
+        db = sqlite3.connect(database)
+        try:
+            db.execute('PRAGMA journal_mode=WAL')
+            db.execute('CREATE TABLE sessions (body TEXT)')
+            db.execute("INSERT INTO sessions VALUES ('kept')")
+            db.commit()
+            self.assertTrue(Path(str(database) + '-wal').is_file())
+            new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
+            with contextlib.redirect_stdout(io.StringIO()):
+                bootstrap.carry_over(old, new)
+            copied = sqlite3.connect(new / 'state/session-search.sqlite')
+            try:
+                self.assertEqual(copied.execute('SELECT body FROM sessions').fetchall(), [('kept',)])
+                self.assertEqual(copied.execute('PRAGMA integrity_check').fetchone(), ('ok',))
+            finally:
+                copied.close()
+        finally:
+            db.close()
 
 
 if __name__=='__main__': unittest.main()
