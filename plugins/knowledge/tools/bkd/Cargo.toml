@@ -2,6 +2,7 @@
 name = "bookmarkdrop"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
 description = "Local bookmark retrieval and reviewed publishing"
 license = "MIT"
 
