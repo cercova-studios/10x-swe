@@ -35,6 +35,15 @@ changing tool interfaces, store ownership or review authority. Docker Sandboxes
 
 ## Installation and extension points
 
+`plugins/10x-swe/package.json` packages engineering skills and their resources for
+OpenCode v2. `scripts/hosts.py sync` generates its manifest and frontmatter data
+from the canonical engineering plugin. `index.js` registers skills, subagents
+and namespaced commands through OpenCode transforms. It preserves existing skills
+and agents, inherits build-agent permissions and leaves model selection to the
+host. Loading writes no harness files and starts no knowledge bootstrap or MCP
+connections. npm installation and local archive extraction are explicit operations;
+removing the plugin configuration removes its runtime registrations on reload.
+
 The bootstrap plans, installs and verifies tools in an owned prefix. Harness
 configuration, source indexing and connector setup are explicit user operations.
 Doctor reports installed capabilities and their prerequisites. Connectors, media

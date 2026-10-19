@@ -39,6 +39,8 @@ jobs:
       - name: chrome-devtools selector tests
         working-directory: plugins/10x-swe/skills/chrome-devtools/scripts
         run: node --test __tests__/*.test.js
+      - name: OpenCode npm adapter
+        run: node --test tests/test_opencode.mjs
   rust-msrv:
     runs-on: ubuntu-latest
     timeout-minutes: 30

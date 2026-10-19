@@ -1,0 +1,26 @@
+{
+  "name": "@cercova-studios/10x-swe",
+  "version": "1.2.0",
+  "description": "Engineering skills and bounded workflows for investigation, implementation and verification",
+  "license": "MIT",
+  "repository": "https://github.com/cercova-studios/10x-swe",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "opencode-data.json",
+    "skills",
+    "agents",
+    "commands",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22",
+    "opencode": ">=2.0.32 <3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

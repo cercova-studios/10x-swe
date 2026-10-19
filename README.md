@@ -129,8 +129,44 @@ have not been verified in Copilot. Running a session needs a GitHub Copilot plan
 
 #### opencode (free)
 
-opencode has no skill marketplace, so link the bundles into a project (or into
-`~/.config/opencode` for every project). Needs Python 3 and PyYAML (`pip install pyyaml`).
+For OpenCode v2.0.32 or later, build the engineering npm package from this checkout.
+This package is not published to npm yet. Requires Node.js 22+ and npm.
+
+```sh
+python3 scripts/hosts.py sync           # requires PyYAML; maintainers only
+npm pack ./plugins/10x-swe --ignore-scripts --pack-destination /tmp
+```
+
+In your target project, install the resulting archive (replace the archive path
+with the filename printed by `npm pack`):
+
+```sh
+npm install --prefix .opencode/npm --ignore-scripts /absolute/path/to/package.tgz
+```
+
+Add the installed directory to your project's `opencode.json`:
+
+```json
+{
+  "plugins": ["./.opencode/npm/node_modules/@cercova-studios/10x-swe"]
+}
+```
+
+OpenCode loads the engineering skills, eight subagents and five commands such as
+`/10x-swe:research`. Existing skills, agents and commands take precedence. Agents
+inherit the build agent's permissions and the host's model selection. With no
+build agent, their actions require approval. Knowledge tools remain a separate
+installation. Removing the plugin entry and restarting OpenCode unloads the bundle;
+the installed npm directory can remain for reuse.
+
+OpenCode's `plugin add` accepts npm registry and Git packages, but rejects `.tgz`
+targets; use npm installation plus the directory configuration above for archives.
+After publication, the registry route will be
+`opencode plugin add @cercova-studios/10x-swe@VERSION`.
+[OpenCode v2 plugin configuration](https://opencode.ai/v2/docs/plugins/)
+
+For the existing checkout-link route (including the optional knowledge instructions),
+use Python 3 and PyYAML (`pip install pyyaml`):
 
 ```sh
 git clone https://github.com/cercova-studios/10x-swe.git ~/src/10x-swe
@@ -140,8 +176,7 @@ opencode models opencode               # pick a model marked free
 opencode run -m opencode/MODEL "Use the diagnose skill: ..."
 ```
 
-Verify: `opencode debug skill` lists the 72 skills and `opencode debug agent
-code-reviewer` prints the translated agent. The link step symlinks skills and
+The link step symlinks skills and
 commands and writes opencode-format copies of the agents (opencode rejects Claude
 colour names and model aliases). Rerun it after `git pull`; `--unlink` removes only
 what it created. [Skills](https://opencode.ai/docs/skills/) ·
@@ -347,7 +382,7 @@ approval. Dagu can optionally coordinate the same shell workflow.
 | [Codex CLI](https://developers.openai.com/codex/plugins) | Supported (skills) | ✓ | – not supported by Codex plugins | – | MCP example only | generated `.agents/plugins/marketplace.json` + `.codex-plugin/` |
 | [Grok Build](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/09-plugins.md) | Supported | ✓ | ✓ | ✓ | MCP example only | reads `.claude-plugin/` |
 | [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) | Partial | ✓ | unverified | unverified | MCP example only | `.github/plugin/marketplace.json` → `.claude-plugin/` |
-| [opencode](https://opencode.ai/docs/skills/) | Supported via link | ✓ | ✓ translated | ✓ | manual | `scripts/hosts.py link opencode` |
+| [opencode](https://opencode.ai/v2/docs/plugins/) | npm archive (v2) or checkout link | ✓ | ✓ translated | ✓ | manual | engineering npm package or `scripts/hosts.py link opencode` |
 | [pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) | Partial | ✓ | – no subagents | ✓ prompt templates | manual | root `package.json` |
 | [Agent Skills hosts](https://agentskills.io/specification) | Skills | ✓ | – | – | – | `scripts/hosts.py link agents` |
 
@@ -356,11 +391,18 @@ approval. Dagu can optionally coordinate the same shell workflow.
 `.claude-plugin/marketplace.json`, each `plugins/*/.claude-plugin/plugin.json` and the
 skill frontmatter are the source of truth. After adding or renaming a skill, agent or
 command, link it in the [plugin catalog](plugins/10x-swe/README.md#maintaining-the-catalog)
-and run `python3 scripts/hosts.py sync`; it regenerates the Codex and pi adapters and
+and run `python3 scripts/hosts.py sync`; it regenerates the Codex, pi and OpenCode npm adapters and
 the skill-requirements table. `python3 scripts/validate.py` and
 `tests/test_plugin_metadata.py` run the same checks as CI. Bump the plugin
 `version` with every user-visible change: Claude Code, Codex and Grok only update
 installed plugins when it changes.
+
+Run `node --test tests/test_opencode.mjs` for adapter checks. To test the packed
+artifact with a real OpenCode v2 executable, run
+`python3 tests/opencode_install.py --opencode /absolute/path/to/opencode`.
+This opt-in test uses temporary config, data and cache directories and a loopback
+npm registry. It verifies registry installation, archive installation, loaded
+content/resources, restart and removal without publishing or invoking a model.
 
 ## Documentation
 
