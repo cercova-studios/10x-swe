@@ -26,6 +26,10 @@ unrelated work and establish which environment reproduces the reported symptom.
    probe. Share material assumptions without inserting an unnecessary approval gate.
 4. Change one variable per probe. Prefer debugger inspection or boundary logs;
    tag temporary instrumentation. Missing observations are unknown, not passes.
+   If repeated fixes fail the same check, name the assumption they share. Before
+   trying another fix based on it, run a probe whose outcome would differ if that
+   assumption were false. Retain the observation and revise the causal model
+   when it contradicts the assumption.
 5. Create a regression at the seam that reaches the real trigger. Observe it fail
    for the expected reason, apply the smallest fix, and rerun the original scenario.
    If no adequate seam exists, state that verification gap instead of a shallow pass.
@@ -37,3 +41,6 @@ For independent competing investigations, optionally use
 For a structural follow-up after the fix, use
 [[plugin/10x-swe/improve-codebase-architecture/SKILL]]; do not expand the fix silently.
 The human-assisted fallback is `scripts/hitl-loop.template.sh`; inspect it first.
+
+The premise check adapts [pstack](https://github.com/cursor/plugins/blob/8ad8a41fe418f7c948540641cf1d8649fba99db7/pstack/skills/principle-attack-the-premise/SKILL.md)
+under the [MIT license](../../LICENSE).
