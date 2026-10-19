@@ -31,7 +31,7 @@ class MountTests(unittest.TestCase):
         self.host.mkdir()
         (self.host / 'file').write_text('checkpoint')
         self.shares = m.declarations([], [self.host], self.pg.directory, REPO)
-        self.pg.data = {'schema': 'playground/v1', 'current': 'tenx-' + 'a' * 32,
+        self.pg.data = {'schema': 'playground/v2', 'current': 'tenx-' + 'a' * 32,
                         'owned': ['tenx-' + 'a' * 32], 'mounts': self.shares,
                         'source_sha256': 'source', 'flake_lock_sha256': 'lock'}
         self.pg.save()
@@ -41,15 +41,19 @@ class MountTests(unittest.TestCase):
     def snapshot(self):
         return m.snapshot(self.shares, self.folder)
 
-    def test_explicit_paths_and_managed_primary(self):
+    def test_only_explicit_paths_are_mounted_with_host_protection(self):
         reference = self.root / 'reference repo'
         reference.mkdir()
         shares = m.declarations([reference], [self.host], self.pg.directory, REPO)
-        with patch.object(p, 'sbx') as runtime:
+        with patch.object(p, 'msb') as runtime:
             p.create('vm', 'image', offline=True, shares=shares)
-        self.assertEqual(runtime.call_args_list[0].args[-3:],
-                         (shares[0]['path'], str(reference) + ':ro', str(self.host)))
-        self.assertTrue(shares[0]['managed'])
+        args = runtime.call_args.args
+        volumes = [args[i+1] for i, arg in enumerate(args) if arg == '--volume']
+        self.assertEqual(len(volumes), 2)
+        self.assertTrue(volumes[0].startswith(str(reference) + ':' + str(reference) + ':ro,'))
+        self.assertTrue(volumes[1].startswith(str(self.host) + ':' + str(self.host) + ':rw,'))
+        self.assertTrue(all('nosuid,nodev' in v for v in volumes))
+        self.assertFalse((self.pg.directory / 'primary').exists())
 
     def test_mounts_reject_overlap_control_state_home_and_link_aliases(self):
         cases = [([], [self.root]), ([self.pg.directory], []), ([], [Path.home()]),
@@ -189,11 +193,11 @@ class MountTests(unittest.TestCase):
         folder = self.pg.directory / 'checkpoints/good'
         folder.parent.mkdir()
         self.folder.rename(folder)
-        (folder / 'image.tar').write_bytes(b'image')
-        p.atomic(folder / 'checkpoint.json', {'schema': 'playground-checkpoint/v1', 'mounts': records,
-                 'image': 'pinned', 'archive_sha256': p.digest(folder / 'image.tar')})
+        (folder / 'guest.msb').write_bytes(b'image')
+        p.atomic(folder / 'checkpoint.json', {'schema': 'playground-checkpoint/v2', 'mounts': records,
+                 'archive_sha256': p.digest(folder / 'guest.msb')})
         (folder / records[-1]['archive']).write_bytes(b'corrupt')
-        with patch.object(p, 'sbx') as runtime:
+        with patch.object(p, 'msb') as runtime:
             with self.assertRaisesRegex(ValueError, 'checksum'):
                 self.pg.rewind('good')
         runtime.assert_not_called()
@@ -205,12 +209,14 @@ class MountTests(unittest.TestCase):
             self.assertEqual(stopped, self.pg.data['owned'])
             return original(path)
         def runtime(*args, **kwargs):
+            if args[0] == 'ls':
+                return subprocess.CompletedProcess(args, 0, json.dumps([{'name': n} for n in self.pg.data['owned']]))
             if args[0] == 'stop':
                 stopped.append(args[1])
-            elif args[:2] == ('template', 'save'):
+            elif args[:2] == ('snap', 'create'):
                 Path(args[-1]).write_bytes(b'cold image')
             return subprocess.CompletedProcess(args, 0, '')
-        with patch.object(p, 'sbx', runtime), patch.object(m, 'tree', inspect):
+        with patch.object(p, 'msb', runtime), patch.object(m, 'tree', inspect):
             self.pg.checkpoint('cold')
 
     def test_failed_health_requires_explicit_recovery_and_stops_candidate(self):
@@ -218,9 +224,9 @@ class MountTests(unittest.TestCase):
         folder = self.pg.directory / 'checkpoints/good'
         folder.parent.mkdir()
         self.folder.rename(folder)
-        (folder / 'image.tar').write_bytes(b'image')
-        p.atomic(folder / 'checkpoint.json', {'schema': 'playground-checkpoint/v1', 'mounts': records,
-                 'image': 'pinned', 'archive_sha256': p.digest(folder / 'image.tar'),
+        (folder / 'guest.msb').write_bytes(b'image')
+        p.atomic(folder / 'checkpoint.json', {'schema': 'playground-checkpoint/v2', 'mounts': records,
+                 'archive_sha256': p.digest(folder / 'guest.msb'),
                  'source_sha256': 'source', 'flake_lock_sha256': 'lock'})
         (self.host / 'file').write_text('preserve failed work')
         def runtime(*args, **kwargs):
@@ -229,7 +235,8 @@ class MountTests(unittest.TestCase):
             if args[:1] == ('ls',):
                 return subprocess.CompletedProcess(args, 0, json.dumps([{'name': n} for n in self.pg.data['owned']]))
             return subprocess.CompletedProcess(args, 0, '')
-        with patch.object(p, 'preflight'), patch.object(p, 'create'), patch.object(p, 'boundary'), patch.object(p, 'sbx', runtime) as run:
+        with patch.object(p, 'preflight'), patch.object(p, 'create'), patch.object(p, 'boundary'), \
+             patch.object(p, 'seal'), patch.object(p, 'msb', runtime) as run:
             with self.assertRaises(subprocess.CalledProcessError):
                 self.pg.rewind('good')
             self.assertEqual((self.host / 'file').read_text(), 'checkpoint')

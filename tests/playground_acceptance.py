@@ -39,10 +39,14 @@ from pathlib import Path
 import subprocess
 assert not Path({str(sentinel)!r}).exists(), 'host files are mounted'
 assert subprocess.run(['ssh-add', '-l'], capture_output=True).returncode == 2
-result = subprocess.run(['curl', '--fail', '--max-time', '10', 'https://github.com'], capture_output=True)
-assert result.returncode != 0 and b'403' in result.stderr, result.stderr
-result = subprocess.run(['curl', '--fail', '--max-time', '10', 'http://host.docker.internal:8123'], capture_output=True)
-assert result.returncode != 0 and b'403' in result.stderr, result.stderr
+result = subprocess.run(['curl', '--fail', '--max-time', '3', 'https://github.com'], capture_output=True)
+assert result.returncode != 0, 'public network escaped host policy'
+result = subprocess.run(['curl', '--fail', '--max-time', '3', 'http://192.168.127.1:8123'], capture_output=True)
+assert result.returncode != 0, 'host network escaped host policy'
+probe = "import socket\\ns=socket.socket(); s.settimeout(2)\\ntry: s.connect(('1.1.1.1',443))\\nexcept OSError: pass\\nelse: raise AssertionError('direct TCP escaped host policy')"
+for prefix in ([], ['sudo']):
+    result = subprocess.run([*prefix, 'python3', '-c', probe], capture_output=True)
+    assert result.returncode == 0, result.stderr
 print('PASS: host files unavailable; SSH forwarding disabled; network explicitly denied')
 ''')
     assert 'PASS: host files unavailable' in checks, 'piped boundary probe did not execute'
@@ -166,6 +170,11 @@ print('PASS: session-search -> cited source-insights review; skill-search + bkd 
     # Real stdin/stdout across the microVM boundary must remain ordinary streams.
     output = host('run', '--', 'python3', '-c', 'import sys; sys.stdout.write(sys.stdin.read())', data='pipe contract\n')
     assert output == 'pipe contract\n', repr(output)
+    payload = bytes(range(256)) * 1024
+    output = subprocess.run([*CLI, 'run', NAME, '--', 'python3', '-c',
+                             'import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())'],
+                            input=payload, capture_output=True)
+    assert output.returncode == 0 and output.stdout == payload, (output.returncode, output.stderr)
     assert host('run', '--', 'printf', '%s', '$(touch /tmp/must-not-run)') == '$(touch /tmp/must-not-run)'
     host('run', '--', 'bash', '-c', 'exit 23', code=23)
     review = json.loads(host('review'))

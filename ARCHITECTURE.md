@@ -12,8 +12,8 @@ versioned JSONL records and files; discovery never grants execution authority.
 
 `playground` and `playgrounds/` own local microVM lifecycle, pinned Nix development
 inputs and host-held recovery archives. They invoke the knowledge bootstrap without
-changing tool interfaces, store ownership or review authority. Docker Sandboxes
-0.48.0 provides the microVM boundary; the Python launcher runs on the host.
+changing tool interfaces, store ownership or review authority. Microsandbox 0.7.8
+provides the local microVM boundary; the Python launcher runs on the host.
 
 ## Domain types
 
@@ -120,16 +120,20 @@ The playground copies an explicitly selected project into a private guest worksp
 Explicit read-only shares expose reference repositories, datasets and skills;
 writable shares expose selected host projects. `playgrounds/mounts.py` owns share
 validation, host archives, user-scoped conflict leases and journaled restoration.
-Each shared path is identical on host and guest. A dedicated writable primary leaf
-satisfies the runtime contract without exposing sibling host control metadata. Nix
+Each shared path is identical on host and guest. Only explicitly declared paths
+are exported, with host-enforced read-only grants and virtualized ownership. Nix
 pins Python, Rust, Go, native build tools and workflow dependencies. The existing
 bootstrap installs CLIs and mutable stores in the guest's owned knowledge prefix.
 Only the repository bootstrap runs during dependency-download access. Workspace
-commands run after an explicit per-VM deny-all network rule. Host SSH forwarding
-must be disabled, clipboard image access off, and shared agent skills off.
+commands run in a fresh disk restore with explicit deny-all host network policy.
+Bootstrap uses strict hostname rules and TLS inspection; it is stopped before
+workspace data is imported. The launcher selects the local backend, a private
+runtime directory and empty config; it does not inherit credentials or user defaults.
+The optional runtime installer verifies pinned release archives and retains a file
+receipt. State and checkpoints use versioned Microsandbox-specific contracts.
 
 Host metadata/checkpoints never enter the guest. Checkpointing stops writers and
-captures the container filesystem, including workspace Git/untracked/ignored files,
+captures the persistent guest disk, including workspace Git/untracked/ignored files,
 local database journals and workflow state. Writable shares have separate native
 host tar archives preserving ACLs/xattrs and internal links. Read-only references
 remain live. Other host writers must be paused during snapshot, restore and review;

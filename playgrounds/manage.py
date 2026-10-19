@@ -5,6 +5,7 @@ import contextlib
 import fcntl
 import json
 import os
+import platform
 from pathlib import Path
 import re
 import shutil
@@ -13,13 +14,14 @@ import sys
 import tarfile
 import tempfile
 import uuid
+import urllib.request
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 sys.path.insert(0, str(HERE))
 import mounts
 CONFIG = json.loads((HERE / 'runtime.json').read_text())
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 WORKSPACE = '/home/agent/workspace'
 ENVIRONMENT = '. /home/agent/playground-env.sh; '
 HEALTH = '''set -eu
@@ -40,7 +42,7 @@ seen = set()
 for line in pathlib.Path('/proc/self/mountinfo').read_text().splitlines():
     entry, fs = line.split(' - ', 1)
     target = entry.split()[4].replace(chr(92) + '040', ' ').replace(chr(92) + '134', chr(92))
-    if fs.split()[0] in ('virtiofs', '9p') and target != '/etc/resolv.conf':
+    if fs.split()[0] in ('virtiofs', '9p') and (target, fs.split()[1]) != ('/.msb', 'msb_runtime'):
         assert target in expected, 'unexpected host share: ' + target
         assert expected[target] in entry.split()[5].split(','), 'wrong mount mode: ' + target
         seen.add(target)
@@ -61,11 +63,62 @@ digest = mounts.sha256
 atomic = mounts.write_json
 
 
-def sbx(*args, capture=False, check=True, passthrough=False):
-    env = os.environ.copy()
-    env.pop('SSH_AUTH_SOCK', None)
-    # Use local sbx commands; no workstation variables are passed with --env.
-    result = subprocess.run(['sbx', *map(str, args)], env=env, check=False,
+def runtime_home():
+    return Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')).expanduser().resolve() / '10x-swe/msb'
+
+
+def install_runtime():
+    system = sys.platform + '-' + platform.machine()
+    checksum = CONFIG['runtime_archives'].get(system)
+    if checksum is None:
+        raise ValueError('No pinned Microsandbox build for ' + system)
+    home = runtime_home()
+    home.mkdir(parents=True, exist_ok=True, mode=0o700)
+    target = home / 'bin'
+    if target.exists():
+        receipt = json.loads((target / 'receipt.json').read_text())
+        if receipt['archive_sha256'] != checksum or any(digest(target / name) != sha for name, sha in receipt['files'].items()):
+            raise ValueError('Installed runtime differs from its pinned receipt; preserve it before reinstalling')
+        return {'runtime': CONFIG['msb_version'], 'binary': str(target / 'msb')}
+    artifact = {'darwin-arm64': 'darwin-aarch64', 'linux-aarch64': 'linux-aarch64', 'linux-x86_64': 'linux-x86_64'}[system]
+    url = f"https://github.com/superradcompany/microsandbox/releases/download/v{CONFIG['msb_version']}/microsandbox-{artifact}.tar.gz"
+    with tempfile.TemporaryDirectory(prefix='.install-', dir=home) as temporary:
+        temporary = Path(temporary)
+        archive = temporary / 'runtime.tar.gz'
+        urllib.request.urlretrieve(url, archive)
+        if digest(archive) != checksum:
+            raise ValueError('Microsandbox archive checksum mismatch; runtime not installed')
+        staged = temporary / 'bin'
+        staged.mkdir()
+        with tarfile.open(archive) as bundle:
+            bundle.extractall(staged, filter='data')
+        atomic(staged / 'receipt.json', {'archive_sha256': checksum,
+               'files': {p.name: digest(p) for p in staged.iterdir()}})
+        staged.rename(target)
+        mounts.sync_directory(home)
+    return {'runtime': CONFIG['msb_version'], 'binary': str(target / 'msb')}
+
+
+def msb(*args, capture=False, check=True, passthrough=False):
+    home = runtime_home()
+    home.mkdir(parents=True, exist_ok=True, mode=0o700)
+    config = home / 'playground-config.json'
+    if config.is_symlink() or (config.exists() and config.read_text().strip() != '{}'):
+        raise ValueError('Playground runtime config must remain empty: ' + str(config))
+    if not config.exists():
+        atomic(config, {})
+    # Do not inherit cloud selection, secrets, proxies, or global sandbox defaults.
+    client_home = home / 'client-home'
+    client_home.mkdir(mode=0o700, exist_ok=True)
+    env = {key: os.environ[key] for key in ('PATH', 'TMPDIR', 'LANG', 'TERM') if key in os.environ}
+    env.update(MSB_BACKEND='local', MSB_HOME=str(home), MSB_CONFIG_PATH=str(config),
+               HOME=str(client_home), DOCKER_CONFIG=str(client_home / '.docker'))
+    binary = home / 'bin/msb'
+    if not binary.exists():
+        binary = shutil.which('msb') or 'msb'
+    if args[0] == 'exec' and '--stream' not in args and '--tty' not in args:
+        args = ('exec', '--stream', *args[1:])
+    result = subprocess.run([str(binary), *map(str, args)], env=env, check=False,
                             stdin=None if passthrough else subprocess.DEVNULL,
                             stdout=subprocess.PIPE if capture else (None if passthrough else sys.stderr),
                             stderr=subprocess.PIPE if capture else None, text=True)
@@ -77,62 +130,61 @@ def sbx(*args, capture=False, check=True, passthrough=False):
 
 
 def guest(vm, argv, *, capture=False, check=True, interactive=False):
-    flags = ['-i'] if interactive else []
-    if interactive and sys.stdin.isatty() and sys.stdout.isatty():
-        flags.append('-t')
+    flags = ['--tty'] if interactive and sys.stdin.isatty() and sys.stdout.isatty() else ['--stream']
     # Workspace argv is never interpolated as shell source.
-    return sbx('exec', *flags, '--workdir', WORKSPACE, vm, 'bash', '-c',
+    return msb('exec', *flags, '--workdir', WORKSPACE, vm, '--', 'bash', '-c',
                ENVIRONMENT + 'exec "$@"', 'playground', *argv,
                capture=capture, check=check, passthrough=not capture)
 
 
-def preflight(*, setup=False):
+def preflight():
     if sys.platform not in ('darwin', 'linux'):
-        raise ValueError('Use a macOS or Linux host supported by Docker Sandboxes')
-    if not shutil.which('sbx'):
-        raise ValueError('Install Docker Sandboxes and sign in: https://docs.docker.com/ai/sandboxes/install/')
-    version = sbx('version', capture=True).stdout
-    if CONFIG['sbx_version'] not in version.split():
-        raise ValueError('This runtime contract requires sbx ' + CONFIG['sbx_version'])
-    if sbx('settings', 'get', 'ssh.agentForwardingEnabled', capture=True).stdout.strip() != 'false':
-        raise ValueError('Disable host SSH forwarding explicitly: sbx settings set ssh.agentForwardingEnabled false; sbx daemon restart')
-    for key in ('ssh.agentSocketPath', 'clipboard.imagePaste'):
-        value = sbx('settings', 'get', key, capture=True).stdout.strip()
-        if value not in ('', 'false'):
-            raise ValueError(key + ' exposes host access; disable it explicitly before using playground')
-    if setup:
-        rules = json.loads(sbx('policy', 'ls', '--json', capture=True).stdout)['rules']
-        if any(r.get('scope') == 'global' and r.get('resource_type') == 'network'
-               and r.get('decision') == 'allow' and r.get('status') == 'active' for r in rules):
-            raise ValueError('Setup requires a deny-by-default sbx global policy; review sbx policy ls first')
+        raise ValueError('Use an Apple Silicon macOS or Linux/KVM host supported by Microsandbox')
+    if not shutil.which('msb') and not (runtime_home() / 'bin/msb').is_file():
+        raise ValueError('Install the pinned runtime with ./playground install-runtime')
+    if msb('--version', capture=True).stdout.strip() != 'msb ' + CONFIG['msb_version']:
+        raise ValueError('This runtime contract requires msb ' + CONFIG['msb_version'])
+    if json.loads(msb('context', '--format', 'json', capture=True).stdout)['kind'] != 'local':
+        raise ValueError('Playground requires the local Microsandbox backend')
+    msb('doctor', capture=True)
 
 
 def seal(vm):
-    sbx('policy', 'deny', 'network', '--sandbox', vm, '**', capture=True)
+    info = json.loads(msb('inspect', vm, '--format', 'json', capture=True).stdout)
+    for config in (info['config'], info.get('active_config') or info['config']):
+        network = config['network']
+        if network['policy'] != {'default_egress': 'deny', 'default_ingress': 'deny', 'rules': []}:
+            raise ValueError('Guest network is not sealed; refuse workspace execution')
+        if network['ports'] or network['secrets']['secrets'] or network['trust_host_cas']:
+            raise ValueError('Unexpected host network access in playground runtime')
+    if info['status'] == 'Stopped':
+        msb('start', vm)
 
 
 def create(vm, image, *, offline, shares=()):
-    args = ['create', '--name', vm, '--skills', 'off', '--cpus', '2', '--memory', '4g',
-            '--template', image, '--pull', 'never' if offline else 'missing']
-    if offline:
-        args += ['--deny-network', '**']
-    # No implicit cwd or automatic skill shares. Paths are identical on host and guest.
-    sbx(*args, 'shell', *(m['path'] + (':ro' if m['mode'] == 'ro' else '') for m in shares))
-    # Keep the runtime alive across long saves; stopping it still stops writers.
-    sbx('run', '--detach', '--name', vm)
+    args = (['snap', 'restore', image, '--name', vm] if offline else
+            ['create', image, '--name', vm, '--pull', 'if-missing', '--root-disk', '24G'])
+    args += ['--user', 'agent', '--cpus', '2', '--memory', '4G', '--no-net']
+    if not offline:
+        args += ['--tls-intercept', '--net-rule', 'allow@dns']
+        for host in CONFIG['setup_hosts']:
+            args += ['--net-rule', 'allow@' + host + ':tcp:443']
+    for share in shares:
+        args += ['--volume', share['path'] + ':' + share['path'] + ':' + share['mode'] +
+                 ',nosuid,nodev,stat-virt=strict,host-perms=mirror,uid=1000,gid=1000']
+    msb(*args)
 
 
 def boundary(vm, shares=()):
-    sbx('exec', vm, 'python3', '-c', BOUNDARY, json.dumps({m['path']: m['mode'] for m in shares}))
+    msb('exec', '--no-stdin', vm, '--', 'python3', '-c', BOUNDARY, json.dumps({m['path']: m['mode'] for m in shares}))
 
 
 def import_bundle(vm, source, destination):
     path = '/tmp/tenx-' + uuid.uuid4().hex + '.tar'
-    sbx('cp', source, vm + ':' + path)
-    # sbx cp creates root-owned files; host umask deliberately makes them private.
-    sbx('exec', vm, 'sudo', 'chown', 'agent:agent', path)
-    sbx('exec', vm, 'tar', '-xf', path, '-C', destination)
-    sbx('exec', vm, 'rm', path)
+    msb('cp', source, vm + ':' + path)
+    msb('exec', '--no-stdin', vm, '--', 'sudo', 'chown', 'agent:agent', path)
+    msb('exec', '--no-stdin', vm, '--', 'tar', '-xf', path, '-C', destination)
+    msb('exec', '--no-stdin', vm, '--', 'rm', path)
 
 
 def safe_bundle(source, output, *, repository=False):
@@ -179,8 +231,8 @@ class Playground:
                 if self.statefile.is_symlink():
                     raise ValueError('State file must not be a symlink')
                 self.data = json.loads(self.statefile.read_text())
-                if self.data.get('schema') != 'playground/v1':
-                    raise ValueError('Unknown playground state schema')
+                if self.data.get('schema') != 'playground/v2':
+                    raise ValueError('Unsupported playground state; use a fresh Microsandbox playground directory')
                 if any(not re.fullmatch(r'tenx-[a-f0-9]{32}', vm) for vm in self.data['owned']):
                     raise ValueError('Invalid owned VM identity')
                 if self.data['current'] is not None and self.data['current'] not in self.data['owned']:
@@ -208,24 +260,29 @@ class Playground:
 
     def ready(self, *, contents=True):
         mounts.Restore(self.directory).pending()
+        if any(mounts.overlaps(Path(m['path']), runtime_home()) for m in self.shares()):
+            raise ValueError('Host shares must remain separate from Microsandbox control state')
         mounts.validate(self.shares(), contents=contents)
         if self.shares():
             with mounts.leases(self.statefile, self.shares()):
                 pass
 
     def stop_owned(self):
+        existing = {vm['name'] for vm in json.loads(msb('ls', '--format', 'json', capture=True).stdout)}
         for vm in self.data['owned']:
-            sbx('stop', vm)
+            if vm in existing:
+                msb('stop', vm)
 
     def up(self, workspace, read_only=(), writable=()):
         mounts.Restore(self.directory).pending()
         if self.data and (self.data['current'] or self.data['owned']):
             raise ValueError('Playground exists; use run, rewind, or destroy before retrying setup')
-        preflight(setup=True)
+        preflight()
         if not (HERE / 'flake.lock').is_file():
             raise ValueError('Missing pinned playgrounds/flake.lock')
         for source in (REPO, workspace):
-            if source is not None and self.directory.parent.resolve().is_relative_to(source.resolve()):
+            if source is not None and any(path.is_relative_to(source.resolve())
+                                          for path in (self.directory.parent.resolve(), runtime_home())):
                 raise ValueError('Host playground state must be outside imported directories')
         # Validate and freeze host input before creating any guest resources.
         with tempfile.TemporaryDirectory(prefix='tenx-input-') as tmp:
@@ -235,7 +292,7 @@ class Playground:
             selected = tmp / 'workspace.tar'
             if workspace is not None:
                 safe_bundle(workspace, selected)
-            self.data = {'schema': 'playground/v1', 'current': None, 'owned': [],
+            self.data = {'schema': 'playground/v2', 'current': None, 'owned': [],
                          'source_sha256': digest(source), 'runtime': CONFIG,
                          'flake_lock_sha256': digest(HERE / 'flake.lock')}
             self.save()
@@ -246,17 +303,23 @@ class Playground:
             create(vm, CONFIG['image'], offline=False, shares=self.shares())
             try:
                 boundary(vm, self.shares())
-                sbx('policy', 'allow', 'network', '--sandbox', vm, ','.join(CONFIG['setup_hosts']))
-                sbx('exec', vm, 'sudo', 'mkdir', '-p', '/opt/10x-swe')
-                sbx('exec', vm, 'sudo', 'chown', 'agent:agent', '/opt/10x-swe')
+                msb('exec', '--no-stdin', vm, '--', 'sudo', 'mkdir', '-p', '/opt/10x-swe')
+                msb('exec', '--no-stdin', vm, '--', 'sudo', 'chown', 'agent:agent', '/opt/10x-swe')
                 import_bundle(vm, source, '/opt/10x-swe')
                 # Only the hash-frozen repository bootstrap runs while downloads are enabled.
-                sbx('exec', vm, 'bash', '/opt/10x-swe/playgrounds/bootstrap.sh')
+                msb('exec', '--no-stdin', vm, '--', 'bash', '/opt/10x-swe/playgrounds/bootstrap.sh')
             finally:
-                seal(vm)
+                msb('stop', vm)
+            # Policy is immutable while running. Only the trusted bootstrap sees download access.
+            baseline = tmp / 'bootstrap.msb'
+            msb('snap', 'create', '--sandbox', vm, '--integrity', '--output', baseline)
+            vm = self.reserve()
+            create(vm, baseline, offline=True, shares=self.shares())
+            seal(vm)
+            boundary(vm, self.shares())
             if workspace is not None:
                 import_bundle(vm, selected, WORKSPACE)
-            sbx('exec', vm, 'bash', '-c', HEALTH)
+            msb('exec', '--no-stdin', vm, '--', 'bash', '-c', HEALTH)
             self.data['current'] = vm
             self.save()
         return self.status()
@@ -278,17 +341,16 @@ class Playground:
         if folder.exists():
             raise ValueError('Checkpoint already exists; choose a new label')
         folder.parent.mkdir(exist_ok=True)
-        # Stop all writers first: images exclude tmpfs, mounts and /var/lib/docker.
+        # Stop all writers first; host bind mounts have their own archives.
         self.stop_owned()
         with tempfile.TemporaryDirectory(prefix='.checkpoint-', dir=folder.parent) as tmp:
             tmp = Path(tmp)
-            image = 'tenx-checkpoint:' + uuid.uuid4().hex
-            archive = tmp / 'image.tar'
+            archive = tmp / 'guest.msb'
             host = mounts.snapshot(self.shares(), tmp)
-            sbx('template', 'save', vm, image, '--output', archive)
+            msb('snap', 'create', '--sandbox', vm, '--integrity', '--output', archive)
             mounts.sync_file(archive)
-            atomic(tmp / 'checkpoint.json', {'schema': 'playground-checkpoint/v1',
-                   'image': image, 'archive_sha256': digest(archive),
+            atomic(tmp / 'checkpoint.json', {'schema': 'playground-checkpoint/v2',
+                   'runtime': CONFIG['msb_version'], 'archive_sha256': digest(archive),
                    'mounts': host,
                    'source_sha256': self.data['source_sha256'],
                    'flake_lock_sha256': self.data['flake_lock_sha256']})
@@ -301,9 +363,9 @@ class Playground:
             raise ValueError('Unknown playground')
         folder = self.directory / 'checkpoints' / label(name)
         snapshot = json.loads((folder / 'checkpoint.json').read_text())
-        if snapshot.get('schema') != 'playground-checkpoint/v1':
-            raise ValueError('Unknown checkpoint schema')
-        if digest(folder / 'image.tar') != snapshot['archive_sha256']:
+        if snapshot.get('schema') != 'playground-checkpoint/v2':
+            raise ValueError('Unsupported checkpoint; select a Microsandbox checkpoint')
+        if digest(folder / 'guest.msb') != snapshot['archive_sha256']:
             raise ValueError('Checkpoint archive checksum mismatch; current workspace is unchanged')
         self.ready(contents=False)
         mounts.verify(snapshot.get('mounts', []), folder, self.shares())
@@ -311,7 +373,6 @@ class Playground:
         # Hash-check before stopping anything. Never execute the damaged guest to recover it.
         old = self.data['current']
         self.stop_owned()
-        sbx('template', 'load', folder / 'image.tar')
         candidate = self.reserve()
         restore = mounts.Restore(self.directory)
         transaction = None
@@ -320,9 +381,10 @@ class Playground:
                 # Journal includes the candidate in owned, so recovery can stop it after a crash.
                 transaction = restore.prepare(snapshot['mounts'], folder, self.data)
                 restore.replace(transaction)
-            create(candidate, snapshot['image'], offline=True, shares=self.shares())
+            create(candidate, folder / 'guest.msb', offline=True, shares=self.shares())
+            seal(candidate)
             boundary(candidate, self.shares())
-            sbx('exec', candidate, 'bash', '-c', HEALTH)
+            msb('exec', '--no-stdin', candidate, '--', 'bash', '-c', HEALTH)
             self.data['current'] = candidate  # Old VM remains owned and inspectable.
             self.data['source_sha256'] = snapshot['source_sha256']
             self.data['flake_lock_sha256'] = snapshot['flake_lock_sha256']
@@ -341,10 +403,7 @@ class Playground:
         restore = mounts.Restore(self.directory)
         if not restore.journal.exists():
             raise ValueError('No interrupted host restore')
-        existing = {vm['name'] for vm in json.loads(sbx('ls', '--json', capture=True).stdout)}
-        for vm in self.data['owned']:
-            if vm in existing:
-                sbx('stop', vm)
+        self.stop_owned()
         before = restore.rollback()
         # Do not lose a candidate reserved before a crash or reuse its possibly changed disk.
         before['owned'] = sorted(set(before['owned'] + self.data['owned']))
@@ -364,7 +423,7 @@ class Playground:
             tmp = Path(tmp)
             # GNU tar reports files changed during archiving; failures never certify a review.
             guest(vm, ['tar', '--one-file-system', '-cf', '/tmp/tenx-review.tar', '-C', WORKSPACE, '.'])
-            sbx('cp', vm + ':/tmp/tenx-review.tar', tmp / 'workspace.tar')
+            msb('cp', vm + ':/tmp/tenx-review.tar', tmp / 'workspace.tar')
             mounts.sync_file(tmp / 'workspace.tar')
             with tarfile.open(tmp / 'workspace.tar') as archive:
                 members = []
@@ -392,17 +451,17 @@ class Playground:
                                                  if not p.name.startswith('.')))
 
     def stop(self):
-        sbx('stop', self.current())
+        msb('stop', self.current())
         return {'stopped': self.data['current']}
 
     def destroy(self):
         if not self.data:
             raise ValueError('Unknown playground')
         mounts.Restore(self.directory).pending()
-        existing = {vm['name'] for vm in json.loads(sbx('ls', '--json', capture=True).stdout)}
+        existing = {vm['name'] for vm in json.loads(msb('ls', '--format', 'json', capture=True).stdout)}
         for vm in self.data['owned']:
             if vm in existing:
-                sbx('rm', '--force', vm)
+                msb('rm', '--force', vm)
         self.data['current'] = None
         self.data['owned'] = []
         self.save()
@@ -417,6 +476,7 @@ def main(argv=None):
     parser.add_argument('--version', action='version', version=VERSION)
     parser.add_argument('--state-dir', type=Path, default=Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / '10x-swe/playgrounds')
     commands = parser.add_subparsers(dest='action', required=True)
+    commands.add_parser('install-runtime', help='Install the checksum-pinned local Microsandbox binary in the owned data directory')
     commands.add_parser('doctor', help='Check the host runtime and setup boundary without creating a VM')
     for action in ('up', 'run', 'checkpoint', 'rewind', 'recover', 'review', 'status', 'stop', 'destroy'):
         command = commands.add_parser(action)
@@ -434,9 +494,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         os.umask(0o077)
+        if args.action == 'install-runtime':
+            print(json.dumps(install_runtime(), indent=2))
+            return 0
         if args.action == 'doctor':
-            preflight(setup=True)
-            print(json.dumps({'runtime': CONFIG['sbx_version'], 'host_preflight': 'passed',
+            preflight()
+            print(json.dumps({'runtime': CONFIG['msb_version'], 'host_preflight': 'passed',
                               'guest_workflow': 'not-tested', 'local_only': True}, indent=2))
             return 0
         root = args.state_dir.expanduser()

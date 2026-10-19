@@ -28,7 +28,7 @@ Use it to:
 | [Engineering skills only](#engineering-skills-only) | Debugging, review, testing and refactoring. **Start here.** | Install the `10x-swe` plugin |
 | [Knowledge CLI tools](#knowledge-cli-tools) | Search skills and sessions, convert articles and keep reviewed insights | Build tools separately; optionally install the `knowledge` instruction plugin |
 | [Other agents](#other-agents) | The same skills in Codex, Grok Build, Copilot CLI, opencode (free models) or pi | One install command per host |
-| [Optional playground](#optional-recoverable-playground) | Run work in a recoverable local microVM | Docker Sandboxes and the host setup guide |
+| [Optional playground](#optional-recoverable-playground) | Run work in a recoverable local microVM | Microsandbox and the host setup guide |
 
 ### Engineering skills only
 
@@ -181,8 +181,8 @@ host-specific and are not linked.
   `gemini` needs a Google sign-in). Everything else runs locally.
 - **Optional MCP servers** are listed in [examples/mcp.optional.json](plugins/10x-swe/examples/mcp.optional.json);
   some need their own keys.
-- **The playground** needs a Docker account: Docker Sandboxes requires a Docker
-  sign-in for local use (`./playground doctor` tells you if it is missing).
+- **The playground** uses local Microsandbox with a pinned runtime installer;
+  it requires no account.
 - **distiller EPUB covers** call the paid Muse image API only when you export
   `DISTILLER_MUSE_API_KEY`; pass `--cover PATH` to avoid it.
 
@@ -271,8 +271,8 @@ configured library or index paths outside the prefix are not moved. See
 ### Optional recoverable playground
 
 Choose this route when you want a private Linux microVM with Nix-pinned tools and
-host-held checkpoints. It requires Python 3.11+, Docker Sandboxes 0.48.0 and a Docker
-account sign-in.
+host-held checkpoints. It requires Python 3.11+ and local Microsandbox 0.7.8 on
+Apple Silicon macOS or Linux/KVM.
 Complete the [one-time host setup](playgrounds/README.md#one-time-host-setup), then
 run these commands from the checkout:
 

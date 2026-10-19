@@ -170,11 +170,6 @@ def declarations(read_only, writable, directory, repository):
             if mode == 'rw':
                 tree(path)
             mounts.append({'path': str(path), 'mode': mode, 'identity': identity(path)})
-    if mounts:
-        # sbx requires a writable primary. Expose only this empty leaf, never control state.
-        primary = directory / 'primary'
-        primary.mkdir(mode=0o700, exist_ok=True)
-        mounts.insert(0, {'path': str(primary.resolve()), 'mode': 'rw', 'identity': identity(primary), 'managed': True})
     return mounts
 
 

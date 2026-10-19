@@ -1,6 +1,11 @@
 {
-  "schema": "playground-runtime/v1",
-  "sbx_version": "v0.48.0",
+  "schema": "playground-runtime/v2",
+  "msb_version": "0.7.8",
+  "runtime_archives": {
+    "darwin-arm64": "5dbe0d921c6b6f807d2c59f87e0a3c3a648424871b6bee513b837a8c600a2493",
+    "linux-aarch64": "6a9905fe80a7e4e3ff554896ef733a3cc6ed653924135631c28dece65a011cfd",
+    "linux-x86_64": "86f9f72dc3e639c7175bc07909b4b63ce412517c1ef8a2e1921171af5682fded"
+  },
   "image": "docker.io/docker/sandbox-templates@sha256:1560168ac5fb9ce23d413c878349334c5845c07e264cd675d7867f0c78ad1761",
   "nix_version": "2.31.2",
   "nix_archives": {

@@ -30,8 +30,9 @@ def main():
     first.mkdir()
     second.mkdir()
     (output / 'host-only').write_text('not exported')
+    (reference / 'outside-link').symlink_to('../host-only')
     snapshot = json.loads((image_folder / 'checkpoint.json').read_text())
-    assert p.digest(image_folder / 'image.tar') == snapshot['archive_sha256']
+    assert p.digest(image_folder / 'guest.msb') == snapshot['archive_sha256']
     pg = p.Playground(output / 'states', 'mount-test')
     cli = [str(REPO / 'playground'), '--state-dir', str(pg.directory.parent)]
 
@@ -47,18 +48,18 @@ def main():
         print(result.strip(), flush=True)
 
     p.preflight()
-    p.sbx('template', 'load', image_folder / 'image.tar')
     with pg.locked():
-        pg.data = {'schema': 'playground/v1', 'current': None, 'owned': [], 'runtime': p.CONFIG,
+        pg.data = {'schema': 'playground/v2', 'current': None, 'owned': [], 'runtime': p.CONFIG,
                    'source_sha256': snapshot['source_sha256'], 'flake_lock_sha256': snapshot['flake_lock_sha256']}
         pg.save()
         pg.data['mounts'] = p.mounts.declarations([reference], [first, second], pg.directory, REPO)
         pg.save()
         pg.ready()
         vm = pg.reserve()
-        p.create(vm, snapshot['image'], offline=True, shares=pg.shares())
+        p.create(vm, image_folder / 'guest.msb', offline=True, shares=pg.shares())
+        p.seal(vm)
         p.boundary(vm, pg.shares())
-        p.sbx('exec', vm, 'bash', '-c', p.HEALTH)
+        p.msb('exec', '--no-stdin', vm, '--', 'bash', '-c', p.HEALTH)
         pg.data['current'] = vm
         pg.save()
     print('PASS: reused pinned tool environment; exact declared host shares admitted', flush=True)
@@ -68,6 +69,12 @@ import subprocess
 ''' + paths + f'''
 assert (reference/'reading.txt').read_text() == 'reference remains read-only'
 assert not Path({str(output / 'host-only')!r}).exists()
+try:
+    (reference/'outside-link').read_text()
+except OSError:
+    pass
+else:
+    raise AssertionError('reference symlink escaped its host grant')
 for sudo in ([], ['sudo']):
     result = subprocess.run([*sudo, 'python3', '-c', 'from pathlib import Path; Path(' + repr(str(reference/'forbidden')) + ').write_text("forbidden")'], capture_output=True)
     assert result.returncode != 0 and b'Read-only file system' in result.stderr, result.stderr
@@ -147,7 +154,7 @@ print('PASS: single rewind restored host files, Git staging, metadata, committed
     review = json.loads(host('review'))
     packet = json.loads(Path(review['review']).read_text())
     assert packet['publication'] == 'pending-human-review'
-    assert len(packet['mounts']) == 4
+    assert len(packet['mounts']) == 3
     for record in packet['mounts']:
         if record['mode'] == 'rw':
             assert p.digest(Path(review['review']).parent/record['archive']) == record['sha256']
@@ -156,7 +163,7 @@ print('PASS: single rewind restored host files, Git staging, metadata, committed
                     str(pg.directory.parent), 'mount-test'], check=True)
     result = {'result':'PASS','checkpoint':checkpoint,'restore':restored,'review':review,
               'abrupt_host_restore_recovery':'passed',
-              'runtime':p.CONFIG['sbx_version'],'fixture':str(output)}
+              'runtime':p.CONFIG['msb_version'],'fixture':str(output)}
     p.atomic(output/'result.json', result)
     print(json.dumps(result,indent=2), flush=True)
     host('destroy','--yes')

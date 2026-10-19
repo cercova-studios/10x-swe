@@ -6,25 +6,21 @@ knowledge bootstrap installs independent CLIs inside the guest.
 
 ## One-time host setup
 
-Use Python 3.11+ and [Docker Sandboxes 0.48.0](https://docs.docker.com/ai/sandboxes/install/)
-on a supported macOS or Linux host. Docker Sandboxes requires Docker sign-in for
-local use. Nix, compilers and the knowledge tools are installed inside the guest.
+Use Python 3.11+ on Apple Silicon macOS or Linux with KVM access and glibc 2.28+.
+The launcher uses [Microsandbox 0.7.8](https://github.com/superradcompany/microsandbox/releases/tag/v0.7.8)
+locally. Nix, compilers and the knowledge tools are installed inside the guest.
 Run the following commands on the host, from the cloned `10x-swe` repository.
 
 ```sh
-sbx login
-# Initialize an unconfigured runtime. Inspect existing policy before changing it.
-sbx policy init deny-all
-# These are host-wide settings. Restart stops running sandboxes.
-sbx settings set ssh.agentForwardingEnabled false
-sbx daemon restart
+./playground install-runtime
 ./playground doctor
 ```
 
-The launcher checks these settings rather than changing them. Setup requires a
-global policy without network allow rules, an empty `ssh.agentSocketPath`, and
-disabled clipboard image access. Existing runtime policy and other sandboxes stay
-under the operator's control.
+Installation verifies the pinned release checksum and installs the executable and
+guest kernel library in the launcher's private data directory. Repeating it checks
+the installed files against their receipt. The local backend uses its own empty
+configuration and requires no account. Doctor checks the runtime and virtualization
+prerequisites; resolve any reported KVM access issue on the Linux host before setup.
 
 ## Start an environment
 
@@ -115,15 +111,13 @@ privileged modes are rejected when admitting or checkpointing a writable tree.
 Rewind can replace a tree damaged by the guest without traversing unsafe entries.
 Keep the mount root directory itself in place.
 
-The runtime requires a writable primary share. The launcher supplies a dedicated
-`primary/` leaf inside this playground's state, and snapshots it with other writable
-shares. Its sibling metadata and recovery archives remain outside the guest.
-
 First setup downloads the pinned Nix release, builds the locked profile and
-compiles the knowledge tools. It uses two CPUs and 4 GiB of guest memory. Package
-downloads are allowed only during the repository bootstrap. Workspace commands
-run with outbound network access denied, shared skills off and SSH forwarding
-disabled. Commands can modify the guest freely without per-command prompts.
+compiles the knowledge tools. It uses two CPUs, 4 GiB of guest memory and a 24 GiB
+sparse root disk. Package downloads use an explicit host allowlist with HTTPS
+inspection during the trusted repository bootstrap. Setup stops that guest and
+restores its disk into a new guest with deny-all networking before importing
+workspace data. Host credentials, sockets and user runtime defaults are not
+forwarded. Commands can modify the guest freely without per-command prompts.
 The VM stays available between commands until `stop` or `destroy`.
 
 Each `run` preserves stdin, stdout and the child exit status. For example:
@@ -157,12 +151,12 @@ Tool discovery and exported records remain data; they do not authorize execution
 
 ## Checkpoint contract
 
-`checkpoint` stops all owned VMs, saves the active container filesystem and
+`checkpoint` stops all owned VMs, saves the active guest's persistent disk and
 exports a SHA-256-bound archive into the host state directory. It captures the
 workspace, installed tools, local databases, knowledge stores and workflow state
 when they reside in that filesystem. Keep durable work in those locations;
-`/run`, `/dev/shm` and nested Docker storage under `/var/lib/docker` are separate
-runtime storage. A checkpoint cold-boots processes after restore.
+tmpfs mounts such as `/dev/shm` are temporary. A checkpoint cold-boots processes
+after restore. Host-mounted files use separate host archives.
 
 `rewind` verifies all archive hashes before stopping the current VM. It stages and
 checks restored host trees, retains the current directories as sibling backups,
@@ -200,6 +194,13 @@ Override this with `--state-dir /absolute/path` before the subcommand. That path
 must stay outside the guest and imported project directories. Lifecycle commands
 serialize access to each named playground.
 
+The runtime, image cache and guest disks live under
+`$XDG_DATA_HOME/10x-swe/msb` (default `~/.local/share/10x-swe/msb`), outside all
+guest shares. Keep this path short enough for macOS Unix sockets. Set
+`XDG_DATA_HOME` to a short, private, persistent directory before installation if
+needed, and use the same value for every command. `--state-dir` changes checkpoint
+storage, not the runtime directory.
+
 ```sh
 ./playground status demo
 ./playground destroy demo --yes
@@ -210,15 +211,10 @@ checkpoint archives and review packets. You can still `rewind` a retained
 checkpoint. To retry an incomplete setup, destroy its owned VMs, then run `up`
 again. Inspect partial failure output before retrying.
 
-An interrupted image save publishes no checkpoint. If the runtime subsequently
-stops responding, inspect other sandboxes before running `sbx daemon restart`;
-that host-wide recovery stops their running sessions too. Guest disks and
-completed checkpoint archives remain separate from the daemon process.
-
-Saved templates also occupy the sandbox runtime's image store. Use the exact
-image tag in a checkpoint manifest with `sbx template rm TAG` when reclaiming its
-cached image; the retained archive can reload it. Delete host checkpoint folders
-only when you intend to discard those recovery points. No global prune is run.
+An interrupted snapshot publishes no checkpoint. Completed `guest.msb` archives
+restore directly; the original guest and its cached base image are not required.
+Delete checkpoint directories only when you intend to discard those recovery
+points. Runtime removal and checkpoint retention are separate operations.
 
 ## Verify
 
@@ -244,9 +240,9 @@ a review packet. The output directory must not already exist.
 It also terminates a host restore between directory renames and verifies that
 explicit `recover` restores the original host trees and active VM identity.
 
-Runtime contracts: [workspace isolation](https://docs.docker.com/ai/sandboxes/security/isolation/),
-[saved templates](https://docs.docker.com/ai/sandboxes/usage/#saving-a-sandbox-as-a-template),
-[host settings](https://docs.docker.com/ai/sandboxes/configuration/settings/),
+Runtime contracts: [isolation](https://docs.microsandbox.dev/security/isolation),
+[snapshots and mounts](https://docs.microsandbox.dev/sandboxes/snapshots),
+[network policy](https://docs.microsandbox.dev/networking/overview),
 [Nix flakes](https://nix.dev/concepts/flakes).
 
 Detailed validation: [playground development archive](https://github.com/cercova-studios/10x-swe/wiki/Playground-validation).

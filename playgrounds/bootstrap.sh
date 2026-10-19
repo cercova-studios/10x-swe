@@ -21,6 +21,8 @@ subprocess.run([str(destination / f'nix-{version}-{system}/install'), '--no-daem
 archive.unlink()
 PY
 export PATH="$HOME/.nix-profile/bin:$PATH"
+export NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+export SSL_CERT_FILE="$NIX_SSL_CERT_FILE"
 # The microVM is the isolation boundary; this single-user Nix only supplies tools.
 export NIX_CONFIG='experimental-features = nix-command flakes
 sandbox = false
