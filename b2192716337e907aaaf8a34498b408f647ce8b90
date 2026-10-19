@@ -1,0 +1,39 @@
+package.json
+  s_d51b394dbf00cc::t_af34428f23d42a 3
+plugins/10x-swe/.claude-plugin/plugin.json
+  s_d51b394dbf00cc::t_3247db96658695 4
+plugins/10x-swe/.codex-plugin/plugin.json
+  s_d51b394dbf00cc::t_76c8c922f1e436 3
+plugins/10x-swe/LICENSE
+  s_d51b394dbf00cc::t_1bd26d93e95e49 1-22
+plugins/10x-swe/agents/code-reviewer.md
+  s_e3904cce11fe7d::t_73635ff615d6b6 3-5,10-47
+plugins/10x-swe/skills/diagnose/SKILL.md
+  s_d51b394dbf00cc::t_fefecad85dd910 29-32,44-46
+plugins/10x-swe/skills/test-driven-development/SKILL.md
+  s_d51b394dbf00cc::t_d36ee5f83ba963 3-5,8-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b2192716337e907aaaf8a34498b408f647ce8b90",
+  "prompts": {},
+  "sessions": {
+    "s_d51b394dbf00cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a15128-23dc-7a63-bbcb-2c8c0845b136",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3904cce11fe7d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15128-23dc-7a63-bbcb-2c8c0845b136",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}

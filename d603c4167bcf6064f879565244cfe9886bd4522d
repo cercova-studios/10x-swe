@@ -1,0 +1,19 @@
+tests/test_newsletter.py
+  s_e3121fbece1af6::t_c4a7c3bda9ac02 8,352-354
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d603c4167bcf6064f879565244cfe9886bd4522d",
+  "prompts": {},
+  "sessions": {
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
