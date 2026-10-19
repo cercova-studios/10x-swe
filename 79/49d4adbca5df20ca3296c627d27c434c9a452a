@@ -1,0 +1,49 @@
+.github/workflows/plugins.yml
+  s_e3904cce11fe7d::t_3d3feb5cca4e20 42-43
+ARCHITECTURE.md
+  s_d51b394dbf00cc::t_63a23449be55fd 38-46
+README.md
+  s_e3904cce11fe7d::t_a7ed0f93fdded2 132-169,179,385,394,400-406
+package.json
+  s_e3904cce11fe7d::t_c185733c1ec462 3
+plugins/10x-swe/.claude-plugin/plugin.json
+  s_e3904cce11fe7d::t_33ebe83c2ffd8d 4
+plugins/10x-swe/.codex-plugin/plugin.json
+  s_e3904cce11fe7d::t_944142c110f74f 3
+plugins/10x-swe/index.js
+  s_d51b394dbf00cc::t_d5be3f487c7e72 1-49
+plugins/10x-swe/opencode-data.json
+  s_e3904cce11fe7d::t_e6da4a833fafcc 1-577
+plugins/10x-swe/package.json
+  s_e3904cce11fe7d::t_52e9551d94048a 1-26
+scripts/hosts.py
+  s_e3904cce11fe7d::t_ef693cceffe21d 13,175-205,225-227
+tests/opencode_install.py
+  s_d51b394dbf00cc::t_fe4a17eff4a795 1-230
+tests/test_opencode.mjs
+  s_d51b394dbf00cc::t_41fb5e9718ace4 1-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7949d4adbca5df20ca3296c627d27c434c9a452a",
+  "prompts": {},
+  "sessions": {
+    "s_d51b394dbf00cc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a15128-23dc-7a63-bbcb-2c8c0845b136",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3904cce11fe7d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15128-23dc-7a63-bbcb-2c8c0845b136",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
