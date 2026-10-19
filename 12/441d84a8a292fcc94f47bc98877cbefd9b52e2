@@ -1,0 +1,38 @@
+README.md
+  s_6d0f66475f425a::t_a82cd819fb8309 31
+  s_6d0f66475f425a::t_b92e456f0e306a 184-185,274-275
+ARCHITECTURE.md
+  s_6d0f66475f425a::t_a53c23063fee4c 15-16,123-124,128-133,136
+playgrounds/README.md
+  s_6d0f66475f425a::t_0fd4615dd7ca71 9-11,15,19-23,115-120,154,158-159,197-203,214-217,243-245
+playgrounds/bootstrap.sh
+  s_6d0f66475f425a::t_618a18e5c0c0c8 24-25
+playgrounds/manage.py
+  s_6d0f66475f425a::t_7b48815478f913 8,17,24,45,66-121,133,135,140,142-149,153-161,165-175,179,184-187,234-235,263-264,271,273-274,280,284-285,295,306-307,310,312-319,322,344,348,350,352-353,366-368,384-385,387,406,426,454,461,464,479,497-499,501-502
+playgrounds/runtime.json
+  s_6d0f66475f425a::t_638c5ad4f20bf2 2-8
+tests/playground_acceptance.py
+  s_6d0f66475f425a::t_9cf4def658e4d3 42-49,173-177
+tests/playground_mount_acceptance.py
+  s_6d0f66475f425a::t_e55e3c6dd1f006 33,35,52,59-60,62,72-77,157,166
+tests/test_playground.py
+  s_6d0f66475f425a::t_233c0d78554f52 10,24-26,30,35-40,46,48-49,91,100,114,122,131-135,141-147,152,155,157,159,163-164,167-173,184,187,191,193,196-252,282,289,293,295-296
+tests/test_playground_mounts.py
+  s_6d0f66475f425a::t_929ab5a4dafc9d 34,44,48,50-56,196-198,200,212-213,216,219,227-229,238-239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "12441d84a8a292fcc94f47bc98877cbefd9b52e2",
+  "prompts": {},
+  "sessions": {
+    "s_6d0f66475f425a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14ca1-c9c8-73d1-9c68-12f0e64f3b81",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
