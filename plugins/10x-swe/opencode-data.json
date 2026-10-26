@@ -99,6 +99,13 @@
       "autoinvoke": true
     },
     {
+      "id": "decision-model-evals",
+      "name": "decision-model-evals",
+      "description": "Choose, tune, and trust any model that returns a probability for a yes/no decision: decision-model APIs (Jev, Perplexity Decider, Liquid d1, Cloudflare Clef, OpenAI Decisions), LLM judges that emit scores, or classic classifiers. Use when picking a decision threshold, comparing decision models on cost vs. quality, setting precision/recall floors, or deciding whether a score can be read as a confidence. Do NOT use for error analysis or writing the criterion (error-discovery, write-judge-prompt), or for judges that only return Pass/Fail with no score (validate-evaluator).\n",
+      "path": "skills/decision-model-evals/SKILL.md",
+      "autoinvoke": true
+    },
+    {
       "id": "deep-architecture-analysis",
       "name": "deep-architecture-analysis",
       "description": "Performs comprehensive reverse engineering and architecture analysis of GitHub repositories and application binaries. Identifies inefficiencies, bloat, vulnerabilities, and architectural patterns. Deconstructs from first principles to recommend optimal tech stacks for rewrites and modernization.",
