@@ -10,6 +10,7 @@ Generated (never edit by hand; run `scripts/hosts.py sync`):
   .agents/plugins/marketplace.json         OpenAI Codex repo marketplace
   plugins/<plugin>/.codex-plugin/plugin.json   Codex plugin overlay
   package.json                             pi package manifest (skills + prompts)
+  plugins/10x-swe/{package.json,opencode-data.json}  OpenCode npm adapter (index.ts is hand-written)
   the skill-requirements table in plugins/<plugin>/README.md (from each skill's
   `compatibility` field) and marketplace descriptions
 
@@ -171,6 +172,40 @@ def requirements(item):
     return '\n'.join(lines)
 
 
+def opencode_package(item):
+    manifest = item['manifest']
+    return {
+        'name': '@cercova-studios/10x-swe', 'version': manifest['version'],
+        'description': manifest['description'], 'license': manifest['license'],
+        'repository': manifest['repository'], 'type': 'module',
+        'exports': {'.': './index.ts'},
+        'files': ['index.ts', 'opencode-data.json', 'skills', 'agents', 'commands', 'LICENSE'],
+        'scripts': {'typecheck': 'tsc -p .'},
+        # Types only: index.ts uses `import type`, so consumers install no dependencies.
+        'devDependencies': {'@opencode/plugin': '2.2.5', '@types/node': '22.20.5', 'typescript': '7.0.2'},
+        'engines': {'node': '>=22.18', 'opencode': '>=2.0.32 <3'},
+        'publishConfig': {'access': 'public'},
+    }
+
+
+def opencode_data(item):
+    skills, agents, commands = components(item['root'])
+    result = {'skills': [], 'agents': [], 'commands': []}
+    for folder in skills:
+        data, _ = parse_frontmatter(folder / 'SKILL.md')
+        result['skills'].append({
+            'id': data['name'], 'name': data['name'], 'description': data['description'],
+            'path': (folder / 'SKILL.md').relative_to(item['root']).as_posix(),
+            'autoinvoke': data.get('disable-model-invocation') is not True,
+        })
+    for kind, paths in [('agents', agents), ('commands', commands)]:
+        for path in paths:
+            data, body = parse_frontmatter(path)
+            result[kind].append({'name': path.stem, 'description': data['description'],
+                                 'content': body.lstrip('\n')})
+    return result
+
+
 def render_readme(path, block):
     text = path.read_text(encoding='utf-8')
     if BEGIN in text and END in text:
@@ -190,6 +225,9 @@ def expected():
     files[MARKETPLACE] = dump_json(new_market)
     for item in items:
         files[item['root'] / '.codex-plugin/plugin.json'] = dump_json(codex_plugin(item))
+        if item['entry']['name'] == '10x-swe':
+            files[item['root'] / 'package.json'] = dump_json(opencode_package(item))
+            files[item['root'] / 'opencode-data.json'] = dump_json(opencode_data(item))
         readme = item['root'] / 'README.md'
         rendered = render_readme(readme, requirements(item))
         if rendered is not None:

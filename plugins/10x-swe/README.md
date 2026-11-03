@@ -150,6 +150,7 @@ Every other skill runs with only your agent and the tools your task already uses
 ### AI/ML & LLM
 | Skill | Description |
 |-------|-------------|
+| [decision-model-evals](skills/decision-model-evals/SKILL.md) | Threshold tuning, cost/quality comparison, and calibration for probability-returning judges |
 | [langchain-architecture](skills/langchain-architecture/SKILL.md) | LangChain 1.x and LangGraph for agents, memory, and tool integration |
 | [langgraph-docs](skills/langgraph-docs/SKILL.md) | Fetch relevant LangGraph documentation for accurate guidance |
 | [llm-evaluation](skills/llm-evaluation/SKILL.md) | Evaluation strategies: automated metrics, human feedback, benchmarking |
