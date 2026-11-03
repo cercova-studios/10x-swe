@@ -1,0 +1,25 @@
+.github/workflows/playground.yml
+  s_f2b370ad555af7::t_65a2cde9c2581c 16,19
+.github/workflows/plugins.yml
+  s_f2b370ad555af7::t_0c38c358446c0d 12,15,18,55
+.github/workflows/portable.yml
+  s_f2b370ad555af7::t_c66018b4287158 16,19,22
+.github/workflows/publish.yml
+  s_f2b370ad555af7::t_a22ec8a7343229 24,27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0e5f51ecb4158f470fc5b83ce65c7aacc39b3bbc",
+  "prompts": {},
+  "sessions": {
+    "s_f2b370ad555af7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0bda6d87-ce3e-443b-b28d-c09dfaaf26b1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
