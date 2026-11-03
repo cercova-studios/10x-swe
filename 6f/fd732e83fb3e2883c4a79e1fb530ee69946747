@@ -1,0 +1,42 @@
+plugins/10x-swe/tsconfig.json
+  s_f2b370ad555af7::t_20e0bab9a91e20 1-14
+plugins/10x-swe/index.ts
+  s_f2b370ad555af7::t_aee2ee1de4c6a4 6,9-17,59
+  s_f2b370ad555af7::t_57f11308c20c1d 3-5,7-8
+  s_f2b370ad555af7::t_7339206b5d0537 23-24
+scripts/hosts.py
+  s_f2b370ad555af7::t_3f7d5b2f3b8db6 181-186
+  s_f2b370ad555af7::t_2a3d328b798aa8 13
+tests/check_distribution.py
+  s_f2b370ad555af7::t_88e05dfa3748cf 11-12
+.github/workflows/plugins.yml
+  s_f2b370ad555af7::t_7ce77fbf1fb6cf 42-45
+ARCHITECTURE.md
+  s_f2b370ad555af7::t_cf7cc3bb84990b 40-43
+README.md
+  s_f2b370ad555af7::t_f493e5646926eb 400-402
+plugins/10x-swe/package-lock.json
+  s_f2b370ad555af7::t_090be1f2da94a8 1-4262
+plugins/10x-swe/package.json
+  s_f2b370ad555af7::t_96f8841db19ccc 9,12,19-26,28
+tests/opencode_install.py
+  s_f2b370ad555af7::t_5ef9d81e555b9f 189,191
+tests/test_opencode.mjs
+  s_f2b370ad555af7::t_40acf74830a40f 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6ffd732e83fb3e2883c4a79e1fb530ee69946747",
+  "prompts": {},
+  "sessions": {
+    "s_f2b370ad555af7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0bda6d87-ce3e-443b-b28d-c09dfaaf26b1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
