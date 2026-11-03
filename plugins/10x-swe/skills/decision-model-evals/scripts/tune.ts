@@ -2,7 +2,7 @@
 //
 // Input JSON: [{"model": str, "id": str, "score": float, "label": 0|1}, ...]
 // Run with --self-check to verify the logic on synthetic data.
-// Requires Node >= 22.18 (type stripping on by default); no dependencies.
+// Run with Bun (Node >= 22.18 also works); no dependencies.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -157,7 +157,7 @@ function main() {
   });
   if (values["self-check"]) return selfCheck();
   if (!positionals[0]) {
-    console.error("usage: node tune.ts SCORES.json [--min-precision P] [--min-recall R] [--beta B] [--folds K] [--seed N] | --self-check");
+    console.error("usage: bun tune.ts SCORES.json [--min-precision P] [--min-recall R] [--beta B] [--folds K] [--seed N] | --self-check");
     process.exit(2);
   }
   const o: Opts = {

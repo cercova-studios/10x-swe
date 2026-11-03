@@ -132,15 +132,15 @@ have not been verified in Copilot. Running a session needs a GitHub Copilot plan
 For OpenCode v2.0.32 or later, build the engineering npm package from this checkout.
 This package is not on the public npm registry. Merges to `main` publish it to
 GitHub Packages (`npm.pkg.github.com`), which requires a token with `read:packages`
-to install. Building it requires Node.js 22+ and npm.
+to install. Building it requires Bun; installing it requires npm.
 
 ```sh
 python3 scripts/hosts.py sync           # requires PyYAML; maintainers only
-npm pack ./plugins/10x-swe --ignore-scripts --pack-destination /tmp
+bun pm pack --cwd plugins/10x-swe --ignore-scripts --destination /tmp
 ```
 
 In your target project, install the resulting archive (replace the archive path
-with the filename printed by `npm pack`):
+with the path printed by `bun pm pack`):
 
 ```sh
 npm install --prefix .opencode/npm --ignore-scripts /absolute/path/to/package.tgz
@@ -400,9 +400,9 @@ the skill-requirements table. `python3 scripts/validate.py` and
 installed plugins when it changes, and the publish workflow skips versions that are
 already on GitHub Packages.
 
-Run `node --test tests/test_opencode.mjs` for adapter checks (Node 22.18+ runs
-`index.ts` directly), and `npm ci --prefix plugins/10x-swe --ignore-scripts && npm run --prefix plugins/10x-swe typecheck`
-to check it against the pinned OpenCode plugin types. To test the packed
+Run `bun test ./tests/test_opencode.mjs` for adapter checks, and
+`bun install --cwd plugins/10x-swe --frozen-lockfile --ignore-scripts && bun run --cwd plugins/10x-swe typecheck`
+to check `index.ts` against the pinned OpenCode plugin types. To test the packed
 artifact with a real OpenCode v2 executable, run
 `python3 tests/opencode_install.py --opencode /absolute/path/to/opencode`.
 This opt-in test uses temporary config, data and cache directories and a loopback

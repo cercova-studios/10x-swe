@@ -15,6 +15,7 @@ import re
 import shutil
 import socket
 import subprocess
+import tarfile
 import tempfile
 import threading
 import time
@@ -180,12 +181,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix='10x-opencode-') as temp:
         root = Path(temp).resolve()
         env = environment(root)
-        packed = json.loads(run(['npm', 'pack', str(PACKAGE), '--ignore-scripts', '--json',
-                                 '--pack-destination', str(root)], root, env).stdout)[0]
-        archive = root / packed['filename']
+        # Pack with Bun, as the publish workflow does; install below with npm, as users do.
+        archive = Path(run(['bun', 'pm', 'pack', '--cwd', str(PACKAGE), '--destination', str(root),
+                            '--ignore-scripts', '--quiet'], root, env).stdout.strip())
         manifest = json.loads((PACKAGE / 'package.json').read_text())
         expected = json.loads((PACKAGE / 'opencode-data.json').read_text())
-        entries = {f['path'] for f in packed['files']}
+        with tarfile.open(archive) as tar:
+            entries = {m.name.removeprefix('package/') for m in tar.getmembers() if m.isfile()}
         assert {'index.ts', 'package.json', 'LICENSE', 'opencode-data.json'} <= entries
         assert not any('node_modules' in p or p.startswith('../') for p in entries)
         assert all(p.startswith(('skills/', 'agents/', 'commands/')) or p in {'index.ts', 'package.json', 'LICENSE',
