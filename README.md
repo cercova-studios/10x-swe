@@ -397,7 +397,9 @@ the skill-requirements table. `python3 scripts/validate.py` and
 `version` with every user-visible change: Claude Code, Codex and Grok only update
 installed plugins when it changes.
 
-Run `node --test tests/test_opencode.mjs` for adapter checks. To test the packed
+Run `node --test tests/test_opencode.mjs` for adapter checks (Node 22.18+ runs
+`index.ts` directly), and `npm ci --prefix plugins/10x-swe --ignore-scripts && npm run --prefix plugins/10x-swe typecheck`
+to check it against the pinned OpenCode plugin types. To test the packed
 artifact with a real OpenCode v2 executable, run
 `python3 tests/opencode_install.py --opencode /absolute/path/to/opencode`.
 This opt-in test uses temporary config, data and cache directories and a loopback

@@ -186,9 +186,9 @@ def main():
         manifest = json.loads((PACKAGE / 'package.json').read_text())
         expected = json.loads((PACKAGE / 'opencode-data.json').read_text())
         entries = {f['path'] for f in packed['files']}
-        assert {'index.js', 'package.json', 'LICENSE', 'opencode-data.json'} <= entries
+        assert {'index.ts', 'package.json', 'LICENSE', 'opencode-data.json'} <= entries
         assert not any('node_modules' in p or p.startswith('../') for p in entries)
-        assert all(p.startswith(('skills/', 'agents/', 'commands/')) or p in {'index.js', 'package.json', 'LICENSE',
+        assert all(p.startswith(('skills/', 'agents/', 'commands/')) or p in {'index.ts', 'package.json', 'LICENSE',
                                                    'opencode-data.json', 'README.md'} for p in entries)
         for route in ['tgz', 'registry']:
             target = root / route

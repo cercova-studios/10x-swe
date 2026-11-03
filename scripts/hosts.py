@@ -10,7 +10,7 @@ Generated (never edit by hand; run `scripts/hosts.py sync`):
   .agents/plugins/marketplace.json         OpenAI Codex repo marketplace
   plugins/<plugin>/.codex-plugin/plugin.json   Codex plugin overlay
   package.json                             pi package manifest (skills + prompts)
-  plugins/10x-swe/{package.json,opencode-data.json}  OpenCode npm adapter
+  plugins/10x-swe/{package.json,opencode-data.json}  OpenCode npm adapter (index.ts is hand-written)
   the skill-requirements table in plugins/<plugin>/README.md (from each skill's
   `compatibility` field) and marketplace descriptions
 
@@ -178,9 +178,12 @@ def opencode_package(item):
         'name': '@cercova-studios/10x-swe', 'version': manifest['version'],
         'description': manifest['description'], 'license': manifest['license'],
         'repository': manifest['repository'], 'type': 'module',
-        'exports': {'.': './index.js'},
-        'files': ['index.js', 'opencode-data.json', 'skills', 'agents', 'commands', 'LICENSE'],
-        'engines': {'node': '>=22', 'opencode': '>=2.0.32 <3'},
+        'exports': {'.': './index.ts'},
+        'files': ['index.ts', 'opencode-data.json', 'skills', 'agents', 'commands', 'LICENSE'],
+        'scripts': {'typecheck': 'tsc -p .'},
+        # Types only: index.ts uses `import type`, so consumers install no dependencies.
+        'devDependencies': {'@opencode/plugin': '2.2.5', '@types/node': '22.20.5', 'typescript': '7.0.2'},
+        'engines': {'node': '>=22.18', 'opencode': '>=2.0.32 <3'},
         'publishConfig': {'access': 'public'},
     }
 

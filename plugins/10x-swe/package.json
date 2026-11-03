@@ -6,18 +6,26 @@
   "repository": "https://github.com/cercova-studios/10x-swe",
   "type": "module",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.ts"
   },
   "files": [
-    "index.js",
+    "index.ts",
     "opencode-data.json",
     "skills",
     "agents",
     "commands",
     "LICENSE"
   ],
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@opencode/plugin": "2.2.5",
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  },
   "engines": {
-    "node": ">=22",
+    "node": ">=22.18",
     "opencode": ">=2.0.32 <3"
   },
   "publishConfig": {

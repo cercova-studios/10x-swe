@@ -37,8 +37,10 @@ changing tool interfaces, store ownership or review authority. Docker Sandboxes
 
 `plugins/10x-swe/package.json` packages engineering skills and their resources for
 OpenCode v2. `scripts/hosts.py sync` generates its manifest and frontmatter data
-from the canonical engineering plugin. `index.js` registers skills, subagents
-and namespaced commands through OpenCode transforms. It preserves existing skills
+from the canonical engineering plugin. `index.ts` registers skills, subagents
+and namespaced commands through OpenCode transforms; OpenCode loads it as
+TypeScript. Its `@opencode/plugin` types are a dev dependency imported with
+`import type`, so the package has no runtime dependencies. It preserves existing skills
 and agents, inherits build-agent permissions and leaves model selection to the
 host. Loading writes no harness files and starts no knowledge bootstrap or MCP
 connections. npm installation and local archive extraction are explicit operations;

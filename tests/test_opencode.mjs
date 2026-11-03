@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import plugin from '../plugins/10x-swe/index.js';
+import plugin from '../plugins/10x-swe/index.ts';
 
 test('registers canonical content without replacing user skills or agents', async () => {
   const skills = new Map([['diagnose', { id: 'diagnose', content: 'user skill' }]]);
