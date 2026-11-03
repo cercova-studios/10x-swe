@@ -45,6 +45,9 @@ and agents, inherits build-agent permissions and leaves model selection to the
 host. Loading writes no harness files and starts no knowledge bootstrap or MCP
 connections. npm installation and local archive extraction are explicit operations;
 removing the plugin configuration removes its runtime registrations on reload.
+`.github/workflows/publish.yml` publishes the package to GitHub Packages on pushes
+to `main`, after the adapter check, type check and adapter tests, and only when
+its version is not already published.
 
 The bootstrap plans, installs and verifies tools in an owned prefix. Harness
 configuration, source indexing and connector setup are explicit user operations.
