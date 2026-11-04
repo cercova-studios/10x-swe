@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Install pinned validator dependency
@@ -39,17 +39,20 @@ jobs:
       - name: chrome-devtools selector tests
         working-directory: plugins/10x-swe/skills/chrome-devtools/scripts
         run: node --test __tests__/*.test.js
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.3
       - name: OpenCode npm adapter types
         run: |
-          npm ci --prefix plugins/10x-swe --ignore-scripts --no-audit --no-fund
-          npm run --prefix plugins/10x-swe typecheck
+          bun install --cwd plugins/10x-swe --frozen-lockfile --ignore-scripts
+          bun run --cwd plugins/10x-swe typecheck
       - name: OpenCode npm adapter
-        run: node --test tests/test_opencode.mjs
+        run: bun test ./tests/test_opencode.mjs
   rust-msrv:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Build with the declared minimum Rust version

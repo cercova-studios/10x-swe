@@ -56,11 +56,11 @@ Primary source: Husain & Saha, "How To Use Decision Models for Evals"
 6. **Iterate.** A prompt change invalidates the threshold and calibration. Re-run
    steps 3–5. Prefer a larger model first, then test whether cheaper ones match.
 
-`scripts/tune.ts` does steps 3 and 5 from a JSON file of saved scores. It needs
-Node 22.18 or later, which runs TypeScript directly, and has no dependencies.
+`scripts/tune.ts` does steps 3 and 5 from a JSON file of saved scores. Run it with
+Bun; it has no dependencies.
 
 ```bash
-node scripts/tune.ts scores.json \
+bun scripts/tune.ts scores.json \
   --min-precision 0.8 --min-recall 0.8 --beta 1
 ```
 

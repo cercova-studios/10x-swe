@@ -129,43 +129,75 @@ have not been verified in Copilot. Running a session needs a GitHub Copilot plan
 
 #### opencode (free)
 
-For OpenCode v2.0.32 or later, build the engineering npm package from this checkout.
-This package is not on the public npm registry. Merges to `main` publish it to
-GitHub Packages (`npm.pkg.github.com`), which requires a token with `read:packages`
-to install. Building it requires Node.js 22+ and npm.
+For OpenCode v2.0.32 or later, install the engineering plugin with `opencode plugin add`.
+The package `@cercova-studios/10x-swe` is published to GitHub Packages
+(`npm.pkg.github.com`), not the public npm registry, so installing it requires a
+GitHub token.
+
+1. Get a token with the `read:packages` scope. GitHub Packages documents a
+   [personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages);
+   a GitHub CLI token with that scope also works:
+
+   ```sh
+   gh auth refresh -h github.com -s read:packages
+   export GITHUB_PACKAGES_TOKEN="$(gh auth token)"
+   ```
+
+2. Add the registry and token to `~/.npmrc`. The quoted heredoc keeps the token as
+   a variable reference, so the token itself is not written to the file:
+
+   ```sh
+   cat >> ~/.npmrc <<'EOF'
+   @cercova-studios:registry=https://npm.pkg.github.com
+   //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+   EOF
+   ```
+
+   Keep `GITHUB_PACKAGES_TOKEN` set wherever OpenCode runs, for example in your
+   shell profile: OpenCode reinstalls missing packages and checks for updates when
+   it starts.
+
+3. Install the plugin. OpenCode adds it to your global `opencode.json`:
+
+   ```sh
+   opencode plugin add @cercova-studios/10x-swe
+   ```
+
+OpenCode loads the engineering skills, eight subagents and five commands such as
+`/10x-swe:research`. Existing skills, agents and commands take precedence. Agents
+inherit the build agent's permissions and the host's model selection. With no
+build agent, their actions require approval. Knowledge tools remain a separate
+installation.
+
+To update or remove the plugin, use the specifier you installed:
+
+```sh
+opencode plugin update @cercova-studios/10x-swe
+opencode plugin remove @cercova-studios/10x-swe
+```
+
+To pin a release, install `@cercova-studios/10x-swe@VERSION` instead; OpenCode does
+not update exact versions. See
+[OpenCode v2 plugin configuration](https://opencode.ai/v2/docs/plugins/).
+
+**Install an unreleased build from a checkout.** `plugin add` rejects `.tgz`
+archives, so install the packed archive with npm and configure its directory.
+Packing requires Bun:
 
 ```sh
 python3 scripts/hosts.py sync           # requires PyYAML; maintainers only
-npm pack ./plugins/10x-swe --ignore-scripts --pack-destination /tmp
-```
-
-In your target project, install the resulting archive (replace the archive path
-with the filename printed by `npm pack`):
-
-```sh
+bun pm pack --cwd plugins/10x-swe --ignore-scripts --destination /tmp
 npm install --prefix .opencode/npm --ignore-scripts /absolute/path/to/package.tgz
 ```
 
-Add the installed directory to your project's `opencode.json`:
+Replace the archive path with the path printed by `bun pm pack`, then add the
+installed directory to your project's `opencode.json`:
 
 ```json
 {
   "plugins": ["./.opencode/npm/node_modules/@cercova-studios/10x-swe"]
 }
 ```
-
-OpenCode loads the engineering skills, eight subagents and five commands such as
-`/10x-swe:research`. Existing skills, agents and commands take precedence. Agents
-inherit the build agent's permissions and the host's model selection. With no
-build agent, their actions require approval. Knowledge tools remain a separate
-installation. Removing the plugin entry and restarting OpenCode unloads the bundle;
-the installed npm directory can remain for reuse.
-
-OpenCode's `plugin add` accepts npm registry and Git packages, but rejects `.tgz`
-targets; use npm installation plus the directory configuration above for archives.
-After publication, the registry route will be
-`opencode plugin add @cercova-studios/10x-swe@VERSION`.
-[OpenCode v2 plugin configuration](https://opencode.ai/v2/docs/plugins/)
 
 For the existing checkout-link route (including the optional knowledge instructions),
 use Python 3 and PyYAML (`pip install pyyaml`):
@@ -384,7 +416,7 @@ approval. Dagu can optionally coordinate the same shell workflow.
 | [Codex CLI](https://developers.openai.com/codex/plugins) | Supported (skills) | ✓ | – not supported by Codex plugins | – | MCP example only | generated `.agents/plugins/marketplace.json` + `.codex-plugin/` |
 | [Grok Build](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/09-plugins.md) | Supported | ✓ | ✓ | ✓ | MCP example only | reads `.claude-plugin/` |
 | [Copilot CLI](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) | Partial | ✓ | unverified | unverified | MCP example only | `.github/plugin/marketplace.json` → `.claude-plugin/` |
-| [opencode](https://opencode.ai/v2/docs/plugins/) | npm archive (v2) or checkout link | ✓ | ✓ translated | ✓ | manual | engineering npm package or `scripts/hosts.py link opencode` |
+| [opencode](https://opencode.ai/v2/docs/plugins/) | npm package (v2) or checkout link | ✓ | ✓ translated | ✓ | manual | `opencode plugin add @cercova-studios/10x-swe` or `scripts/hosts.py link opencode` |
 | [pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md) | Partial | ✓ | – no subagents | ✓ prompt templates | manual | root `package.json` |
 | [Agent Skills hosts](https://agentskills.io/specification) | Skills | ✓ | – | – | – | `scripts/hosts.py link agents` |
 
@@ -400,9 +432,9 @@ the skill-requirements table. `python3 scripts/validate.py` and
 installed plugins when it changes, and the publish workflow skips versions that are
 already on GitHub Packages.
 
-Run `node --test tests/test_opencode.mjs` for adapter checks (Node 22.18+ runs
-`index.ts` directly), and `npm ci --prefix plugins/10x-swe --ignore-scripts && npm run --prefix plugins/10x-swe typecheck`
-to check it against the pinned OpenCode plugin types. To test the packed
+Run `bun test ./tests/test_opencode.mjs` for adapter checks, and
+`bun install --cwd plugins/10x-swe --frozen-lockfile --ignore-scripts && bun run --cwd plugins/10x-swe typecheck`
+to check `index.ts` against the pinned OpenCode plugin types. To test the packed
 artifact with a real OpenCode v2 executable, run
 `python3 tests/opencode_install.py --opencode /absolute/path/to/opencode`.
 This opt-in test uses temporary config, data and cache directories and a loopback

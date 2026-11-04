@@ -183,7 +183,7 @@ def opencode_package(item):
         'scripts': {'typecheck': 'tsc -p .'},
         # Types only: index.ts uses `import type`, so consumers install no dependencies.
         'devDependencies': {'@opencode/plugin': '2.2.5', '@types/node': '22.20.5', 'typescript': '7.0.2'},
-        'engines': {'node': '>=22.18', 'opencode': '>=2.0.32 <3'},
+        'engines': {'opencode': '>=2.0.32 <3'},
         'publishConfig': {'access': 'public'},
     }
 
