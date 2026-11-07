@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 import sqlite3
+from contextlib import closing
 from datetime import datetime, timezone
 
 from . import adapters
@@ -136,78 +137,81 @@ def cmd_search(args: argparse.Namespace) -> int:
         return 2
     if not 1 <= int(getattr(args, 'limit', 10)) <= 20 or len(query.encode()) > 400:
         raise ValueError('Query must be at most 400 bytes and limit 1–20')
-    store = Store()
-    if store.count() == 0:
-        raise ValueError("Index empty; run session-search index explicitly")
-    last = bool(getattr(args, "last", False))
-    limit = 1 if last else int(getattr(args, "limit", 10))
-    try:
-        result = run_strategy(
-            store,
-            query,
-            mode=args.mode,
-            last=last,
-            limit=limit,
-            agent=args.agent,
-            since_ms=parse_since(args.since),
-        )
-    except StrategyUnavailable as exc:
-        if args.json and not getattr(args, 'export', False):
-            json.dump({"error": exc.reason, "mode": exc.name}, sys.stdout)
+    with closing(Store(read_only=True)) as store:
+        if store.count() == 0:
+            raise ValueError("Index empty; run session-search index explicitly")
+        last = bool(getattr(args, "last", False))
+        limit = 1 if last else int(getattr(args, "limit", 10))
+        try:
+            result = run_strategy(
+                store,
+                query,
+                mode=args.mode,
+                last=last,
+                limit=limit,
+                agent=args.agent,
+                since_ms=parse_since(args.since),
+            )
+        except StrategyUnavailable as exc:
+            if args.json and not getattr(args, 'export', False):
+                json.dump({"error": exc.reason, "mode": exc.name}, sys.stdout)
+                sys.stdout.write("\n")
+            else:
+                print(f"{exc.name}: {exc.reason}", file=sys.stderr)
+            return 2
+        for hit in result.hits:
+            rec = store.get(hit.agent, hit.native_id)
+            hit.citations = excerpts(rec, query)
+        if getattr(args, 'export', False):
+            if not result.hits:
+                print('No sessions found; no record exported', file=sys.stderr)
+                return 1
+            print(json.dumps(export_snapshot(store, result, role=getattr(args,'role',None)), ensure_ascii=False, separators=(',', ':')))
+            return 0
+        if args.json:
+            json.dump(result.as_dict(), sys.stdout, indent=2)
             sys.stdout.write("\n")
         else:
-            print(f"{exc.name}: {exc.reason}", file=sys.stderr)
-        return 2
-    for hit in result.hits:
-        rec = store.get(hit.agent, hit.native_id)
-        hit.citations = excerpts(rec, query)
-    if getattr(args, 'export', False):
-        if not result.hits:
-            print('No sessions found; no record exported', file=sys.stderr)
-            return 1
-        print(json.dumps(export_snapshot(store, result, role=getattr(args,'role',None)), ensure_ascii=False, separators=(',', ':')))
-        return 0
-    if args.json:
-        json.dump(result.as_dict(), sys.stdout, indent=2)
-        sys.stdout.write("\n")
-    else:
-        _print_result(result, last=last)
-    return 0 if result.hits else 1
+            _print_result(result, last=last)
+        return 0 if result.hits else 1
 
 
 def cmd_show(args: argparse.Namespace) -> int:
-    store = Store()
-    rec = store.get(args.agent, args.session_id)
-    if rec is None:
+    if not default_db_path().is_file():
         print("not found", file=sys.stderr)
         return 1
-    if args.json:
-        json.dump(
-            {
-                "id": rec.id,
-                "agent": rec.agent,
-                "native_id": rec.native_id,
-                "cwd": rec.cwd,
-                "title": rec.title,
-                "summary": rec.summary,
-                "snippet": snippet(rec.body or rec.summary or rec.title),
-                "updated_at": rec.updated_at,
-                "source_path": rec.source_path,
-            },
-            sys.stdout,
-            indent=2,
-        )
-        sys.stdout.write("\n")
+    with closing(Store(read_only=True)) as store:
+        rec = store.get(args.agent, args.session_id)
+        if rec is None:
+            print("not found", file=sys.stderr)
+            return 1
+        if args.json:
+            json.dump(
+                {
+                    "id": rec.id,
+                    "agent": rec.agent,
+                    "native_id": rec.native_id,
+                    "cwd": rec.cwd,
+                    "title": rec.title,
+                    "summary": rec.summary,
+                    "snippet": snippet(rec.body or rec.summary or rec.title),
+                    "updated_at": rec.updated_at,
+                    "source_path": rec.source_path,
+                },
+                sys.stdout,
+                indent=2,
+            )
+            sys.stdout.write("\n")
+            return 0
+        print(f"agent:    {rec.agent}")
+        print(f"session:  {rec.native_id}")
+        print(f"when:     {_fmt_time(rec.updated_at)}")
+        print(f"cwd:      {rec.cwd}")
+        print(f"title:    {rec.title}")
+        print(f"source:   {rec.source_path}")
+        print()
+        print(snippet(rec.summary or rec.body or rec.title, n=800))
         return 0
-    print(f"agent:    {rec.agent}")
-    print(f"session:  {rec.native_id}")
-    print(f"when:     {_fmt_time(rec.updated_at)}")
-    print(f"cwd:      {rec.cwd}")
-    print(f"title:    {rec.title}")
-    print(f"source:   {rec.source_path}")
-    print()
-    print(snippet(rec.summary or rec.body or rec.title, n=800))
-    return 0
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -223,13 +227,13 @@ def cmd_status(args: argparse.Namespace) -> int:
         "counts": {},
     }
     if path.exists():
-        store = Store(path)
-        payload["indexed_at"] = store.get_meta("indexed_at")
-        payload["embedder"] = store.get_meta("embedder")
-        payload["total"] = store.count()
-        payload["embeddings"] = store.embedding_count()
-        payload["insights"] = store.insight_count()
-        payload["counts"] = store.counts_by_agent()
+        with closing(Store(path, read_only=True)) as store:
+            payload["indexed_at"] = store.get_meta("indexed_at")
+            payload["embedder"] = store.get_meta("embedder")
+            payload["total"] = store.count()
+            payload["embeddings"] = store.embedding_count()
+            payload["insights"] = store.insight_count()
+            payload["counts"] = store.counts_by_agent()
     if args.json:
         json.dump(payload, sys.stdout, indent=2)
         sys.stdout.write("\n")

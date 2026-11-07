@@ -97,8 +97,21 @@ def default_db_path() -> Path:
 
 
 class Store:
-    def __init__(self, path: Path | None = None) -> None:
+    def __init__(self, path: Path | None = None, *, read_only: bool = False) -> None:
         self.path = path or default_db_path()
+        if read_only:
+            if not self.path.is_file():
+                raise ValueError('Session index missing; run session-search index explicitly')
+            self.conn = sqlite3.connect(self.path.absolute().as_uri() + '?mode=ro', uri=True)
+            self.conn.row_factory = sqlite3.Row
+            try:
+                columns = {r[1] for r in self.conn.execute('PRAGMA table_info(sessions)')}
+                if not {'turns_json', 'limitations_json'} <= columns:
+                    raise ValueError('Session index needs an upgrade; run session-search index explicitly')
+            except Exception:
+                self.conn.close()
+                raise
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.path))
         self.conn.row_factory = sqlite3.Row

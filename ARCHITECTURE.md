@@ -57,6 +57,11 @@ extraction, local models and Dagu each have separate setup requirements.
 Keyword `skill-search path` uses declared relationships without a neural map.
 Semantic routing remains optional and validates its mapping provenance. Session
 onboarding explicitly indexes the selected harness; setup leaves that index empty.
+Session queries open existing databases read-only; creation and schema upgrades
+belong to explicit indexing. Mapping-helper failures retain private diagnostics;
+semantic path failures provide explicit lexical retry arguments without running them.
+Distiller rejects existing text/JSON outputs before extraction and atomically
+publishes complete files without replacement, including concurrent destinations.
 Source-insights exposes read-only evidence/analysis validation. Session review
 checks citations and prepared hashes before issuing a digest, and stops without
 creating a destination library or granting publication approval.

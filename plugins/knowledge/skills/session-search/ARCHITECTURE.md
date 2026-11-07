@@ -49,8 +49,13 @@ a locator from a metadata/semantic match. No-hit or failed export emits no packe
 
 ## Storage and failure behavior
 
-`store.py` owns a derived SQLite index. Existing indexes gain turns_json and
-limitations_json columns; refreshing a selected adapter replaces its rows, FTS,
+`store.py` owns a derived SQLite index. Explicit indexing creates the schema and
+adds missing turns_json and limitations_json columns. Search, last, export, show
+and status open existing indexes read-only; they never initialize, migrate or
+chmod a database. Missing or outdated indexes require explicit indexing. SQLite
+may create WAL coordination sidecars when reading an existing live index;
+readers retain committed WAL visibility rather than using immutable snapshots.
+Refreshing a selected adapter replaces its rows, FTS,
 embeddings and cards in one transaction. An enrichment failure retains the previous
 complete generation. Adapter errors also preserve the last successful index timestamp.
 Source stores remain unchanged. Search never implicitly crawls;

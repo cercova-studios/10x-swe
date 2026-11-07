@@ -217,7 +217,7 @@ fn global_graph(checked: &Value) -> Result<Value> {
     Ok(global)
 }
 
-fn run(cli: Cli) -> Result<Value> {
+fn locations(cli: &Cli) -> Result<(PathBuf, PathBuf, PathBuf)> {
     let home = std::env::var_os("HOME")
         .map(PathBuf::from)
         .context("HOME unavailable; specify state and graph")?;
@@ -226,10 +226,17 @@ fn run(cli: Cli) -> Result<Value> {
         .unwrap_or_else(|| home.join(".agents"));
     let state = cli
         .state
+        .clone()
         .unwrap_or_else(|| root.join("knowledge/skills/search"));
     let graph = cli
         .graph
+        .clone()
         .unwrap_or_else(|| root.join("knowledge/skills/graph.json"));
+    Ok((root, state, graph))
+}
+
+fn run(cli: Cli) -> Result<Value> {
+    let (root, state, graph) = locations(&cli)?;
     let db = state.join("catalog.sqlite");
     match cli.command {
         Operation::Export { query, limit } => {
@@ -554,8 +561,39 @@ fn run(cli: Cli) -> Result<Value> {
         ),
     }
 }
+fn lexical_recovery(cli: &Cli) -> Option<Value> {
+    let Operation::Path {
+        query,
+        limit,
+        semantic: true,
+        ..
+    } = &cli.command
+    else {
+        return None;
+    };
+    let (_, state, graph) = locations(cli).ok()?;
+    let mut argv = vec![
+        json!(std::env::current_exe().ok()?),
+        json!("--state"),
+        json!(state),
+        json!("--graph"),
+        json!(graph),
+    ];
+    argv.extend([
+        json!("path"),
+        json!(query),
+        json!("--limit"),
+        json!(limit.to_string()),
+    ]);
+    Some(
+        json!({"method":"lexical","argv":argv,"meaning":"Run explicitly to retry without semantic retrieval; no retry was performed."}),
+    )
+}
+
 fn main() {
-    match run(Cli::parse()) {
+    let cli = Cli::parse();
+    let recovery = lexical_recovery(&cli);
+    match run(cli) {
         Ok(v) if v.is_null() => {}
         Ok(v)
             if matches!(
@@ -567,7 +605,15 @@ fn main() {
         }
         Ok(v) => println!("{}", serde_json::to_string_pretty(&v).unwrap()),
         Err(e) => {
-            eprintln!("{}", json!({"status":"failed","error":format!("{e:#}")}));
+            let mut failure = json!({"status":"failed","error":format!("{e:#}")});
+            if let Some(helper) = e.downcast_ref::<topics::HelperFailure>() {
+                failure["code"] = json!("mapping_helper_failed");
+                failure["diagnostics"] = json!(helper.diagnostics);
+                if let Some(recovery) = recovery {
+                    failure["recovery"] = recovery;
+                }
+            }
+            eprintln!("{failure}");
             std::process::exit(1);
         }
     }

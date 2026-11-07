@@ -1,6 +1,7 @@
 //! One relationship graph: bounded topic discovery and candidate workflow paths.
 use anyhow::{Context, Result, ensure};
 use serde_json::{Value, json};
+use std::os::unix::fs::PermissionsExt;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
@@ -101,48 +102,71 @@ pub fn build_map(path: &Path, state: &Path, python: &Path, script: &Path) -> Res
     )
 }
 
+#[derive(Debug)]
+pub struct HelperFailure {
+    pub diagnostics: std::path::PathBuf,
+}
+impl std::fmt::Display for HelperFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Mapping helper failed; inspect retained diagnostics")
+    }
+}
+impl std::error::Error for HelperFailure {}
+
 pub fn helper(python: &Path, helper: &Path, graph: &Value, args: &[&str]) -> Result<Value> {
-    ensure!(
-        python.is_file() && helper.is_file(),
-        "mapping runtime/helper unavailable"
-    );
     let temp = tempfile::tempdir()?;
-    let input = temp.path().join("graph.json");
-    fs::write(&input, serde_json::to_vec(graph)?)?;
-    let stdout = temp.path().join("stdout");
-    let stderr = temp.path().join("stderr");
-    let mut child = Command::new(python)
-        .arg(helper)
-        .args(args)
-        .arg("--graph")
-        .arg(&input)
-        .env("PYTHONDONTWRITEBYTECODE", "1")
-        .stdin(Stdio::null())
-        .stdout(fs::File::create(&stdout)?)
-        .stderr(fs::File::create(&stderr)?)
-        .spawn()?;
-    let started = std::time::Instant::now();
-    let status = loop {
-        let oversized =
-            fs::metadata(&stdout)?.len() > 1024 * 1024 || fs::metadata(&stderr)?.len() > 128 * 1024;
-        if oversized || started.elapsed() > std::time::Duration::from_secs(180) {
-            let _ = child.kill();
-            let _ = child.wait();
-            anyhow::bail!("mapping helper exceeded time/output budget");
+    fs::set_permissions(temp.path(), fs::Permissions::from_mode(0o700))?;
+    let result = (|| {
+        ensure!(
+            python.is_file() && helper.is_file(),
+            "mapping runtime/helper unavailable"
+        );
+        let input = temp.path().join("graph.json");
+        fs::write(&input, serde_json::to_vec(graph)?)?;
+        let stdout = temp.path().join("stdout");
+        let stderr = temp.path().join("stderr");
+        let mut child = Command::new(python)
+            .arg(helper)
+            .args(args)
+            .arg("--graph")
+            .arg(&input)
+            .env("PYTHONDONTWRITEBYTECODE", "1")
+            .stdin(Stdio::null())
+            .stdout(fs::File::create(&stdout)?)
+            .stderr(fs::File::create(&stderr)?)
+            .spawn()?;
+        let started = std::time::Instant::now();
+        let status = loop {
+            let oversized = fs::metadata(&stdout)?.len() > 1024 * 1024
+                || fs::metadata(&stderr)?.len() > 128 * 1024;
+            if oversized || started.elapsed() > std::time::Duration::from_secs(180) {
+                let _ = child.kill();
+                let _ = child.wait();
+                anyhow::bail!("mapping helper exceeded time/output budget");
+            }
+            if let Some(status) = child.try_wait()? {
+                break status;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        };
+        let output = crate::bundle::read_bounded(&stdout, 1024 * 1024)?;
+        ensure!(
+            fs::metadata(&stderr)?.len() <= 128 * 1024,
+            "mapping helper exceeded output budget"
+        );
+        ensure!(status.success(), "mapping helper exited with {status}");
+        serde_json::from_slice(&output).context("invalid mapping helper response")
+    })();
+    match result {
+        Ok(value) => Ok(value),
+        Err(error) => {
+            fs::write(temp.path().join("failure.txt"), format!("{error:#}\n"))?;
+            Err(HelperFailure {
+                diagnostics: temp.keep(),
+            }
+            .into())
         }
-        if let Some(status) = child.try_wait()? {
-            break status;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(50));
-    };
-    let output = crate::bundle::read_bounded(&stdout, 1024 * 1024)?;
-    let errors = crate::bundle::read_bounded(&stderr, 128 * 1024)?;
-    ensure!(
-        status.success(),
-        "mapping helper failed: {}",
-        String::from_utf8_lossy(&errors)
-    );
-    serde_json::from_slice(&output).context("invalid mapping helper response")
+    }
 }
 
 pub fn validate(graph: &Value) -> Result<()> {
