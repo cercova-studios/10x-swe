@@ -1,0 +1,67 @@
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/topics.rs
+  s_e3121fbece1af6::t_29e1d38217e747 4,118
+  s_e3121fbece1af6::t_7a7eb6c6fc3f63 105-115,119,159-163,169
+  s_e3121fbece1af6::t_05d6fb1bc87fb6 120-152,157-158,164-167
+  s_467129469abcc4::t_b54c5e4b25edd6 153-156
+plugins/knowledge/skills/session-search/ARCHITECTURE.md
+  s_e3121fbece1af6::t_cb02dca86a2238 52-58
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_cb02dca86a2238 60-64
+plugins/knowledge/skills/skill-graph/scripts/search-core/tests/recovery.rs
+  s_467129469abcc4::t_b54c5e4b25edd6 151-164
+  s_e3121fbece1af6::t_9166d13f3ae5c6 1-9,13-15,18-20,25,31-33,52-58,64,93,99-100,148,170
+  s_e3121fbece1af6::t_deebaa61c540ed 149-150,165-169
+  s_e3121fbece1af6::t_51b199d0e594fd 68-71,107-121,128-141
+  s_e3121fbece1af6::t_aed13e18d533c8 65-67,72,105-106,122-127,142-147
+  s_e3121fbece1af6::t_05d6fb1bc87fb6 26-30,34-51,59-63,73-92,94-98,101-104
+  s_e3121fbece1af6::t_0bb64de57163c3 10-12,16-17,21-24
+tests/test_axi_session.py
+  s_e3121fbece1af6::t_35168c0acdd43d 3,64,66,72
+  s_e3121fbece1af6::t_3d54a45d07d90e 1-2,4-32,35,37-38,41-47,49-58,63,65,67-71,73-77
+  s_e3121fbece1af6::t_cb02dca86a2238 48,59-62
+  s_e3121fbece1af6::t_5e87173833c81b 33-34,36,39-40
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/main.rs
+  s_467129469abcc4::t_4679c7dc6b1d20 575-581
+  s_e3121fbece1af6::t_7a7eb6c6fc3f63 564,591-592,594-596,608-616
+  s_e3121fbece1af6::t_05d6fb1bc87fb6 565-573,582-590
+  s_e3121fbece1af6::t_dbe42fd457592b 220,229,233,235-239,574
+plugins/knowledge/tools/distiller/src/main.rs
+  s_e3121fbece1af6::t_82c0f1ce74df1e 3,108,112-117,122-124,129-133,259-262,271,276-281,284,292-305
+  s_e3121fbece1af6::t_cb02dca86a2238 38
+  s_e3121fbece1af6::t_05d6fb1bc87fb6 109-111,118-121,125-128,272-275,282-283,285-290
+  s_467129469abcc4::t_8e5cd5f15c4d2a 291,306
+plugins/knowledge/skills/session-search/scripts/session_search/cli.py
+  s_e3121fbece1af6::t_5e87173833c81b 7,180
+  s_e3121fbece1af6::t_0c9e982c28728d 140-172,175-176,183-213,230-236
+plugins/knowledge/skills/skill-graph/ARCHITECTURE.md
+  s_e3121fbece1af6::t_cb02dca86a2238 33-40
+plugins/knowledge/skills/session-search/scripts/session_search/store.py
+  s_e3121fbece1af6::t_5e87173833c81b 100,102-114
+plugins/knowledge/tools/distiller/tests/cli.rs
+  s_e3121fbece1af6::t_2ff88a696c7ef2 101-107,118-138,141-142,152,158-169
+  s_e3121fbece1af6::t_05d6fb1bc87fb6 108-117,139-140,143-151,153-157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "969f78a745508a2af52f35668b75d927da8bcd45",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
