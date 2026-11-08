@@ -1,4 +1,4 @@
-.osgrep
+.zvec-grep
 __pycache__/
 *.py[cod]
 target/

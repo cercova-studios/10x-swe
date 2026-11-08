@@ -17,7 +17,11 @@ Use surrounding context only as needed to confirm the match.
 </step>
 
 <step number="3">
-If the result set is noisy, tighten the pattern or switch to ast-grep for structure or osgrep for meaning.
+For an absence claim or a script, use `rg`: it exits 1 when nothing matches. Managed `zg --rg` searches exhaustively too, but prints `No matches.` and exits 0, so check its output instead of its exit status. Ranked `zg --fts` never proves absence.
+</step>
+
+<step number="4">
+If the result set is noisy, tighten the pattern, switch to ast-grep for structure, or use zg for meaning.
 </step>
 </process>
 

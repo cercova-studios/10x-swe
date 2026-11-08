@@ -39,7 +39,7 @@ what each host supports. The skills need no build step.
 | You want to… | Use |
 |---|---|
 | Understand a codebase, library or API from source and primary docs | `code-research` (or `/research`) |
-| Find code by identifier, syntax or meaning in a local repo | `code-search` (routes to `ast-grep`, `rg` or `osgrep-semantic-search`) |
+| Find code by identifier, syntax or meaning in a local repo | `code-search` (routes to `ast-grep`, `rg`, `zg` or `codegraph`) |
 | Search the live web with citations (needs a search API key) | `web-research` |
 | Research your own Readwise library into an Obsidian note | `research-readwise-obsidian` |
 | Drive a browser from the terminal with a ready-made CLI | `agent-browser` or `playwright-cli` |
@@ -92,7 +92,6 @@ Every other skill runs with only your agent and the tools your task already uses
 |-------|-------------|
 | [agent-browser](skills/agent-browser/SKILL.md) | Automate browser tasks with the agent-browser CLI |
 | [code-search](skills/code-search/SKILL.md) | Choose lexical, semantic, or structural code search |
-| [osgrep-semantic-search](skills/osgrep-semantic-search/SKILL.md) | Search code by meaning with osgrep |
 | [web-research](skills/web-research/SKILL.md) | Find and verify web evidence with available research tools |
 | [x-api](skills/x-api/SKILL.md) | Read and manage X content through the X API |
 | [ast-grep](skills/ast-grep/SKILL.md) | Structural code search using AST patterns |

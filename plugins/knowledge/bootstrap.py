@@ -19,7 +19,7 @@ PACKAGE = Path(__file__).resolve().parent
 REPO = PACKAGE.parents[1]
 MARKER = '.knowledge-owner.json'
 COMMANDS = ('skill-search', 'bkd', 'distiller', 'insights', 'source-insights', 'session-search', 'knowledge-intake')
-IGNORED_PARTS = ('__pycache__', 'target', '.venv', 'node_modules', '.osgrep', '.DS_Store')
+IGNORED_PARTS = ('__pycache__', 'target', '.venv', 'node_modules', '.zvec-grep', '.DS_Store')
 USER_DATA = ('knowledge/sources', 'state')
 # One-line fixes for failed build checks, by OS family and by check.
 FIXES = {

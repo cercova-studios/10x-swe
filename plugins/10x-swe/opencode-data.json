@@ -288,13 +288,6 @@
       "autoinvoke": true
     },
     {
-      "id": "osgrep-semantic-search",
-      "name": "osgrep-semantic-search",
-      "description": "Semantic code search via the `osgrep` CLI. Use when the user wants to find code by behavior, concept, or intent (\"where do we validate JWTs?\", \"where is rate limiting handled?\") rather than by exact text. Prefer ripgrep for literal matches and ast-grep for structural patterns.",
-      "path": "skills/osgrep-semantic-search/SKILL.md",
-      "autoinvoke": true
-    },
-    {
       "id": "parallel-debugging",
       "name": "parallel-debugging",
       "description": "Compare independent hypotheses when a reproduced failure spans multiple causes; use parallel investigators only with explicit authorization.",

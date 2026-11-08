@@ -277,7 +277,7 @@ Logs, CSV, configs, plaintext:
 <Source Code>
 Code Research, Refactors, rewrites, audits:
 - demongrep
-- osgrep
+- zg (zvec-grep)
 - ast-grep
 - semgrep
 - grit
