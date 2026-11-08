@@ -60,6 +60,6 @@ jobs:
         run: |
           set -euo pipefail
           rustup toolchain install 1.88.0 --profile minimal
-          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller; do
+          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller plugins/knowledge/tools/session-search; do
             cargo +1.88.0 check --locked --manifest-path "$PROJECT/Cargo.toml" --target-dir "$RUNNER_TEMP/msrv"
           done

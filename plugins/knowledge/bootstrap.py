@@ -257,7 +257,8 @@ def doctor(prefix, verify=True):
     check_activation(prefix)
     for command in COMMANDS:
         target = prefix / 'bin' / command
-        if not target.is_symlink() or target.resolve() != (prefix / 'libexec/launch.py').resolve():
+        expected = prefix / ('libexec/native/session-search' if command == 'session-search' else 'libexec/launch.py')
+        if not target.is_symlink() or target.resolve() != expected.resolve():
             raise ValueError('Installed command launcher changed: ' + command)
     if verify:
         env = environment(prefix)
@@ -366,7 +367,8 @@ def setup(prefix, previous=None):
             runtime.symlink_to('source-insights', target_is_directory=True)
         env = environment(prefix)
         for source, command in ((staged / 'skills/skill-graph/scripts/search-core', 'skill-search'),
-                                (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller')):
+                                (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller'),
+                                (staged / 'tools/session-search', 'session-search')):
             run(['cargo', 'build', '--locked', '--release', '--bin', command,
                  '--manifest-path', source / 'Cargo.toml', '--target-dir', prefix / 'build/rust'], env=env)
             shutil.copy2(prefix / 'build/rust/release' / command, prefix / 'libexec/native' / command)
@@ -379,7 +381,7 @@ def setup(prefix, previous=None):
             target = prefix / 'bin' / command
             if target.exists() or target.is_symlink():
                 target.unlink()
-            target.symlink_to('../libexec/launch.py')
+            target.symlink_to('../libexec/native/session-search' if command == 'session-search' else '../libexec/launch.py')
         graph(prefix, python, env)
         run([prefix / 'bin/source-insights', 'reindex', '--rebuild'], env=env)
         if inputs() != manifest:

@@ -2,8 +2,9 @@
 
 ## Domain and entrypoints
 
-`scripts/session_search/cli.py` exposes explicit index, search, last, show, status
-and export operations. `models.py` owns SessionRecord, Turn, Hit and SearchResult.
+`../../tools/session-search` owns the native Rust CLI, SQLite store, adapters and
+portable records. `src/main.rs` exposes explicit index, search, last, show, status
+and export operations. `src/model.rs` owns Session, Turn, Hit and SearchResult.
 Adapters alone read their own session stores. Consumers receive public records;
 no consumer path, process or library appears in the producer.
 
@@ -16,7 +17,7 @@ take precedence over duplicate event messages. Codex automatic Guardian approval
 traces are excluded by `session_meta.payload.source.subagent.other=guardian`;
 human conversations and other subagents remain eligible.
 
-`turns.py` bounds a JSONL record to 16 MiB and a decoded public turn to 4 MiB.
+`src/turns.rs` streams JSONL and bounds a record to 16 MiB and a decoded public turn to 4 MiB.
 Oversized records/turns are omitted with line-specific coverage limitations. Binary
 line reads remain bounded while consuming oversized records. Complete malformed
 records fail the adapter; an unfinished final JSON record from an active writer is
@@ -38,7 +39,7 @@ codepoints in the redacted indexed text; whitespace is preserved. Full indexed-t
 and excerpt SHA256 accompany each citation. Known credential patterns are redacted;
 this is not a complete sensitive-data detector. Inspect excerpts before sharing.
 
-`records.py` emits one `knowledge-snapshot/v1`, corpus `sessions`, with session
+`src/records.rs` emits one `knowledge-snapshot/v1`, corpus `sessions`, with session
 and session_turn nodes, recorded part_of edges, revisions and exact-query ranks.
 Session IDs are `session:AGENT:NATIVE_ID`; turns are `turn:AGENT:NATIVE_ID:LINE`.
 Turn versions pin the original record SHA256, including its role and timestamp;
@@ -49,7 +50,7 @@ a locator from a metadata/semantic match. No-hit or failed export emits no packe
 
 ## Storage and failure behavior
 
-`store.py` owns a derived SQLite index. Explicit indexing creates the schema and
+`src/store.rs` owns the existing derived SQLite schema. Explicit indexing creates the schema and
 adds missing turns_json and limitations_json columns. Search, last, export, show
 and status open existing indexes read-only; they never initialize, migrate or
 chmod a database. Missing or outdated indexes require explicit indexing. SQLite
@@ -71,7 +72,7 @@ navigation. These are external shell recipes, not producer dependencies. Data,
 hashes, relationships and recalled assistant statements grant no execution or
 publication authority.
 
-`python3 tests/check.py` covers late-user/assistant/tool recall, hidden reasoning,
+The native Cargo tests and `tools/session-search/tests/check.py` cover late-user/assistant/tool recall, hidden reasoning,
 redaction, exact locators/hashes, duplicate suppression, malformed/oversized records,
 Guardian filtering, SQLite rollback and failure-atomic JSONL export. Back up the
 derived SQLite index before installation/refresh. Rollback restores owned skill

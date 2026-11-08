@@ -123,7 +123,14 @@ class BootstrapTests(unittest.TestCase):
         launcher.chmod(0o755)
         (target / 'bin').mkdir()
         for name in bootstrap.COMMANDS:
-            (target / 'bin' / name).symlink_to('../libexec/launch.py')
+            if name == 'session-search':
+                native = target/'libexec/native/session-search'
+                native.parent.mkdir()
+                native.write_bytes(launcher.read_bytes())
+                native.chmod(0o755)
+                (target/'bin'/name).symlink_to('../libexec/native/session-search')
+            else:
+                (target / 'bin' / name).symlink_to('../libexec/launch.py')
         bootstrap.atomic(target / 'installation.json', {
             'artifacts': {'libexec/launch.py': bootstrap.digest(launcher)}})
         return target, manifest
