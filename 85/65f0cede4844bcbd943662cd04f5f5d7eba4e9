@@ -1,0 +1,102 @@
+plugins/knowledge/tools/session-search/src/model.rs
+  s_e3121fbece1af6::t_ed06eb6e60ea29 1-63
+  s_e3121fbece1af6::t_0a309f0b5fd0ad 64-67
+plugins/knowledge/skills/session-search/ARCHITECTURE.md
+  s_e3121fbece1af6::t_a6dd313bda2db8 5-7,20,42,53,75
+.github/workflows/portable.yml
+  s_e3121fbece1af6::t_a6dd313bda2db8 53,93
+plugins/knowledge/tools/session-search/src/text.rs
+  s_e3121fbece1af6::t_ed06eb6e60ea29 1-6,10,100,125-127,139,158,171,182,206-207,232
+  s_467129469abcc4::t_1f46ce5faf1894 7-9,11-99,101-124,128-138,140-157,159-170,172-181,183-190,194-195,201-205,208-231,233-238,247-254
+  s_e3121fbece1af6::t_47f929030da6a5 191-192,196-200
+  s_e3121fbece1af6::t_4ad0225eceb667 193
+  s_467129469abcc4::t_28abd57604e160 239-246
+plugins/knowledge/tools/session-search/src/search.rs
+  s_e3121fbece1af6::t_262bc8699ec52d 1-23
+  s_e3121fbece1af6::t_713c9b6393467e 24-31,33-105
+plugins/knowledge/tools/session-search/src/turns.rs
+  s_e3121fbece1af6::t_ed06eb6e60ea29 1-6,11,14,17,19-20,24,30-36,41-68,70-87
+  s_e3121fbece1af6::t_5daf5605caa7a0 7-10,12-13,15-16,18,21-23,25-29,37-40,69
+  s_e3121fbece1af6::t_2cee9558af9412 88-251
+tests/test_bootstrap.py
+  s_e3121fbece1af6::t_a6dd313bda2db8 126-133
+ARCHITECTURE.md
+  s_e3121fbece1af6::t_a6dd313bda2db8 61-63
+plugins/knowledge/tools/session-search/tests/check.py
+  s_e3121fbece1af6::t_fd3b092723f269 70-72
+  s_e3121fbece1af6::t_4949f74ab4b315 1-69,73-108
+plugins/knowledge/tools/session-search/tests/adapters.py
+  s_467129469abcc4::t_1658520bb2848c 1-41,66
+  s_467129469abcc4::t_0db6c35e808444 42-65
+plugins/knowledge/distribution.json
+  s_e3121fbece1af6::t_a6dd313bda2db8 11
+plugins/knowledge/tools/session-search/tests/cli.rs
+  s_e3121fbece1af6::t_f8cf5feabce292 1-19
+plugins/knowledge/tools/session-search/src/embed.rs
+  s_e3121fbece1af6::t_47f929030da6a5 91-93,95
+  s_e3121fbece1af6::t_4ad0225eceb667 2-5,8-28,31-35,37-62,65-71,87-90,94,96
+  s_e3121fbece1af6::t_9aa0dffdb4e852 63-64,72-85
+  s_e3121fbece1af6::t_430ccb43f1dc3e 1
+  s_e3121fbece1af6::t_ab03e048387dbb 6-7,29-30,36,86,97
+plugins/knowledge/tools/session-search/src/main.rs
+  s_e3121fbece1af6::t_262bc8699ec52d 1-8,13-15,24-25,36-38,43-47,57-61,66-69,76,81,96,108,125,166,176,224,226,228,379-380,397-398,414
+  s_e3121fbece1af6::t_ebf0d870f2b411 11
+  s_e3121fbece1af6::t_47f929030da6a5 105-106
+  s_e3121fbece1af6::t_6e62944e006aad 9-10,12,16-23,26-35,39-42,48-56,62-65,70-75,77-80,82-95,99-104,107,109-124,126-165,167-175,177-223,225,227,229-378,381-396,399-413
+  s_e3121fbece1af6::t_4ad0225eceb667 97-98
+plugins/knowledge/bootstrap.py
+  s_e3121fbece1af6::t_a6dd313bda2db8 260-261,370-371,384
+plugins/knowledge/tools/session-search/Cargo.toml
+  s_e3121fbece1af6::t_ed06eb6e60ea29 1-8,13-15,17-25
+  s_e3121fbece1af6::t_9aa0dffdb4e852 9-12,16
+plugins/knowledge/tools/session-search/src/store.rs
+  s_e3121fbece1af6::t_5a11f6283221fd 85-86,93
+  s_e3121fbece1af6::t_ab03e048387dbb 1-3,5,7-21,23-64,66-84,87-92,94-98
+  s_e3121fbece1af6::t_ebf0d870f2b411 4,6,22,65,99
+  s_e3121fbece1af6::t_056645e4e5ab3e 100-403
+.github/workflows/plugins.yml
+  s_e3121fbece1af6::t_a6dd313bda2db8 63
+plugins/knowledge/tools/session-search/src/schema.sql
+  s_467129469abcc4::t_ddafec8ecd7e75 1-78
+plugins/knowledge/provenance.json
+  s_467129469abcc4::t_26b61403322bd0 67-69,71,74-75,77-78,80-83
+  s_467129469abcc4::t_0641ce3df40358 70,72-73,76,79
+plugins/knowledge/tools/session-search/src/adapters.rs
+  s_e3121fbece1af6::t_749f0e9c5b1e58 1-17,19-33,36-41,43-65,67-75,77-94,96-99,101-139,141-183,185
+  s_e3121fbece1af6::t_430ccb43f1dc3e 95
+  s_e3121fbece1af6::t_5daf5605caa7a0 18,34-35,42,66,76,100,140,184
+  s_e3121fbece1af6::t_0c49cbbdf94ffd 186-912
+plugins/knowledge/skills/session-search/SKILL.md
+  s_e3121fbece1af6::t_f8cf5feabce292 40-53
+  s_e3121fbece1af6::t_a6dd313bda2db8 18-23
+plugins/knowledge/tools/session-search/src/records.rs
+  s_e3121fbece1af6::t_262bc8699ec52d 1-21,23
+  s_e3121fbece1af6::t_430ccb43f1dc3e 22
+  s_e3121fbece1af6::t_857ae10bd84fa9 24-59
+plugins/knowledge/tools/session-search/Cargo.lock
+  s_467129469abcc4::t_303bf2a3ab8227 1-1780
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8565f0cede4844bcbd943662cd04f5f5d7eba4e9",
+  "prompts": {},
+  "sessions": {
+    "s_467129469abcc4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    },
+    "s_e3121fbece1af6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12d90-fe64-7f01-b322-0a76ac36ece9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
