@@ -50,7 +50,7 @@ jobs:
           "$RUNTIME" plugins/10x-swe/skills/web-research/tests/test_websearch.py
           "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_graph.py
           "$RUNTIME" plugins/knowledge/skills/skill-graph/scripts/test_concepts.py
-          "$RUNTIME" plugins/knowledge/skills/session-search/tests/check.py
+          "$RUNTIME" plugins/knowledge/tools/session-search/tests/check.py
           "$RUNTIME" plugins/knowledge/skills/source-insights/scripts/check_workflow.py
           "$RUNTIME" tests/acceptance.py "$RUNNER_TEMP/knowledge tools"
           ./knowledge doctor --prefix "$RUNNER_TEMP/knowledge tools"
@@ -90,7 +90,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller; do
+          for PROJECT in plugins/knowledge/skills/skill-graph/scripts/search-core plugins/knowledge/tools/bkd plugins/knowledge/tools/distiller plugins/knowledge/tools/session-search; do
             cargo test --locked --release --manifest-path "$PROJECT/Cargo.toml" --target-dir "$RUNNER_TEMP/knowledge tools/build/rust"
           done
           cd plugins/knowledge/tools/insights

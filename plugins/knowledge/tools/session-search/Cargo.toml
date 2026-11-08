@@ -1,0 +1,25 @@
+[package]
+name = "session-search"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+description = "Local public-session recall with exact provenance and independent JSONL exports"
+
+[features]
+default = []
+neural = ["dep:fastembed"]
+
+[dependencies]
+anyhow = "1"
+blake2 = "0.10"
+fastembed = { version = "=7.6.1", optional = true, default-features = false, features = ["onnx", "ort-load-dynamic"] }
+chrono = "0.4"
+clap = { version = "4", features = ["derive"] }
+regex = "1"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tempfile = "3"
+url = "2"
