@@ -1,0 +1,42 @@
+AGENTS.md
+  s_efbd5461f230c7::t_184a61cc4082fb 280
+plugins/10x-swe/skills/code-search/references/tool-selection.md
+  s_efbd5461f230c7::t_a490a44809142b 19-20
+  s_efbd5461f230c7::t_68f8b658ac72ad 13-18,34-35,38
+  s_efbd5461f230c7::t_bd209a83bc4b71 36
+  s_efbd5461f230c7::t_7ea7d11b4af55c 12
+plugins/10x-swe/skills/code-search/references/zg.md
+  s_efbd5461f230c7::t_d006ce9897e94e 1-86
+.gitignore
+  s_efbd5461f230c7::t_184a61cc4082fb 1
+plugins/knowledge/bootstrap.py
+  s_efbd5461f230c7::t_184a61cc4082fb 22
+plugins/10x-swe/skills/code-search/workflows/semantic-search.md
+  s_efbd5461f230c7::t_2efa612ea2035b 9,22,26,30,35-36
+  s_efbd5461f230c7::t_d93d0d47b8d6ba 14
+  s_efbd5461f230c7::t_a7b81a693d5676 4
+plugins/10x-swe/skills/code-search/references/codegraph.md
+  s_efbd5461f230c7::t_d9c4ebad210f15 1-56,60
+  s_efbd5461f230c7::t_147df7202c4be1 57-59
+plugins/10x-swe/README.md
+  s_efbd5461f230c7::t_077c077e7f39d7 42
+plugins/10x-swe/skills/code-search/workflows/text-search.md
+  s_efbd5461f230c7::t_818c7f9feca23a 20-23
+  s_efbd5461f230c7::t_863c4799a8f253 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "84a66665b2b61455b52ef67e64341b0bb98debc0",
+  "prompts": {},
+  "sessions": {
+    "s_efbd5461f230c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1afa390e-063a-4323-ba8a-fd4dee6c3a93",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
