@@ -1,0 +1,1134 @@
+#!/bin/sh
+# Source-built, owned-prefix installation. No credentials, crawls or publication.
+# POSIX sh. Python 3.11+ is still required to build the tools, not to run plan.
+# Existing prefixes stay valid: the source fingerprint is sha256 of the same
+# one-line JSON object Python's json.dumps(manifest, sort_keys=True) emits.
+set -eu
+
+if [ -z "${KNOWLEDGE_BOOTSTRAP_PATH:-}" ]; then
+  KNOWLEDGE_BOOTSTRAP_PATH=$0
+fi
+dir_name() {
+  case $1 in
+    */*) printf '%s\n' "${1%/*}" ;;
+    *) printf '.\n' ;;
+  esac
+}
+base_name() {
+  case $1 in
+    */*) printf '%s\n' "${1##*/}" ;;
+    *) printf '%s\n' "$1" ;;
+  esac
+}
+BASE=$(CDPATH='' cd -- "$(dir_name "$KNOWLEDGE_BOOTSTRAP_PATH")" && pwd -P)
+ROOT=$(CDPATH='' cd -- "$BASE/../.." && pwd -P)
+MARKER=.knowledge-owner.json
+COMMANDS='skill-search bkd distiller insights source-insights session-search knowledge-intake'
+MINIMUM_FREE_BYTES=$((3 * 1024 * 1024 * 1024))
+LOCKDIR=
+TMP_SWITCHED=0
+SAVED_TMP_PRESENT=0
+SAVED_TMP=
+
+die() {
+  restore_tmp
+  printf 'ERROR: %s\n' "$1" >&2
+  exit 1
+}
+
+restore_tmp() {
+  if [ "$TMP_SWITCHED" != 1 ]; then
+    return 0
+  fi
+  TMP_SWITCHED=0
+  if [ "$SAVED_TMP_PRESENT" = 1 ]; then
+    TMPDIR=$SAVED_TMP
+    export TMPDIR
+  else
+    unset TMPDIR
+  fi
+}
+
+cleanup() {
+  if [ -n "$LOCKDIR" ]; then
+    PATH=/usr/bin:/bin rmdir "$LOCKDIR" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
+json_escape() {
+  JSON_ESCAPE_IN=$1 LC_ALL=C PATH=/usr/bin:/bin awk 'BEGIN {
+    s = ENVIRON["JSON_ESCAPE_IN"]
+    n = length(s)
+    for (i = 1; i <= n; i++) {
+      c = substr(s, i, 1)
+      if (c == "\\") printf "\\\\"
+      else if (c == "\"") printf "\\\""
+      else if (c == "\t") printf "\\t"
+      else if (c == "\r") printf "\\r"
+      else if (c == "\n") printf "\\n"
+      else printf "%s", c
+    }
+  }'
+}
+
+shell_quote() {
+  SHELL_QUOTE_IN=$1 LC_ALL=C PATH=/usr/bin:/bin awk 'BEGIN {
+    s = ENVIRON["SHELL_QUOTE_IN"]
+    if (s == "") { printf "\047\047"; exit }
+    if (s ~ /^[A-Za-z0-9_@%+=:,.\/-]+$/) { printf "%s", s; exit }
+    printf "\047"
+    n = length(s)
+    for (i = 1; i <= n; i++) {
+      c = substr(s, i, 1)
+      if (c == "\047") printf "\047\"\047\"\047"
+      else printf "%s", c
+    }
+    printf "\047"
+  }'
+}
+
+hash_file() {
+  if [ -x /usr/bin/sha256sum ]; then
+    /usr/bin/sha256sum "$1" | /usr/bin/awk '{print $1}'
+  elif [ -x /usr/bin/shasum ]; then
+    /usr/bin/shasum -a 256 "$1" | /usr/bin/awk '{print $1}'
+  else
+    die 'sha256sum or shasum is required to fingerprint sources'
+  fi
+}
+
+os_family() {
+  if [ "$(PATH=/usr/bin:/bin uname -s)" = Darwin ]; then
+    printf '%s\n' macos
+    return
+  fi
+  if [ -f /etc/os-release ] && PATH=/usr/bin:/bin grep -Eq '^(ID|ID_LIKE)=.*(fedora|rhel|centos)' /etc/os-release; then
+    printf '%s\n' fedora
+  else
+    printf '%s\n' debian
+  fi
+}
+
+disk_free_bytes() {
+  blocks=$(PATH=/usr/bin:/bin df -kP "$1" | /usr/bin/awk 'NR==2 {print $4}')
+  /usr/bin/awk -v blocks="$blocks" 'BEGIN { printf "%d\n", blocks * 1024 }'
+}
+
+require_disk_space() {
+  probe=$1
+  if [ ! -e "$probe" ]; then
+    probe=$(dir_name "$probe")
+  fi
+  free=$(disk_free_bytes "$probe")
+  if [ "$free" -lt "$MINIMUM_FREE_BYTES" ]; then
+    free_mib=$((free / 1024 / 1024))
+    need_mib=$((MINIMUM_FREE_BYTES / 1024 / 1024))
+    die "Not enough free disk space for setup: ${free_mib} MiB available at ${probe}, need at least ${need_mib} MiB"
+  fi
+}
+
+resolve_prefix() {
+  raw=$1
+  home_prefix='~'
+  case $raw in
+    "$home_prefix") raw=$HOME ;;
+    "$home_prefix"/*) raw=$HOME/${raw#"$home_prefix"/} ;;
+  esac
+  case $raw in
+    /*) ;;
+    *) raw=$PWD/$raw ;;
+  esac
+  if [ -L "$raw" ]; then
+    die 'Installation prefix must not be a symlink'
+  fi
+  if [ -d "$raw" ]; then
+    CDPATH='' cd -- "$raw" && pwd -P
+    return
+  fi
+  parent=$(dir_name "$raw")
+  name=$(base_name "$raw")
+  if [ -d "$parent" ]; then
+    parent=$(CDPATH='' cd -- "$parent" && pwd -P)
+  fi
+  printf '%s\n' "$parent/$name"
+}
+
+list_source_files() {
+  out=$1
+  : > "$out"
+  if command -v git >/dev/null 2>&1 && [ -d "$ROOT/.git" ]; then
+    git -C "$ROOT" ls-files -z --cached -- plugins/knowledge plugins/10x-swe/skills |
+      PATH=/usr/bin:/bin tr '\0' '\n' |
+      while IFS= read -r rel; do
+        path=$ROOT/$rel
+        if [ -f "$path" ] && [ ! -L "$path" ]; then
+          printf '%s\n' "$rel"
+        fi
+      done | LC_ALL=C PATH=/usr/bin:/bin sort >> "$out"
+    return
+  fi
+  for base in "$ROOT/plugins/knowledge" "$ROOT/plugins/10x-swe/skills"; do
+    PATH=/usr/bin:/bin find "$base" \
+      \( -name __pycache__ -o -name target -o -name .venv -o -name node_modules -o -name .zvec-grep \) -prune -o \
+      -type f ! -name .DS_Store -print
+  done | while IFS= read -r path; do
+    printf '%s\n' "${path#"$ROOT"/}"
+  done | LC_ALL=C PATH=/usr/bin:/bin sort >> "$out"
+}
+
+write_canonical_manifest() {
+  list=$1
+  dest=$2
+  pairs=$(PATH=/usr/bin:/bin mktemp)
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    printf '%s\t%s\n' "$rel" "$(hash_file "$ROOT/$rel")"
+  done < "$list" | LC_ALL=C PATH=/usr/bin:/bin sort > "$pairs"
+  LC_ALL=C PATH=/usr/bin:/bin awk -F '\t' 'function esc(s,    i, n, c, out) {
+      out = ""
+      n = length(s)
+      for (i = 1; i <= n; i++) {
+        c = substr(s, i, 1)
+        if (c == "\\") out = out "\\\\"
+        else if (c == "\"") out = out "\\\""
+        else out = out c
+      }
+      return out
+    }
+    BEGIN { printf "{" }
+    NR > 1 { printf ", " }
+    { printf "\"%s\": \"%s\"", esc($1), esc($2) }
+    END { printf "}" }' "$pairs" > "$dest"
+  PATH=/usr/bin:/bin rm -f "$pairs"
+}
+
+source_fingerprint() {
+  list=$(PATH=/usr/bin:/bin mktemp)
+  manifest=$(PATH=/usr/bin:/bin mktemp)
+  list_source_files "$list"
+  write_canonical_manifest "$list" "$manifest"
+  if [ -x /usr/bin/sha256sum ]; then
+    /usr/bin/sha256sum "$manifest" | /usr/bin/awk '{print $1}'
+  else
+    /usr/bin/shasum -a 256 "$manifest" | /usr/bin/awk '{print $1}'
+  fi
+  PATH=/usr/bin:/bin rm -f "$list" "$manifest"
+}
+
+version_ge() {
+  if [ "$1" -gt "$3" ]; then
+    return 0
+  fi
+  [ "$1" -eq "$3" ] && [ "$2" -ge "$4" ]
+}
+
+parse_version() {
+  kind=$1
+  text=$2
+  printf '%s\n' "$text" | PATH=/usr/bin:/bin awk -v kind="$kind" '
+    kind == "cargo" && $0 ~ /^cargo [0-9]+\.[0-9]+/ { split($2, a, "."); print a[1], a[2]; exit }
+    kind == "rustc" && $0 ~ /^rustc [0-9]+\.[0-9]+/ { split($2, a, "."); print a[1], a[2]; exit }
+    kind == "go" && $0 ~ /^go version go[0-9]+\.[0-9]+/ {
+      split($3, a, ".")
+      sub(/^go/, "", a[1])
+      print a[1], a[2]
+      exit
+    }
+  '
+}
+
+run_probe() {
+  outf=$(PATH=/usr/bin:/bin mktemp)
+  errf=$(PATH=/usr/bin:/bin mktemp)
+  if [ -n "${PROBE_INPUT+x}" ]; then
+    printf '%s' "$PROBE_INPUT" | "$@" >"$outf" 2>"$errf" &
+  else
+    "$@" >"$outf" 2>"$errf" &
+  fi
+  pid=$!
+  ticks=0
+  while PATH=/usr/bin:/bin kill -0 "$pid" 2>/dev/null; do
+    ticks=$((ticks + 1))
+    if [ "$ticks" -ge 50 ]; then
+      PATH=/usr/bin:/bin kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      probe_status=timeout
+      probe_out=$(PATH=/usr/bin:/bin cat "$outf" 2>/dev/null || true)
+      probe_err=$(PATH=/usr/bin:/bin cat "$errf" 2>/dev/null || true)
+      PATH=/usr/bin:/bin rm -f "$outf" "$errf"
+      return 0
+    fi
+    PATH=/usr/bin:/bin sleep 0.2
+  done
+  probe_status=0
+  wait "$pid" 2>/dev/null || probe_status=$?
+  probe_out=$(PATH=/usr/bin:/bin cat "$outf" 2>/dev/null || true)
+  probe_err=$(PATH=/usr/bin:/bin cat "$errf" 2>/dev/null || true)
+  PATH=/usr/bin:/bin rm -f "$outf" "$errf"
+  probe_out=$(printf '%s' "$probe_out" | LC_ALL=C PATH=/usr/bin:/bin awk 'BEGIN{ORS=""} {text=$0} END{sub(/^[[:space:]]+/,"",text); sub(/[[:space:]]+$/,"",text); print substr(text,1,500)}')
+  probe_err=$(printf '%s' "$probe_err" | LC_ALL=C PATH=/usr/bin:/bin awk 'BEGIN{ORS=""} {text=$0} END{sub(/^[[:space:]]+/,"",text); sub(/[[:space:]]+$/,"",text); print substr(text,1,500)}')
+}
+
+append_check() {
+  # command, path or -, passed, output or -, error or -.
+  # Empty fields are stored as "-" because consecutive tabs collapse under read.
+  output=$4
+  error=$5
+  [ -n "$output" ] || output=-
+  [ -n "$error" ] || error=-
+  printf '%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$output" "$error" >> "$CHECK_FILE"
+}
+
+check_tool() {
+  name=$1
+  kind=$2
+  min_major=$3
+  min_minor=$4
+  shift 4
+  path=$(command -v "$name" 2>/dev/null || true)
+  if [ -z "$path" ]; then
+    append_check "$name" - false - "Missing build prerequisite: $name"
+    return
+  fi
+  run_probe "$path" "$@"
+  if [ "$probe_status" = timeout ] || [ "$probe_status" -eq 137 ] || [ "$probe_status" -eq 143 ]; then
+    append_check "$name" "$path" false "$probe_out" "$name probe failed: timed out after 10 seconds"
+    return
+  fi
+  if [ "$probe_status" != 0 ]; then
+    detail=$probe_err
+    if [ -z "$detail" ]; then
+      detail=$probe_status
+    fi
+    append_check "$name" "$path" false "$probe_out" "$name probe failed: $detail"
+    return
+  fi
+  if [ -z "$kind" ]; then
+    append_check "$name" "$path" true "$probe_out" -
+    return
+  fi
+  parsed=$(parse_version "$kind" "$probe_out")
+  major=${parsed%% *}
+  minor=${parsed#* }
+  if [ -n "$parsed" ] && version_ge "$major" "$minor" "$min_major" "$min_minor"; then
+    append_check "$name" "$path" true "$probe_out" -
+  else
+    label=$name
+    if [ "$name" = go ]; then
+      label=Go
+    fi
+    append_check "$name" "$path" false "$probe_out" "$path must report $label $min_major.$min_minor+; check PATH or update the compiler"
+  fi
+}
+
+collect_checks() {
+  CHECK_FILE=$(PATH=/usr/bin:/bin mktemp)
+  py=$(command -v python3 2>/dev/null || true)
+  if [ -z "$py" ]; then
+    append_check python - false - 'Python 3.11+ is required'
+  else
+    py_out=$("$py" -c 'import platform; print(platform.python_version())' 2>/dev/null || true)
+    if "$py" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+      append_check python "$py" true "$py_out" -
+    else
+      append_check python "$py" false "$py_out" 'Python 3.11+ is required'
+    fi
+  fi
+  check_tool cargo cargo 1 88 --version
+  check_tool rustc rustc 1 88 --version
+  check_tool go go 1 22 version
+  PROBE_INPUT='int main(void) { return 0; }
+'
+  check_tool cc '' 0 0 -x c -fsyntax-only -
+  unset PROBE_INPUT
+  if [ "$(PATH=/usr/bin:/bin uname -s)" = Linux ]; then
+    check_tool pkg-config '' 0 0 --modversion openssl
+  fi
+}
+
+fixes_for() {
+  family=$(os_family)
+  case $family in
+    macos) os_fix='xcode-select --install; brew install pkg-config openssl go rustup && rustup-init' ;;
+    fedora) os_fix='sudo dnf install -y gcc pkgconf-pkg-config openssl-devel golang && curl https://sh.rustup.rs -sSf | sh' ;;
+    *) os_fix='sudo apt-get update && sudo apt-get install -y build-essential pkgconf libssl-dev golang && curl https://sh.rustup.rs -sSf | sh' ;;
+  esac
+  rust_fix='rustup update stable (or install rustup from https://rustup.rs; distro Rust is often older than 1.88)'
+  go_fix='install Go 1.22+ from https://go.dev/dl/ or your package manager'
+  py_fix='install Python 3.11+ and rerun with it'
+  seen=$(PATH=/usr/bin:/bin mktemp)
+  while IFS="$(printf '\t')" read -r name path passed _output error; do
+    [ "$passed" = false ] || continue
+    if [ "$path" != - ] && { [ "$name" = cargo ] || [ "$name" = rustc ]; }; then
+      line=$rust_fix
+    elif [ "$path" != - ] && [ "$name" = go ]; then
+      line=$go_fix
+    elif [ "$name" = python ]; then
+      line=$py_fix
+    else
+      line=$os_fix
+    fi
+    if ! PATH=/usr/bin:/bin grep -F -x -q -- "$line" "$seen"; then
+      printf '%s\n' "$line" >> "$seen"
+      printf '%s\n' "$line"
+    fi
+  done < "$CHECK_FILE"
+  PATH=/usr/bin:/bin rm -f "$seen"
+}
+
+json_string() {
+  printf '"%s"' "$(json_escape "$1")"
+}
+
+emit_plan() {
+  prefix=$1
+  collect_checks
+  ready=true
+  while IFS="$(printf '\t')" read -r _name _path passed _output _error; do
+    if [ "$passed" != true ]; then
+      ready=false
+    fi
+  done < "$CHECK_FILE"
+  printf '{\n'
+  printf '  "prefix": "%s",\n' "$(json_escape "$prefix")"
+  printf '  "profile": "keyword",\n'
+  printf '  "tools": [\n'
+  printf '    "skill-search",\n    "bkd",\n    "distiller",\n    "insights",\n    "source-insights",\n    "session-search",\n    "knowledge-intake"\n'
+  printf '  ],\n'
+  printf '  "build_prerequisites": [\n'
+  printf '    "Python 3.11+",\n'
+  printf '    "Rust 1.88+ (current locked dependency minimum)",\n'
+  printf '    "Go 1.22+",\n'
+  printf '    "C compiler",\n'
+  printf '    "OpenSSL development headers and pkg-config on Linux"\n'
+  printf '  ],\n'
+  printf '  "build_checks": [\n'
+  first=1
+  while IFS="$(printf '\t')" read -r name path passed output error; do
+    if [ "$first" = 1 ]; then
+      first=0
+    else
+      printf ',\n'
+    fi
+    printf '    {\n'
+    printf '      "command": "%s",\n' "$(json_escape "$name")"
+    if [ "$path" = - ]; then
+      printf '      "path": null,\n'
+    else
+      printf '      "path": "%s",\n' "$(json_escape "$path")"
+    fi
+    printf '      "passed": %s' "$passed"
+    if [ "$output" != - ]; then
+      printf ',\n      "output": "%s"' "$(json_escape "$output")"
+    fi
+    if [ "$error" != - ]; then
+      printf ',\n      "error": "%s"' "$(json_escape "$error")"
+    fi
+    printf '\n    }'
+  done < "$CHECK_FILE"
+  printf '\n  ],\n'
+  printf '  "build_ready": %s,\n' "$ready"
+  fix_file=$(PATH=/usr/bin:/bin mktemp)
+  fixes_for > "$fix_file"
+  printf '  "fix": ['
+  if [ -s "$fix_file" ]; then
+    printf '\n'
+    first=1
+    while IFS= read -r line; do
+      if [ "$first" = 1 ]; then
+        first=0
+      else
+        printf ',\n'
+      fi
+      printf '    "%s"' "$(json_escape "$line")"
+    done < "$fix_file"
+    printf '\n  '
+  fi
+  printf '],\n'
+  PATH=/usr/bin:/bin rm -f "$fix_file"
+  printf '  "effects": [\n'
+  printf '    "download hash-locked dependencies",\n'
+  printf '    "compile sources",\n'
+  printf '    "create owned empty libraries"\n'
+  printf '  ],\n'
+  printf '  "excluded": [\n'
+  printf '    "Kindle delivery",\n'
+  printf '    "credentials",\n'
+  printf '    "external skills activation",\n'
+  printf '    "session crawl",\n'
+  printf '    "cloud AI",\n'
+  printf '    "publication"\n'
+  printf '  ]\n'
+  printf '}\n'
+  PATH=/usr/bin:/bin rm -f "$CHECK_FILE"
+}
+
+read_marker() {
+  marker=$1
+  marker_schema=$(PATH=/usr/bin:/bin sed -n 's/^  "schema": "\(.*\)",$/\1/p' "$marker" || true)
+  marker_fingerprint=$(PATH=/usr/bin:/bin sed -n 's/^  "fingerprint": "\([0-9a-f]*\)"$/\1/p' "$marker" || true)
+}
+
+owned() {
+  prefix=$1
+  fingerprint=$2
+  OWNED_STATUS=0
+  if [ -L "$prefix" ]; then
+    die 'Installation prefix must not be a symlink'
+  fi
+  if [ -e "$prefix" ]; then
+    marker=$prefix/$MARKER
+    if [ ! -f "$marker" ] || [ -L "$marker" ]; then
+      die 'Refusing an existing unowned prefix; choose a fresh directory'
+    fi
+    read_marker "$marker"
+    if [ "$marker_schema" != 'knowledge-owner/v1' ] || [ "$marker_fingerprint" != "$fingerprint" ]; then
+      OWNED_STATUS=2
+      return 2
+    fi
+    scan_external_symlinks "$prefix"
+  else
+    PATH=/usr/bin:/bin mkdir -p "$prefix"
+    tmp=$(PATH=/usr/bin:/bin mktemp "$prefix/.marker.XXXXXX")
+    printf '{\n  "schema": "knowledge-owner/v1",\n  "fingerprint": "%s"\n}\n' "$fingerprint" > "$tmp"
+    PATH=/usr/bin:/bin mv "$tmp" "$prefix/$MARKER"
+  fi
+}
+
+scan_external_symlinks() {
+  prefix=$1
+  list=$(PATH=/usr/bin:/bin mktemp)
+  PATH=/usr/bin:/bin find "$prefix" -type l -print > "$list" 2>/dev/null || true
+  while IFS= read -r link; do
+    [ -n "$link" ] || continue
+    case $link in
+      "$prefix/runtimes"/*) continue ;;
+    esac
+    if PATH=/usr/bin:/bin readlink -f "$link" >/dev/null 2>&1; then
+      target=$(PATH=/usr/bin:/bin readlink -f "$link")
+    else
+      target=$(readlink "$link")
+    fi
+    case $target in
+      "$prefix"/*) ;;
+      *) die "Unexpected external symlink in owned prefix: $link" ;;
+    esac
+  done < "$list"
+  PATH=/usr/bin:/bin rm -f "$list"
+}
+
+carry_over() {
+  previous=$1
+  prefix=$2
+  if [ -L "$previous" ]; then
+    die '--from must name an existing knowledge installation: '"$previous"
+  fi
+  previous=$(resolve_prefix "$previous") || die '--from must name an existing knowledge installation: '"$1"
+  marker=$previous/$MARKER
+  if [ -L "$previous" ] || [ -L "$marker" ] || [ ! -f "$marker" ]; then
+    die '--from must name an existing knowledge installation: '"$previous"
+  fi
+  read_marker "$marker"
+  if [ "$marker_schema" != 'knowledge-owner/v1' ] || [ -z "$marker_fingerprint" ]; then
+    die '--from must name an existing knowledge installation: '"$previous"
+  fi
+  case $previous/ in
+    "$prefix"/*|"$prefix"/) die '--from and --prefix must not overlap' ;;
+  esac
+  case $prefix/ in
+    "$previous"/*|"$previous"/) die '--from and --prefix must not overlap' ;;
+  esac
+  for rel in knowledge/sources state; do
+    source=$previous/$rel
+    destination=$prefix/$rel
+    cursor=$source
+    while [ "$cursor" != "$previous" ] && [ "$cursor" != / ]; do
+      if [ -L "$cursor" ]; then
+        die "User data must not contain symlinks: $cursor"
+      fi
+      cursor=$(dir_name "$cursor")
+    done
+    cursor=$destination
+    while [ "$cursor" != "$prefix" ] && [ "$cursor" != / ]; do
+      if [ -L "$cursor" ]; then
+        die "User data must not contain symlinks: $cursor"
+      fi
+      cursor=$(dir_name "$cursor")
+    done
+    if [ -d "$source" ] && [ ! -L "$source" ]; then
+      list=$(PATH=/usr/bin:/bin mktemp)
+      PATH=/usr/bin:/bin find "$source" -type l -print > "$list"
+      while IFS= read -r link; do
+        [ -n "$link" ] || continue
+        die "User data must not contain symlinks: $link"
+      done < "$list"
+      PATH=/usr/bin:/bin rm -f "$list"
+    elif [ -e "$source" ]; then
+      die "User data must be a directory: $source"
+    fi
+    if [ -e "$destination" ]; then
+      if [ ! -d "$destination" ] || [ -L "$destination" ]; then
+        die "--from needs empty destination data directories; choose a fresh prefix: $destination"
+      fi
+      if [ -n "$(PATH=/usr/bin:/bin find "$destination" -mindepth 1 -print -quit)" ]; then
+        die "--from needs empty destination data directories; choose a fresh prefix: $destination"
+      fi
+    fi
+  done
+  pending=$prefix/.migration-pending
+  if [ -e "$pending" ]; then
+    die 'User-data migration was interrupted; preserve this prefix and choose a fresh prefix with --from'
+  fi
+  printf '%s\n' "$previous" > "$pending"
+  for rel in knowledge/sources state; do
+    source=$previous/$rel
+    destination=$prefix/$rel
+    if [ -d "$source" ]; then
+      printf 'Carrying over %s\n' "$source"
+      PATH=/usr/bin:/bin mkdir -p "$(dir_name "$destination")"
+      PATH=/usr/bin:/bin cp -pR "$source" "$destination"
+    fi
+  done
+  PATH=/usr/bin:/bin rm -f "$pending"
+}
+
+activation_text() {
+  qbin=$(shell_quote "$1/bin")
+  qhome=$(shell_quote "$1")
+  # $PATH and the default index mode are literal text in the generated env.sh.
+  # shellcheck disable=SC2016
+  printf 'export PATH=%s:"$PATH"\nexport AGENT_KNOWLEDGE_HOME=%s\nexport SOURCE_INSIGHTS_INDEX_MODE="${SOURCE_INSIGHTS_INDEX_MODE:-keyword}"\n' "$qbin" "$qhome"
+}
+
+check_activation() {
+  path=$1/env.sh
+  if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+    die 'Missing env.sh; rerun setup with the same source and prefix to restore activation'
+  fi
+  if [ -L "$path" ] || [ ! -f "$path" ]; then
+    die 'Installed env.sh changed; preserve your changes and choose a fresh prefix'
+  fi
+  expected=$(activation_text "$1")
+  actual=$(PATH=/usr/bin:/bin cat "$path")
+  if [ "$actual" != "$expected" ]; then
+    die 'Installed env.sh changed; preserve your changes and choose a fresh prefix'
+  fi
+}
+
+ensure_activation() {
+  path=$1/env.sh
+  if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+    tmp=$(PATH=/usr/bin:/bin mktemp "$1/.env.XXXXXX")
+    activation_text "$1" > "$tmp"
+    PATH=/usr/bin:/bin mv "$tmp" "$path"
+  fi
+  check_activation "$1"
+}
+
+next_steps() {
+  printf 'Activate explicitly: . %s\n' "$(shell_quote "$1/env.sh")"
+  printf "Then try: skill-search search 'debug a regression' --limit 5\n"
+}
+
+quote_command() {
+  quoted=
+  for arg in "$@"; do
+    part=$(shell_quote "$arg")
+    if [ -z "$quoted" ]; then
+      quoted=$part
+    else
+      quoted="$quoted $part"
+    fi
+  done
+  printf '%s' "$quoted"
+}
+
+record_cause() {
+  flat=$(printf '%s' "$1" | LC_ALL=C PATH=/usr/bin:/bin tr -s '[:space:]' ' ')
+  flat=${flat# }
+  flat=${flat% }
+  [ -n "$flat" ] || return 0
+  if [ -f "$cause_file" ] && PATH=/usr/bin:/bin grep -F -x -q -- "$flat" "$cause_file"; then
+    return 0
+  fi
+  count=0
+  if [ -f "$cause_file" ]; then
+    count=$(PATH=/usr/bin:/bin wc -l < "$cause_file" | LC_ALL=C PATH=/usr/bin:/bin awk '{print $1}')
+  fi
+  if [ "$count" -ge 8 ]; then
+    return 0
+  fi
+  printf '%s\n' "$flat" >> "$cause_file"
+}
+
+run_stream() {
+  printf '+ %s\n' "$(quote_command "$@")"
+  status_file=$(PATH=/usr/bin:/bin mktemp)
+  cause_file=$(PATH=/usr/bin:/bin mktemp)
+  : > "$cause_file"
+  {
+    set +e
+    "$@" 2>&1
+    status=$?
+    set -e
+    printf '%s\n' "$status" > "$status_file"
+  } | while IFS= read -r line || [ -n "$line" ]; do
+    printf '%s\n' "$line"
+    low=$(printf '%s' "$line" | LC_ALL=C PATH=/usr/bin:/bin tr '[:upper:]' '[:lower:]')
+    case $low in
+      *'no space left on device'*|*'enospc'*|*'disk quota exceeded'*|*'could not resolve host'*|*'temporary failure in name resolution'*|*'network is unreachable'*|*'connection reset by peer'*|*'failed to download'*|*'error sending request for url'*|*'ssl connect error'*|*'operation timed out'*)
+        record_cause "$line"
+        ;;
+    esac
+  done
+  status=$(PATH=/usr/bin:/bin cat "$status_file")
+  if [ "$status" != 0 ]; then
+    detail=$(printf 'Command %s returned exit status %s' "$(quote_command "$@")" "$status")
+    while IFS= read -r cause; do
+      [ -n "$cause" ] || continue
+      detail="$detail
+  cause: $cause"
+    done < "$cause_file"
+    PATH=/usr/bin:/bin rm -f "$status_file" "$cause_file"
+    die "$detail"
+  fi
+  PATH=/usr/bin:/bin rm -f "$status_file" "$cause_file"
+}
+
+run_quiet() {
+  printf '+ %s\n' "$(quote_command "$@")"
+  set +e
+  "$@" >/dev/null 2>&1
+  status=$?
+  set -e
+  if [ "$status" -ne 0 ]; then
+    die "Command $(quote_command "$@") returned exit status $status"
+  fi
+}
+
+with_install_env() {
+  prefix=$1
+  shift
+  AGENT_KNOWLEDGE_HOME=$prefix \
+    SOURCE_INSIGHTS_LIBRARY=$prefix/knowledge/sources \
+    SOURCE_INSIGHTS_INDEX_MODE=keyword \
+    SESSION_SEARCH_DB=$prefix/state/session-search.sqlite \
+    BKD_HOME=$prefix/state/bookmarks \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=$prefix/lib \
+    PATH=$prefix/bin:$PATH \
+    "$@"
+}
+
+stage_sources() {
+  prefix=$1
+  list=$(PATH=/usr/bin:/bin mktemp)
+  list_source_files "$list"
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    case $rel in
+      plugins/knowledge/*)
+        dest=$prefix/build/source/${rel#plugins/knowledge/}
+        ;;
+      plugins/10x-swe/skills/*)
+        dest=$prefix/engineering-skills/${rel#plugins/10x-swe/skills/}
+        ;;
+      *) continue ;;
+    esac
+    PATH=/usr/bin:/bin mkdir -p "$(dir_name "$dest")"
+    PATH=/usr/bin:/bin cp -p "$ROOT/$rel" "$dest"
+  done < "$list"
+  PATH=/usr/bin:/bin rm -f "$list"
+  if [ -d "$prefix/build/source/skills" ]; then
+    PATH=/usr/bin:/bin mkdir -p "$prefix/skills"
+    PATH=/usr/bin:/bin cp -pR "$prefix/build/source/skills/." "$prefix/skills/"
+  fi
+  if [ -d "$prefix/build/source/lib" ]; then
+    PATH=/usr/bin:/bin mkdir -p "$prefix/lib"
+    PATH=/usr/bin:/bin cp -pR "$prefix/build/source/lib/." "$prefix/lib/"
+  fi
+}
+
+release_build_scratch() {
+  PATH=/usr/bin:/bin rm -rf "$1/build"
+}
+
+link_commands() {
+  prefix=$1
+  for command in $COMMANDS; do
+    target=$prefix/bin/$command
+    if [ -e "$target" ] || [ -L "$target" ]; then
+      PATH=/usr/bin:/bin rm -f "$target"
+    fi
+    if [ "$command" = session-search ]; then
+      PATH=/usr/bin:/bin ln -s ../libexec/native/session-search "$target"
+    else
+      PATH=/usr/bin:/bin ln -s ../libexec/launch.py "$target"
+    fi
+  done
+}
+
+apply_graph() {
+  prefix=$1
+  py=$prefix/runtimes/source-insights/bin/python
+  helper=$prefix/skills/skill-graph/scripts/graph.py
+  roots=$prefix/knowledge/skills/roots.json
+  PATH=/usr/bin:/bin mkdir -p "$(dir_name "$roots")"
+  PATH=/usr/bin:/bin cat > "$roots" <<EOF
+{
+  "roots": [
+    {
+      "id": "global",
+      "path": "$prefix/skills"
+    },
+    {
+      "id": "plugin/10x-swe",
+      "path": "$prefix/engineering-skills"
+    }
+  ]
+}
+EOF
+  stage=$(PATH=/usr/bin:/bin mktemp -d "${TMPDIR:-/tmp}/knowledge-backlinks-XXXXXX")
+  proposal=$stage/proposal
+  with_install_env "$prefix" run_stream "$py" "$helper" annotate --roots "$roots" --output "$proposal"
+  list=$(PATH=/usr/bin:/bin mktemp)
+  PATH=/usr/bin:/bin find "$proposal" -type f -name SKILL.md -print > "$list"
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    rel=${path#"$proposal"/}
+    case $rel in
+      global/*)
+        dest=$prefix/skills/${rel#global/}
+        ;;
+      plugin/*/*)
+        rest=${rel#plugin/}
+        rest=${rest#*/}
+        dest=$prefix/engineering-skills/$rest
+        ;;
+      *) continue ;;
+    esac
+    PATH=/usr/bin:/bin mkdir -p "$(dir_name "$dest")"
+    PATH=/usr/bin:/bin cp -p "$path" "$dest"
+  done < "$list"
+  PATH=/usr/bin:/bin rm -f "$list"
+  PATH=/usr/bin:/bin rm -rf "$stage"
+  with_install_env "$prefix" run_stream "$prefix/bin/skill-search" refresh --lexical
+}
+
+write_receipt() {
+  prefix=$1
+  fingerprint=$2
+  list=$(PATH=/usr/bin:/bin mktemp)
+  : > "$list"
+  for base in libexec lib skills engineering-skills; do
+    if [ -d "$prefix/$base" ]; then
+      PATH=/usr/bin:/bin find "$prefix/$base" -type f ! -path '*/__pycache__/*' -print
+    fi
+  done | LC_ALL=C PATH=/usr/bin:/bin sort > "$list"
+  pairs=$(PATH=/usr/bin:/bin mktemp)
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    rel=${path#"$prefix"/}
+    printf '%s\t%s\n' "$rel" "$(hash_file "$path")"
+  done < "$list" > "$pairs"
+  if [ -f "$prefix/env.sh" ]; then
+    printf '%s\t%s\n' env.sh "$(hash_file "$prefix/env.sh")" >> "$pairs"
+  fi
+  tmp=$(PATH=/usr/bin:/bin mktemp "$prefix/.receipt.XXXXXX")
+  {
+    printf '{\n'
+    printf '  "schema": "knowledge-installation/v1",\n'
+    printf '  "fingerprint": "%s",\n' "$fingerprint"
+    printf '  "profile": "keyword",\n'
+    printf '  "artifacts": {\n'
+    first=1
+    while IFS="$(printf '\t')" read -r rel digest; do
+      [ -n "$rel" ] || continue
+      if [ "$first" = 1 ]; then
+        first=0
+      else
+        printf ',\n'
+      fi
+      printf '    "%s": "%s"' "$(json_escape "$rel")" "$(json_escape "$digest")"
+    done < "$pairs"
+    printf '\n  },\n'
+    printf '  "created": %s\n' "$(PATH=/usr/bin:/bin date +%s)"
+    printf '}\n'
+  } > "$tmp"
+  PATH=/usr/bin:/bin mv "$tmp" "$prefix/installation.json"
+  PATH=/usr/bin:/bin rm -f "$list" "$pairs"
+}
+
+doctor() {
+  prefix=$1
+  printf 'Checking installation at %s\n' "$prefix" >&2
+  receipt=$prefix/installation.json
+  if [ ! -f "$receipt" ]; then
+    die "No completed installation receipt at $prefix; rerun setup after fixing its error: ./knowledge setup --prefix $(shell_quote "$prefix") (set AGENT_KNOWLEDGE_HOME or pass --prefix if you installed elsewhere)"
+  fi
+  py=$(command -v python3 2>/dev/null || true)
+  if [ -z "$py" ]; then
+    die 'Python 3.11+ is required'
+  fi
+  arts=$(PATH=/usr/bin:/bin mktemp)
+  "$py" - "$receipt" > "$arts" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1]))
+for rel, digest in data.get("artifacts", {}).items():
+    sys.stdout.write(rel + "\t" + digest + "\n")
+PY
+  errors=
+  count=0
+  while IFS="$(printf '\t')" read -r rel digest; do
+    [ -n "$rel" ] || continue
+    path=$prefix/$rel
+    if [ ! -f "$path" ] || [ "$(hash_file "$path")" != "$digest" ]; then
+      if [ "$count" -lt 10 ]; then
+        if [ -z "$errors" ]; then
+          errors=$rel
+        else
+          errors="$errors, $rel"
+        fi
+      fi
+      count=$((count + 1))
+      only_env=$rel
+    fi
+  done < "$arts"
+  PATH=/usr/bin:/bin rm -f "$arts"
+  if [ "$count" -gt 0 ]; then
+    if [ "$count" -eq 1 ] && [ "$only_env" = env.sh ] && [ ! -e "$prefix/env.sh" ]; then
+      check_activation "$prefix"
+    fi
+    die "Installed artifacts changed: $errors"
+  fi
+  check_activation "$prefix"
+  for command in $COMMANDS; do
+    target=$prefix/bin/$command
+    if [ "$command" = session-search ]; then
+      expected=$prefix/libexec/native/session-search
+    else
+      expected=$prefix/libexec/launch.py
+    fi
+    if [ ! -L "$target" ]; then
+      die "Installed command launcher changed: $command"
+    fi
+    if PATH=/usr/bin:/bin readlink -f "$target" >/dev/null 2>&1; then
+      actual=$(PATH=/usr/bin:/bin readlink -f "$target")
+      want=$(PATH=/usr/bin:/bin readlink -f "$expected")
+    else
+      actual=$(PATH=/usr/bin:/bin python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$target")
+      want=$(PATH=/usr/bin:/bin python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$expected")
+    fi
+    if [ "$actual" != "$want" ]; then
+      die "Installed command launcher changed: $command"
+    fi
+  done
+  for command in $COMMANDS; do
+    with_install_env "$prefix" run_quiet "$prefix/bin/$command" --help
+  done
+  with_install_env "$prefix" run_quiet "$prefix/bin/skill-search" export
+  printf '{\n  "status": "passed",\n  "profile": "keyword",\n  "prefix": "%s",\n  "optional": {\n' "$(json_escape "$prefix")"
+  first=1
+  for spec in \
+    'pandoc|EPUB conversion' \
+    'dagu|optional workflow runner; use 2.19.2' \
+    'llama-embedding|optional local neural ranking; pinned model also required' \
+    'ffmpeg|media' \
+    'yt-dlp|media'
+  do
+    name=${spec%%|*}
+    purpose=${spec#*|}
+    if [ "$first" = 1 ]; then
+      first=0
+    else
+      printf ',\n'
+    fi
+    found=false
+    if command -v "$name" >/dev/null 2>&1; then
+      found=true
+    fi
+    printf '    "%s": {\n      "executable_found": %s,\n      "required_for": "%s",\n      "capability_verified": false\n    }' \
+      "$name" "$found" "$(json_escape "$purpose")"
+  done
+  printf '\n  },\n  "excluded": [\n    "Kindle delivery",\n    "credentials",\n    "source-session indexing"\n  ]\n}\n'
+}
+
+build_tools() {
+  prefix=$1
+  staged=$prefix/build/source
+  py=$prefix/runtimes/source-insights/bin/python
+  if [ ! -x "$py" ]; then
+    run_stream python3 -m venv "$prefix/runtimes/source-insights"
+  fi
+  run_stream "$py" -m pip install --require-hashes -r "$staged/requirements.lock"
+  if [ ! -e "$prefix/runtimes/skill-graph" ]; then
+    PATH=/usr/bin:/bin ln -s source-insights "$prefix/runtimes/skill-graph"
+  fi
+  for pair in \
+    'skill-search|skills/skill-graph/scripts/search-core' \
+    'bkd|tools/bkd' \
+    'distiller|tools/distiller' \
+    'session-search|tools/session-search'
+  do
+    command=${pair%%|*}
+    source=$staged/${pair#*|}
+    with_install_env "$prefix" run_stream cargo build --locked --release --bin "$command" \
+      --manifest-path "$source/Cargo.toml" --target-dir "$prefix/build/rust"
+    PATH=/usr/bin:/bin cp -p "$prefix/build/rust/release/$command" "$prefix/libexec/native/$command"
+  done
+  oldpwd=$PWD
+  CDPATH='' cd -- "$staged/tools/insights"
+  with_install_env "$prefix" run_stream go build -trimpath -o "$prefix/libexec/native/insights" .
+  CDPATH='' cd -- "$oldpwd"
+  PATH=/usr/bin:/bin cp -p "$staged/launch.py" "$prefix/libexec/launch.py"
+  PATH=/usr/bin:/bin cp -p "$staged/intake.py" "$prefix/libexec/intake.py"
+  PATH=/usr/bin:/bin chmod 755 "$prefix/libexec/launch.py"
+  link_commands "$prefix"
+  apply_graph "$prefix"
+  with_install_env "$prefix" run_stream "$prefix/bin/source-insights" reindex --rebuild
+}
+
+setup() {
+  prefix=$1
+  previous=${2:-}
+  case $prefix/ in
+    "$ROOT"/*|"$ROOT"/) die 'Keep installation state outside the source repository' ;;
+  esac
+  case $(PATH=/usr/bin:/bin uname -s) in
+    Darwin|Linux) ;;
+    *) die 'This source package targets macOS and Linux/WSL; native Windows is unsupported' ;;
+  esac
+  fingerprint=$(source_fingerprint)
+  if ! owned "$prefix" "$fingerprint"; then
+    if [ "$OWNED_STATUS" = 2 ]; then
+      die "$prefix was built from a different source revision. Keep it, install the new revision into a fresh prefix and carry your data over:
+  ./knowledge setup --prefix NEW_PREFIX --from $(shell_quote "$prefix")"
+    fi
+    exit 1
+  fi
+  LOCKDIR=$prefix/.setup.lock.d
+  if ! PATH=/usr/bin:/bin mkdir "$LOCKDIR" 2>/dev/null; then
+    LOCKDIR=
+    die '[Errno 11] Resource temporarily unavailable'
+  fi
+  if [ -e "$prefix/.migration-pending" ]; then
+    die 'User-data migration was interrupted; preserve this prefix and choose a fresh prefix with --from'
+  fi
+  if [ -f "$prefix/installation.json" ]; then
+    if [ -n "$previous" ]; then
+      die "--from only applies to a fresh prefix; $prefix is already installed"
+    fi
+    ensure_activation "$prefix"
+    doctor "$prefix"
+    next_steps "$prefix"
+    return 0
+  fi
+  collect_checks
+  failed=
+  while IFS="$(printf '\t')" read -r _name _path passed _output error; do
+    [ "$passed" = false ] || continue
+    if [ -z "$failed" ]; then
+      failed=$error
+    else
+      failed="$failed; $error"
+    fi
+  done < "$CHECK_FILE"
+  if [ -n "$failed" ]; then
+    fix_text=
+    while IFS= read -r line; do
+      fix_text="$fix_text
+  fix: $line"
+    done <<EOF
+$(fixes_for)
+EOF
+    PATH=/usr/bin:/bin rm -f "$CHECK_FILE"
+    die "$failed$fix_text"
+  fi
+  PATH=/usr/bin:/bin rm -f "$CHECK_FILE"
+  require_disk_space "$prefix"
+  if [ -n "$previous" ]; then
+    if ! carry_over "$previous" "$prefix"; then
+      die 'User-data migration was interrupted; preserve this prefix and choose a fresh prefix with --from'
+    fi
+  fi
+  for folder in bin libexec/native knowledge/sources/entries state runtimes build build/tmp; do
+    PATH=/usr/bin:/bin mkdir -p "$prefix/$folder"
+  done
+  if [ -n "${TMPDIR+x}" ]; then
+    SAVED_TMP_PRESENT=1
+    SAVED_TMP=$TMPDIR
+  else
+    SAVED_TMP_PRESENT=0
+  fi
+  TMPDIR=$prefix/build/tmp
+  export TMPDIR
+  TMP_SWITCHED=1
+  before=$(PATH=/usr/bin:/bin mktemp)
+  list_source_files "$before.list"
+  write_canonical_manifest "$before.list" "$before"
+  stage_sources "$prefix"
+  build_tools "$prefix"
+  after=$(PATH=/usr/bin:/bin mktemp)
+  list_source_files "$after.list"
+  write_canonical_manifest "$after.list" "$after"
+  if ! PATH=/usr/bin:/bin cmp -s "$before" "$after"; then
+    PATH=/usr/bin:/bin rm -f "$before" "$before.list" "$after" "$after.list"
+    die 'Source changed during setup; installation not certified'
+  fi
+  PATH=/usr/bin:/bin rm -f "$before" "$before.list" "$after" "$after.list"
+  ensure_activation "$prefix"
+  write_receipt "$prefix" "$fingerprint"
+  if ! doctor "$prefix"; then
+    PATH=/usr/bin:/bin rm -f "$prefix/installation.json"
+    die 'Installed artifacts changed'
+  fi
+  release_build_scratch "$prefix"
+  next_steps "$prefix"
+  restore_tmp
+}
+
+main() {
+  if [ $# -lt 1 ]; then
+    die 'usage: knowledge plan|setup|doctor [--prefix DIR] [--from DIR]'
+  fi
+  command=$1
+  shift
+  prefix=
+  previous=
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --prefix)
+        prefix=${2:-}
+        shift 2
+        ;;
+      --from)
+        previous=${2:-}
+        shift 2
+        ;;
+      *)
+        die "unknown argument: $1"
+        ;;
+    esac
+  done
+  if [ -z "$prefix" ]; then
+    if [ -n "${AGENT_KNOWLEDGE_HOME:-}" ]; then
+      prefix=$AGENT_KNOWLEDGE_HOME
+    elif [ -n "${XDG_DATA_HOME:-}" ]; then
+      prefix=$XDG_DATA_HOME/10x-swe/knowledge
+    else
+      prefix=$HOME/.local/share/10x-swe/knowledge
+    fi
+  fi
+  prefix=$(resolve_prefix "$prefix")
+  case $command in
+    plan) emit_plan "$prefix" ;;
+    setup) setup "$prefix" "$previous" ;;
+    doctor) doctor "$prefix" ;;
+    *) die 'usage: knowledge plan|setup|doctor [--prefix DIR] [--from DIR]' ;;
+  esac
+}
+
+if [ "${KNOWLEDGE_BOOTSTRAP_LIBRARY:-}" != 1 ]; then
+  main "$@"
+fi

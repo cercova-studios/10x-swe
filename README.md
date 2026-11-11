@@ -267,7 +267,7 @@ registering the marketplace above:
 claude plugin install knowledge@10x-swe
 ```
 
-To build the tools, use macOS or Linux/WSL with Python 3.11+, Rust 1.88+,
+`./knowledge` is a POSIX shell script. To build the tools, use macOS or Linux/WSL with Python 3.11+, Rust 1.88+,
 Go 1.22+, a C compiler and network access. Linux also needs OpenSSL
 headers and pkg-config. The [CI toolchain pins](.github/workflows/portable.yml)
 are a reproducible starting point. Rust 1.88 is the declared minimum in current
