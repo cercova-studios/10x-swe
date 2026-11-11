@@ -8,6 +8,7 @@ metadata:
   skill-graph-id: plugin/10x-swe/chrome-devtools
   skill-graph-uses: ''
   skill-graph-used-by: ''
+disable-model-invocation: true
 ---
 
 # Chrome DevTools Agent Skill

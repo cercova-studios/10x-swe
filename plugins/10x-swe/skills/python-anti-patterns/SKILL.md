@@ -1,6 +1,7 @@
 ---
 name: python-anti-patterns
 description: Common Python anti-patterns to avoid. Use as a checklist when reviewing code, before finalizing implementations, or when debugging issues that might stem from known bad practices.
+disable-model-invocation: true
 ---
 
 # Python Anti-Patterns Checklist

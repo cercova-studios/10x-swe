@@ -8,6 +8,7 @@ metadata:
   skill-graph-id: plugin/10x-swe/architecture-decision-records
   skill-graph-uses: ''
   skill-graph-used-by: ''
+disable-model-invocation: true
 ---
 
 # Architecture Decision Records

@@ -426,7 +426,10 @@ approval. Dagu can optionally coordinate the same shell workflow.
 skill frontmatter are the source of truth. After adding or renaming a skill, agent or
 command, link it in the [plugin catalog](plugins/10x-swe/README.md#maintaining-the-catalog)
 and run `python3 scripts/hosts.py sync`; it regenerates the Codex, pi and OpenCode npm adapters and
-the skill-requirements table. `python3 scripts/validate.py` and
+the skill-requirements table. A skill with `disable-model-invocation: true` stays out of
+automatic selection on hosts that honor that field. The sync copies it to OpenCode
+`autoinvoke` and writes Codex `agents/openai.yaml` (`allow_implicit_invocation: false`)
+when the skill has no hand-written policy file. `python3 scripts/validate.py` and
 `tests/test_plugin_metadata.py` run the same checks as CI. Bump the plugin
 `version` with every user-visible change: Claude Code, Codex and Grok only update
 installed plugins when it changes, and the publish workflow skips versions that are

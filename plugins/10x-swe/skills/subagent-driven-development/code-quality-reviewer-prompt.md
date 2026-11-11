@@ -7,8 +7,8 @@ Use this template when dispatching a code quality reviewer subagent.
 **Only dispatch after spec compliance review passes.**
 
 ```
-Task tool (superpowers:code-reviewer):
-  Use template at requesting-code-review/code-reviewer.md
+Dispatch the code-reviewer agent at ../../agents/code-reviewer.md.
+Follow that agent's instructions.
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]
@@ -17,4 +17,4 @@ Task tool (superpowers:code-reviewer):
   DESCRIPTION: [task summary]
 ```
 
-**Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment
+**Code reviewer returns:** Actionable findings, verification gaps, and assumptions, as that agent specifies.
