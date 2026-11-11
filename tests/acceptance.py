@@ -34,7 +34,7 @@ routes=json.loads(run('skill-search','path','capture reusable session learning')
 assert routes['method']=='lexical_seed_plus_typed_graph' and routes['candidate_paths'],routes
 run('skill-search','path','capture reusable session learning','--semantic',ok=False)
 runtime_only=dict(env,PATH=str(PYTHON.parent))
-repeat=subprocess.run([str(PYTHON),str(Path(__file__).resolve().parents[1]/'plugins/knowledge/bootstrap.py'),
+repeat=subprocess.run(['/bin/sh', str(Path(__file__).resolve().parents[1]/'plugins/knowledge/bootstrap'),
                        'setup','--prefix',str(PREFIX)],env=runtime_only,capture_output=True,timeout=90)
 assert repeat.returncode==0,(repeat.stdout[-1000:],repeat.stderr[-2000:])
 

@@ -267,20 +267,35 @@ registering the marketplace above:
 claude plugin install knowledge@10x-swe
 ```
 
-To build the tools, use macOS or Linux/WSL with Python 3.11+, Rust 1.88+,
+`./knowledge` is a POSIX shell script. `plan` and `doctor` do not run Python. Setup creates the source-insights runtime with `python3 -m venv` only at that step, so use macOS or Linux/WSL with Python 3.11+, Rust 1.88+,
 Go 1.22+, a C compiler and network access. Linux also needs OpenSSL
 headers and pkg-config. The [CI toolchain pins](.github/workflows/portable.yml)
 are a reproducible starting point. Rust 1.88 is the declared minimum in current
 locked dependencies; use the CI-pinned toolchain for the tested version. Future
 dependency updates may raise that minimum. See [platform requirements](https://github.com/cercova-studios/10x-swe/wiki/Platforms).
-When a build check fails, `plan` and `setup` print a one-line `fix`:
+When a build check fails, `plan` and `setup` print one `fix` line. These are the lines:
 
-| OS | Fix |
-|---|---|
-| Debian/Ubuntu | `sudo apt-get update && sudo apt-get install -y build-essential pkgconf libssl-dev golang` |
-| Fedora | `sudo dnf install -y gcc pkgconf-pkg-config openssl-devel golang` |
-| macOS | `xcode-select --install; brew install pkg-config openssl go rustup` |
-| Rust older than 1.88 (distro packages often are) | install [rustup](https://rustup.rs), then `rustup update stable` |
+Debian or Ubuntu, when a compiler is missing:
+
+```sh
+sudo apt-get update && sudo apt-get install -y build-essential pkgconf libssl-dev golang && curl https://sh.rustup.rs -sSf | sh
+```
+
+Fedora, when a compiler is missing:
+
+```sh
+sudo dnf install -y gcc pkgconf-pkg-config openssl-devel golang && curl https://sh.rustup.rs -sSf | sh
+```
+
+macOS, when a compiler is missing:
+
+```sh
+xcode-select --install; brew install pkg-config openssl go rustup && rustup-init
+```
+
+Rust older than 1.88 (distro packages often are): install [rustup](https://rustup.rs), then `rustup update stable`.
+
+Go older than 1.22: install Go 1.22+ from [go.dev/dl](https://go.dev/dl/) or your package manager.
 
 ```sh
 git clone https://github.com/cercova-studios/10x-swe.git
@@ -294,7 +309,10 @@ command -v skill-search
 
 `plan` reports compiler identity/version, C compilation and Linux OpenSSL checks
 alongside the planned effects. It does not download dependencies or prove the full
-build will succeed. Resolve any failed `build_checks` before setup. `doctor`
+build will succeed. Resolve any failed `build_checks` before setup. Setup needs at
+least 3 GiB free on the prefix and puts compiler temp files in that prefix, so a
+small `/tmp` does not fill up first. A failed compile still prints its log; the
+`ERROR` line repeats `cause:` for disk-full and network failures. `doctor`
 verifies a completed installation. Setup builds tools and indexes bundled skills.
 Skill discovery and source-insights use local keyword indexes. For bookmark search
 without a model, pass `--lexical-only` to `bkd search`; its native default can require
@@ -310,6 +328,8 @@ does not edit shell profiles or configure your agent harness.
 | Symptom | Next step |
 |---|---|
 | Missing build prerequisite or dependency build failure | Run the printed `fix:` command (or install the stated prerequisite), then rerun setup against the same prefix and unchanged checkout |
+| `Not enough free disk space` or `cause: ... No space left on device` | Free at least 3 GiB on the prefix and rerun the same setup |
+| `cause:` names a host lookup, download, or timeout | Restore network access and rerun the same setup |
 | No completed installation receipt | Check the path doctor printed; point `--prefix` or `AGENT_KNOWLEDGE_HOME` at the prefix you set up, or fix the original setup error and rerun setup |
 | `skill-search` is not found | Source the printed `env.sh` in the current shell, then check `command -v skill-search` |
 | `env.sh` is missing | Rerun setup with the same source and prefix; it restores activation and prints the next step |

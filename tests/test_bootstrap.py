@@ -1,373 +1,538 @@
-"""Installation ownership, failed readiness and concurrency boundaries."""
-import importlib.util
-import contextlib
+"""Installation ownership, failed readiness and concurrency boundaries.
+
+The bootstrap entry point is POSIX sh. These tests drive that script instead of
+importing the old Python module.
+"""
 import hashlib
-import io
 import json
 import os
-import shutil
-import sqlite3
 from pathlib import Path
+import sqlite3
 import subprocess
-import sys
 import tempfile
 import unittest
-from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parents[1]
-def load(name,path):
-    spec=importlib.util.spec_from_file_location(name,path)
-    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-    return module
-bootstrap=load('bootstrap',REPO/'plugins/knowledge/bootstrap.py')
+BOOT = REPO / 'plugins/knowledge/bootstrap'
+COMMANDS = ('skill-search', 'bkd', 'distiller', 'insights', 'source-insights', 'session-search', 'knowledge-intake')
+
+
+def run_boot(args, env=None, **kwargs):
+    merged = os.environ.copy()
+    if env:
+        merged.update(env)
+    return subprocess.run(['/bin/sh', str(BOOT), *args], capture_output=True, text=True, env=merged, **kwargs)
 
 
 class BootstrapTests(unittest.TestCase):
     def setUp(self):
-        # Direct helper calls use the same canonical prefix as the CLI (macOS /var is an alias).
-        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
-    def tearDown(self): self.temp.cleanup()
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name).resolve()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
     def test_plan_has_no_writes(self):
-        target=self.root/'absent'
-        p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan','--prefix',str(target)],capture_output=True)
-        self.assertEqual(p.returncode,0,p.stderr);self.assertFalse(target.exists())
-        self.assertIn('Kindle delivery',json.loads(p.stdout)['excluded'])
+        target = self.root / 'absent'
+        result = run_boot(['plan', '--prefix', str(target)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(target.exists())
+        self.assertIn('Kindle delivery', json.loads(result.stdout)['excluded'])
+
     def test_plan_reports_missing_prerequisites_without_writes(self):
         target = self.root / 'absent'
-        result = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'),
-                                 'plan', '--prefix', str(target)],
-                                env=dict(os.environ, PATH=str(self.root / 'no-tools')),
-                                capture_output=True, text=True)
+        result = run_boot(['plan', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
         self.assertEqual(result.returncode, 0, result.stderr)
         data = json.loads(result.stdout)
         self.assertFalse(data['build_ready'])
-        self.assertTrue(any(item['command'] == 'cargo' and not item['passed']
-                            for item in data['build_checks']))
+        self.assertTrue(any(item['command'] == 'cargo' and not item['passed'] for item in data['build_checks']))
         self.assertFalse(target.exists())
 
     def test_version_probes_reject_wrong_identity_and_old_versions(self):
-        for output in ['unrelated utility 4.0', 'go version go1.21.9 linux/amd64']:
-            with self.subTest(output=output), \
-                    patch.object(bootstrap.shutil, 'which', return_value='/fixture/go'), \
-                    patch.object(bootstrap.subprocess, 'run', return_value=subprocess.CompletedProcess(
-                        [], 0, stdout=output, stderr='')):
-                check = bootstrap.version_check('go', ['version'], r'^go version go(\d+)\.(\d+)', (1, 22))
-                self.assertFalse(check['passed'])
-                self.assertIn('Go 1.22+', check['error'])
+        tools = self.root / 'tools'
+        tools.mkdir()
+        (tools / 'go').write_text('#!/bin/sh\necho "unrelated utility 4.0"\n')
+        (tools / 'go').chmod(0o755)
+        for name in ('cargo', 'rustc', 'cc', 'pkg-config', 'python3'):
+            path = tools / name
+            path.write_text('#!/bin/sh\nexec /usr/bin/python3 "$@"\n' if name == 'python3' else '#!/bin/sh\nexit 0\n')
+            path.chmod(0o755)
+        (tools / 'cargo').write_text('#!/bin/sh\necho "cargo 1.99.0"\n')
+        (tools / 'rustc').write_text('#!/bin/sh\necho "rustc 1.99.0"\n')
+        (tools / 'cc').write_text('#!/bin/sh\nexit 0\n')
+        (tools / 'pkg-config').write_text('#!/bin/sh\necho 3.0.0\n')
+        (tools / 'go').chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'p')], env={'PATH': str(tools)})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        checks = {item['command']: item for item in json.loads(result.stdout)['build_checks']}
+        self.assertFalse(checks['go']['passed'])
+        self.assertIn('Go 1.22+', checks['go']['error'])
+        (tools / 'go').write_text('#!/bin/sh\necho "go version go1.21.9 linux/amd64"\n')
+        (tools / 'go').chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'p2')], env={'PATH': str(tools)})
+        checks = {item['command']: item for item in json.loads(result.stdout)['build_checks']}
+        self.assertFalse(checks['go']['passed'])
+        self.assertIn('Go 1.22+', checks['go']['error'])
 
     def test_version_probes_accept_supported_versions_and_report_timeout(self):
-        with patch.object(bootstrap.shutil, 'which', return_value='/fixture/go'):
-            with patch.object(bootstrap.subprocess, 'run', return_value=subprocess.CompletedProcess(
-                    [], 0, stdout='go version go1.27.2 linux/amd64', stderr='')):
-                check = bootstrap.version_check('go', ['version'], r'^go version go(\d+)\.(\d+)', (1, 22))
-                self.assertTrue(check['passed'])
-                self.assertEqual(check['path'], '/fixture/go')
-            with patch.object(bootstrap.subprocess, 'run', side_effect=subprocess.TimeoutExpired('go', 10)):
-                check = bootstrap.version_check('go', ['version'], r'^go version go(\d+)\.(\d+)', (1, 22))
-                self.assertFalse(check['passed'])
-                self.assertIn('timed out', check['error'])
+        tools = self.root / 'tools'
+        tools.mkdir()
+        for name, body in {
+            'go': '#!/bin/sh\necho "go version go1.27.2 linux/amd64"\n',
+            'cargo': '#!/bin/sh\necho "cargo 1.99.0"\n',
+            'rustc': '#!/bin/sh\necho "rustc 1.99.0"\n',
+            'cc': '#!/bin/sh\nexit 0\n',
+            'pkg-config': '#!/bin/sh\necho 3.0.0\n',
+            'python3': '#!/bin/sh\nexec /usr/bin/python3 "$@"\n',
+        }.items():
+            path = tools / name
+            path.write_text(body)
+            path.chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'p')], env={'PATH': str(tools)})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        checks = {item['command']: item for item in json.loads(result.stdout)['build_checks']}
+        self.assertTrue(checks['go']['passed'])
+        self.assertEqual(checks['go']['path'], str(tools / 'go'))
+        (tools / 'go').write_text('#!/bin/sh\n/bin/sleep 30\n')
+        (tools / 'go').chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'slow')], env={'PATH': str(tools)})
+        checks = {item['command']: item for item in json.loads(result.stdout)['build_checks']}
+        self.assertFalse(checks['go']['passed'])
+        self.assertIn('timed out', checks['go']['error'])
 
     def test_rust_preflight_uses_locked_dependency_minimum(self):
-        def probe(argv, **kwargs):
-            output = {'cargo': 'cargo 1.87.0', 'rustc': 'rustc 1.87.0',
-                      'go': 'go version go1.22.0 linux/amd64', 'cc': '',
-                      'pkg-config': '3.0.0'}[Path(argv[0]).name]
-            return subprocess.CompletedProcess(argv, 0, stdout=output, stderr='')
-        with patch.object(bootstrap.shutil, 'which', side_effect=lambda name: '/tools/' + name), \
-                patch.object(bootstrap.subprocess, 'run', side_effect=probe):
-            checks = {item['command']: item for item in bootstrap.build_checks()}
+        tools = self.root / 'tools'
+        tools.mkdir()
+        for name, body in {
+            'cargo': '#!/bin/sh\necho "cargo 1.87.0"\n',
+            'rustc': '#!/bin/sh\necho "rustc 1.87.0"\n',
+            'go': '#!/bin/sh\necho "go version go1.22.0 linux/amd64"\n',
+            'cc': '#!/bin/sh\nexit 0\n',
+            'pkg-config': '#!/bin/sh\necho 3.0.0\n',
+            'python3': '#!/bin/sh\nexec /usr/bin/python3 "$@"\n',
+        }.items():
+            path = tools / name
+            path.write_text(body)
+            path.chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'p')], env={'PATH': str(tools)})
+        checks = {item['command']: item for item in json.loads(result.stdout)['build_checks']}
         self.assertFalse(checks['cargo']['passed'])
         self.assertFalse(checks['rustc']['passed'])
         self.assertTrue(checks['go']['passed'])
+        self.assertEqual(json.loads(result.stdout)['fix'], [
+            'rustup update stable (or install rustup from https://rustup.rs; distro Rust is often older than 1.88)'])
+
     def test_default_prefix_respects_data_home_without_writes(self):
-        data_home=self.root/'data home'
-        p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'plan'],
-                         env=dict({k:v for k,v in os.environ.items() if k!='AGENT_KNOWLEDGE_HOME'},XDG_DATA_HOME=str(data_home)),capture_output=True)
-        self.assertEqual(p.returncode,0,p.stderr)
-        self.assertEqual(json.loads(p.stdout)['prefix'],str((data_home/'10x-swe/knowledge').resolve()))
+        data_home = self.root / 'data home'
+        env = {key: value for key, value in os.environ.items() if key != 'AGENT_KNOWLEDGE_HOME'}
+        env['XDG_DATA_HOME'] = str(data_home)
+        result = subprocess.run(['/bin/sh', str(BOOT), 'plan'], capture_output=True, text=True, env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['prefix'], str((data_home / '10x-swe/knowledge').resolve()))
         self.assertFalse(data_home.exists())
+
     def test_owned_retries_reject_conflicts_and_changed_source(self):
-        target=self.root/'owned';bootstrap.owned(target,'a'*64);bootstrap.owned(target,'a'*64)
-        with self.assertRaisesRegex(ValueError,'different source'): bootstrap.owned(target,'b'*64)
-        conflict=self.root/'existing';conflict.mkdir();(conflict/'valuable').write_text('retain')
-        with self.assertRaisesRegex(ValueError,'unowned'): bootstrap.owned(conflict,'a'*64)
-        self.assertEqual((conflict/'valuable').read_text(),'retain')
-        alias=self.root/'alias';alias.symlink_to(target)
-        with self.assertRaisesRegex(ValueError,'symlink'): bootstrap.owned(alias,'a'*64)
+        target = self.root / 'owned'
+        first = subprocess.run(['/bin/sh', '-c',
+                                'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                                'sh', str(BOOT), str(target), 'a' * 64], capture_output=True, text=True)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        second = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                                 'sh', str(BOOT), str(target), 'a' * 64], capture_output=True, text=True)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        changed = subprocess.run(['/bin/sh', '-c',
+                                  'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                                  'sh', str(BOOT), str(target), 'b' * 64], capture_output=True, text=True)
+        self.assertNotEqual(changed.returncode, 0)
+        self.assertEqual(changed.returncode, 2)
+        conflict = self.root / 'existing'
+        conflict.mkdir()
+        (conflict / 'valuable').write_text('retain')
+        refused = subprocess.run(['/bin/sh', '-c',
+                                  'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                                  'sh', str(BOOT), str(conflict), 'a' * 64], capture_output=True, text=True)
+        self.assertIn('unowned', refused.stderr)
+        self.assertEqual((conflict / 'valuable').read_text(), 'retain')
+        alias = self.root / 'alias'
+        alias.symlink_to(target)
+        rejected = run_boot(['plan', '--prefix', str(alias)])
+        self.assertIn('symlink', rejected.stderr)
+
     def test_failed_setup_is_not_readiness_and_tampered_artifacts_fail(self):
-        target=self.root/'owned';bootstrap.owned(target,'a'*64)
-        with self.assertRaisesRegex(ValueError,'No completed'): bootstrap.doctor(target,verify=False)
-        (target/'artifact').write_text('changed')
-        (target/'installation.json').write_text(json.dumps({'artifacts':{'artifact':'a'*64}}))
-        with self.assertRaisesRegex(ValueError,'artifacts changed'): bootstrap.doctor(target,verify=False)
+        target = self.root / 'owned'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), 'a' * 64], check=True)
+        missing = run_boot(['doctor', '--prefix', str(target)])
+        self.assertIn('No completed', missing.stderr)
+        (target / 'artifact').write_text('changed')
+        (target / 'installation.json').write_text(json.dumps({'artifacts': {'artifact': 'a' * 64}}))
+        tampered = run_boot(['doctor', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
+        self.assertIn('artifacts changed', tampered.stderr)
+        self.assertNotIn('python3', tampered.stderr)
+
     def test_source_tree_install_is_rejected_before_write(self):
-        with self.assertRaisesRegex(ValueError,'outside the source'): bootstrap.setup(REPO/'never-create-this')
-        self.assertFalse((REPO/'never-create-this').exists())
+        target = REPO / 'never-create-this'
+        result = run_boot(['setup', '--prefix', str(target)])
+        self.assertIn('outside the source', result.stderr)
+        self.assertFalse(target.exists())
+
     def test_incomplete_setup_still_requires_build_tools_and_retains_no_receipt(self):
-        target=self.root/'missing-tools'
+        target = self.root / 'missing-tools'
         for _ in range(2):
-            p=subprocess.run([sys.executable,str(REPO/'plugins/knowledge/bootstrap.py'),'setup','--prefix',str(target)],
-                             env=dict(os.environ,PATH=str(self.root/'no-tools')),capture_output=True)
-            self.assertNotEqual(p.returncode,0)
-            self.assertIn(b'Missing build prerequisite: cargo',p.stderr)
-            self.assertFalse((target/'installation.json').exists())
+            result = run_boot(['setup', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Missing build prerequisite: cargo', result.stderr)
+            self.assertFalse((target / 'installation.json').exists())
 
-    def completed_installation(self):
-        target = self.root / "installed tools' prefix"
-        manifest = {'source': 'a' * 64}
-        fingerprint = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
-        bootstrap.owned(target, fingerprint)
-        (target / 'libexec').mkdir()
-        launcher = target / 'libexec/launch.py'
-        launcher.write_text('#!/bin/sh\nexit 0\n')
-        launcher.chmod(0o755)
-        (target / 'bin').mkdir()
-        for name in bootstrap.COMMANDS:
-            if name == 'session-search':
-                native = target/'libexec/native/session-search'
-                native.parent.mkdir()
-                native.write_bytes(launcher.read_bytes())
-                native.chmod(0o755)
-                (target/'bin'/name).symlink_to('../libexec/native/session-search')
-            else:
-                (target / 'bin' / name).symlink_to('../libexec/launch.py')
-        bootstrap.atomic(target / 'installation.json', {
-            'artifacts': {'libexec/launch.py': bootstrap.digest(launcher)}})
-        return target, manifest
+    def test_shell_quote_matches_python_for_the_activation_file(self):
+        sample = "installed tools' prefix"
+        result = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; shell_quote "$2"',
+                                 'sh', str(BOOT), sample], capture_output=True, text=True)
+        self.assertEqual(result.stdout, "'installed tools'\"'\"' prefix'")
 
-    def test_doctor_detects_missing_activation_file(self):
-        target, _ = self.completed_installation()
-        with self.assertRaisesRegex(ValueError, 'env.sh.*rerun setup'):
-            bootstrap.doctor(target, verify=False)
-
-    def test_completed_setup_restores_activation_and_always_prints_next_step(self):
-        target, manifest = self.completed_installation()
-        for _ in range(2):
-            output = io.StringIO()
-            with patch.object(bootstrap, 'inputs', return_value=manifest), \
-                    patch.object(bootstrap.shutil, 'which', return_value=None), \
-                    contextlib.redirect_stdout(output):
-                bootstrap.setup(target)
-            self.assertTrue((target / 'env.sh').is_file())
-            self.assertIn('Activate explicitly: . ', output.getvalue())
-            self.assertIn('skill-search search', output.getvalue())
-            command = output.getvalue().split('Activate explicitly: ', 1)[1].splitlines()[0]
-            result = subprocess.run(['/bin/sh', '-c', command + '; printf "%s" "$AGENT_KNOWLEDGE_HOME"'],
-                                    capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(result.stdout, str(target))
-
-    def test_setup_does_not_replace_modified_activation(self):
-        target, manifest = self.completed_installation()
-        (target / 'env.sh').write_text('custom activation\n')
-        with patch.object(bootstrap, 'inputs', return_value=manifest):
-            with self.assertRaisesRegex(ValueError, 'env.sh'):
-                bootstrap.setup(target)
-        self.assertEqual((target / 'env.sh').read_text(), 'custom activation\n')
-
-    def test_cli_resolves_parent_alias_before_recovering_activation(self):
-        target, manifest = self.completed_installation()
-        alias = self.root / 'parent-alias'
-        alias.symlink_to(self.root, target_is_directory=True)
-        with patch.object(sys, 'argv', ['knowledge', 'setup', '--prefix', str(alias / target.name)]), \
-                patch.object(bootstrap, 'inputs', return_value=manifest), \
-                contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(bootstrap.main(), 0)
-        self.assertEqual((target / 'env.sh').read_text(), bootstrap.activation_text(target))
-
-    def test_missing_receipted_activation_is_restored_without_changing_receipt(self):
-        target, manifest = self.completed_installation()
-        bootstrap.ensure_activation(target)
-        receipt = target / 'installation.json'
-        data = json.loads(receipt.read_text())
-        data['artifacts']['env.sh'] = bootstrap.digest(target / 'env.sh')
-        bootstrap.atomic(receipt, data)
-        before = receipt.read_bytes()
-        (target / 'env.sh').unlink()
-        with self.assertRaisesRegex(ValueError, 'env.sh.*rerun setup'):
-            bootstrap.doctor(target, verify=False)
-        with patch.object(bootstrap, 'inputs', return_value=manifest), contextlib.redirect_stdout(io.StringIO()):
-            bootstrap.setup(target)
-        self.assertEqual(receipt.read_bytes(), before)
-        self.assertEqual(bootstrap.digest(target / 'env.sh'), data['artifacts']['env.sh'])
-
-    def test_setup_rejects_activation_symlink_without_modifying_target(self):
-        target, manifest = self.completed_installation()
-        saved = target / 'saved-environment'
-        saved.write_text('retain\n')
-        (target / 'env.sh').symlink_to(saved)
-        with patch.object(bootstrap, 'inputs', return_value=manifest):
-            with self.assertRaisesRegex(ValueError, 'env.sh'):
-                bootstrap.setup(target)
-        self.assertEqual(saved.read_text(), 'retain\n')
-
-
-    def test_default_prefix_prefers_agent_knowledge_home(self):
-        home = self.root / 'agent home'
-        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan'],
-                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home), XDG_DATA_HOME=str(self.root / 'other')),
-                           capture_output=True)
-        self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertEqual(json.loads(p.stdout)['prefix'], str(home))
-        self.assertFalse(home.exists())
-
-    def test_doctor_names_the_prefix_it_checked(self):
-        home = self.root / 'agent home'
-        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'doctor'],
-                           env=dict(os.environ, AGENT_KNOWLEDGE_HOME=str(home)), capture_output=True, text=True)
-        self.assertNotEqual(p.returncode, 0)
-        self.assertIn('Checking installation at ' + str(home.resolve()), p.stderr)
-        self.assertIn('No completed installation receipt at ' + str(home.resolve()), p.stderr)
-        self.assertFalse(home.exists())
+    def test_source_fingerprint_matches_python_json_dumps(self):
+        shell = subprocess.run(['/bin/sh', '-c',
+                                'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                'sh', str(BOOT)], capture_output=True, text=True, check=True)
+        git = subprocess.run(['git', '-C', str(REPO), 'ls-files', '-z', '--cached', '--',
+                              'plugins/knowledge', 'plugins/10x-swe/skills'], capture_output=True, check=True)
+        manifest = {}
+        for name in git.stdout.split(b'\0'):
+            if not name:
+                continue
+            path = REPO / os.fsdecode(name)
+            if path.is_file() and not path.is_symlink():
+                manifest[str(path.relative_to(REPO))] = hashlib.sha256(path.read_bytes()).hexdigest()
+        expected = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
+        self.assertEqual(shell.stdout.strip(), expected)
 
     def test_failed_build_checks_come_with_a_one_line_fix(self):
-        p = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'setup', '--prefix', str(self.root / 'x')],
-                           env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
-        self.assertIn('Missing build prerequisite: cargo', p.stderr)
-        self.assertRegex(p.stderr, r'fix: (sudo apt-get|sudo dnf|xcode-select)')
-        plan = subprocess.run([sys.executable, str(REPO / 'plugins/knowledge/bootstrap.py'), 'plan', '--prefix', str(self.root / 'y')],
-                              env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
+        result = run_boot(['setup', '--prefix', str(self.root / 'x')], env={'PATH': str(self.root / 'no-tools')})
+        self.assertIn('Missing build prerequisite: cargo', result.stderr)
+        self.assertRegex(result.stderr, r'fix: (sudo apt-get|sudo dnf|xcode-select)')
+        plan = run_boot(['plan', '--prefix', str(self.root / 'y')], env={'PATH': str(self.root / 'no-tools')})
         self.assertTrue(json.loads(plan.stdout)['fix'])
 
-    def test_old_rust_gets_the_rustup_fix_not_the_package_line(self):
-        checks = [{'command': 'python', 'passed': True},
-                  {'command': 'rustc', 'path': '/usr/bin/rustc', 'passed': False},
-                  {'command': 'cargo', 'path': '/usr/bin/cargo', 'passed': False}]
-        self.assertEqual(bootstrap.fixes(checks), [bootstrap.FIXES['rust']])
-        self.assertEqual(bootstrap.fixes([{'command': 'pkg-config', 'path': None, 'passed': False}]),
-                         [bootstrap.FIXES[bootstrap.os_family()]])
+    def test_failed_build_repeats_disk_and_network_causes(self):
+        script = self.root / 'fail.py'
+        script.write_text(
+            'import sys\n'
+            'print("cargo:warning=ar: bcm.o: No space left on device")\n'
+            'print("noise")\n'
+            'print("error: failed to download crate: Could not resolve host: example.invalid")\n'
+            'sys.exit(101)\n')
+        result = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; run_stream "$2" "$3"',
+                                 'sh', str(BOOT), '/usr/bin/python3', str(script)], capture_output=True, text=True)
+        self.assertIn('exit status 101', result.stderr)
+        self.assertIn('cause: cargo:warning=ar: bcm.o: No space left on device', result.stderr)
+        self.assertIn('Could not resolve host: example.invalid', result.stderr)
+        self.assertNotIn('noise', result.stderr)
 
-    @unittest.skipUnless((REPO / '.git').exists() and shutil.which('git'), 'needs a git checkout')
-    def test_untracked_and_ignored_files_do_not_change_the_fingerprint(self):
-        before = bootstrap.inputs()
+    def test_release_build_scratch_removes_only_the_build_tree(self):
+        target = self.root / 'prefix'
+        (target / 'build/rust/release').mkdir(parents=True)
+        (target / 'build/rust/release/skill-search').write_text('bin')
+        (target / 'libexec/native').mkdir(parents=True)
+        result = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; release_build_scratch "$2"',
+                                 'sh', str(BOOT), str(target)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((target / 'build').exists())
+        self.assertTrue((target / 'libexec/native').is_dir())
+
+    def test_require_disk_space_names_the_shortfall(self):
+        result = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"\n'
+                                 'disk_free_bytes() { echo 1073741824; }\n'
+                                 'require_disk_space "$2"\n',
+                                 'sh', str(BOOT), str(self.root)], capture_output=True, text=True)
+        self.assertIn('1024 MiB available', result.stderr)
+
+    def test_setup_points_temp_files_at_the_prefix(self):
+        tools = self.root / 'tools'
+        tools.mkdir()
+        seen = self.root / 'seen-tmp'
+        wrapper = tools / 'python3'
+        wrapper.write_text('#!/bin/sh\n'
+                           'if [ "$1" = "-c" ]; then\n'
+                           '  exit 0\n'
+                           'fi\n'
+                           'if [ "$1" = "-m" ] && [ "$2" = "venv" ]; then\n'
+                           '  printf "%s\\n" "$TMPDIR" > "$SEEN"\n'
+                           '  exit 1\n'
+                           'fi\n'
+                           'exit 1\n')
+        wrapper.chmod(0o755)
+        for name, body in {
+            'cargo': '#!/bin/sh\necho "cargo 1.99.0"\n',
+            'rustc': '#!/bin/sh\necho "rustc 1.99.0"\n',
+            'go': '#!/bin/sh\necho "go version go1.22.0 linux/amd64"\n',
+            'cc': '#!/bin/sh\nexit 0\n',
+            'pkg-config': '#!/bin/sh\necho 3.0.0\n',
+        }.items():
+            path = tools / name
+            path.write_text(body)
+            path.chmod(0o755)
+        target = self.root / 'installed'
+        result = run_boot(['setup', '--prefix', str(target)], env={'PATH': str(tools), 'SEEN': str(seen)})
+        self.assertNotEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(seen.read_text().strip(), str(target / 'build/tmp'))
+        self.assertTrue((target / 'build/tmp').is_dir())
+
+    def test_old_pkg_config_miss_uses_the_os_line(self):
+        tools = self.root / 'tools'
+        tools.mkdir()
+        bodies = {
+            'cargo': '#!/bin/sh\necho "cargo 1.99.0"\n',
+            'rustc': '#!/bin/sh\necho "rustc 1.99.0"\n',
+            'go': '#!/bin/sh\necho "go version go1.22.0 linux/amd64"\n',
+            'cc': '#!/bin/sh\nexit 0\n',
+        }
+        # pkg-config is checked only on Linux. Elsewhere, drop cc so a missing
+        # tool still selects the OS install line.
+        if os.uname().sysname != 'Linux':
+            del bodies['cc']
+        for name, body in bodies.items():
+            path = tools / name
+            path.write_text(body)
+            path.chmod(0o755)
+        result = run_boot(['plan', '--prefix', str(self.root / 'p')], env={'PATH': str(tools)})
+        fixes = json.loads(result.stdout)['fix']
+        self.assertTrue(fixes)
+        self.assertRegex(fixes[0], r'sudo apt-get|sudo dnf|xcode-select')
+
+    def test_untracked_files_do_not_change_the_fingerprint(self):
+        before = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                 'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout
         skill = REPO / 'plugins/10x-swe/skills/chrome-devtools/scripts'
         created = [skill / 'node_modules/fingerprint-probe/index.js', skill / 'fingerprint-probe.untracked']
         try:
             for path in created:
-                path.parent.mkdir(parents=True, exist_ok=True); path.write_text('probe')
-            self.assertEqual(bootstrap.inputs(), before)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('probe')
+            after = subprocess.run(['/bin/sh', '-c',
+                                    'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                    'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout
+            self.assertEqual(before, after)
         finally:
-            for path in created: path.unlink(missing_ok=True)
-            shutil.rmtree(skill / 'node_modules/fingerprint-probe', ignore_errors=True)
-            with contextlib.suppress(OSError): (skill / 'node_modules').rmdir()
+            for path in created:
+                path.unlink(missing_ok=True)
+            probe = skill / 'node_modules/fingerprint-probe'
+            if probe.exists():
+                probe.rmdir()
+            node = skill / 'node_modules'
+            if node.exists():
+                node.rmdir()
 
-    def test_upgrade_carries_user_data_into_a_fresh_prefix(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
-        (old / 'knowledge/sources/entries').mkdir(parents=True); (old / 'knowledge/sources/entries/note.md').write_text('kept')
-        (old / 'state/bookmarks').mkdir(parents=True); (old / 'state/bookmarks/db.json').write_text('{}')
-        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
-        with contextlib.redirect_stdout(io.StringIO()):
-            bootstrap.carry_over(old, new)
-        self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
-        self.assertTrue((new / 'state/bookmarks/db.json').is_file())
-        self.assertTrue((old / 'knowledge/sources/entries/note.md').is_file())
-        with self.assertRaisesRegex(ValueError, 'existing knowledge installation'):
-            bootstrap.carry_over(self.root / 'nowhere', new)
-
-    def test_changed_source_error_points_at_the_upgrade_path(self):
-        target = self.root / 'old'; bootstrap.owned(target, '0' * 64)
-        with self.assertRaisesRegex(ValueError, '--from'):
-            bootstrap.setup(target)
-        self.assertFalse((target / 'installation.json').exists())
-
-    def test_setup_copies_only_fingerprinted_files(self):
+    def test_stage_sources_skips_untracked_files(self):
         skill = REPO / 'plugins/10x-swe/skills/chrome-devtools'
         extra = skill / 'fingerprint-probe.untracked'
-        extra.write_text('not certified')
         go_extra = REPO / 'plugins/knowledge/tools/insights/fingerprint_probe.go'
+        extra.write_text('not certified')
         go_extra.write_text('package main\n')
         target = self.root / 'installed'
         try:
-            with patch.object(bootstrap, 'build_checks', return_value=[]), \
-                    patch.object(bootstrap, 'require_disk_space'), \
-                    patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
-                with self.assertRaisesRegex(RuntimeError, 'stop before build'):
-                    bootstrap.setup(target)
+            result = subprocess.run(['/bin/sh', '-c',
+                                     'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; stage_sources "$2"',
+                                     'sh', str(BOOT), str(target)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
             installed = target / 'engineering-skills/chrome-devtools'
             self.assertTrue((installed / 'SKILL.md').is_file())
             self.assertFalse((installed / extra.name).exists())
             self.assertFalse((target / 'build/source/tools/insights' / go_extra.name).exists())
             self.assertTrue((target / 'build/source/tools/insights/main.go').is_file())
         finally:
-            extra.unlink()
-            go_extra.unlink()
+            extra.unlink(missing_ok=True)
+            go_extra.unlink(missing_ok=True)
 
-    def test_upgrade_rejects_links_and_overlaps_before_copying(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+    def test_upgrade_carries_user_data_and_rejects_a_missing_source(self):
+        old = self.root / 'old'
+        new = self.root / 'new'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"; owned "$4" "$5"',
+                        'sh', str(BOOT), str(old), 'a' * 64, str(new), 'b' * 64], check=True, capture_output=True, text=True)
+        (old / 'knowledge/sources/entries').mkdir(parents=True)
+        (old / 'knowledge/sources/entries/note.md').write_text('kept')
+        (old / 'state/bookmarks').mkdir(parents=True)
+        (old / 'state/bookmarks/db.json').write_text('{}')
+        copied = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                 'sh', str(BOOT), str(old), str(new)], capture_output=True, text=True)
+        self.assertEqual(copied.returncode, 0, copied.stderr)
+        self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
+        self.assertTrue((new / 'state/bookmarks/db.json').is_file())
+        self.assertTrue((old / 'knowledge/sources/entries/note.md').is_file())
+        missing = subprocess.run(['/bin/sh', '-c',
+                                  'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                  'sh', str(BOOT), str(self.root / 'nowhere'), str(new)], capture_output=True, text=True)
+        self.assertIn('existing knowledge installation', missing.stderr)
+
+    def test_upgrade_rejects_links_overlaps_and_nonempty_destinations(self):
+        old = self.root / 'old'
+        new = self.root / 'new'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"; owned "$4" "$5"',
+                        'sh', str(BOOT), str(old), 'a' * 64, str(new), 'b' * 64], check=True, capture_output=True, text=True)
         (old / 'knowledge/sources/entries').mkdir(parents=True)
         (old / 'knowledge/sources/entries/note.md').write_text('kept')
         (old / 'state').mkdir()
         (old / 'state/alias').symlink_to(old / 'knowledge/sources')
-        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
-        with self.assertRaisesRegex(ValueError, 'symlink'):
-            bootstrap.carry_over(old, new)
+        linked = subprocess.run(['/bin/sh', '-c',
+                                 'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                 'sh', str(BOOT), str(old), str(new)], capture_output=True, text=True)
+        self.assertIn('symlink', linked.stderr)
         self.assertFalse((new / 'knowledge').exists())
         (old / 'state/alias').unlink()
-        nested = old / 'state/new'; bootstrap.owned(nested, 'b' * 64)
-        with self.assertRaisesRegex(ValueError, 'overlap'):
-            bootstrap.carry_over(old, nested)
+        nested = old / 'state/new'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(nested), 'b' * 64], check=True, capture_output=True, text=True)
+        overlap = subprocess.run(['/bin/sh', '-c',
+                                  'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                  'sh', str(BOOT), str(old), str(nested)], capture_output=True, text=True)
+        self.assertIn('overlap', overlap.stderr)
+        fresh = self.root / 'fresh'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(fresh), 'c' * 64], check=True, capture_output=True, text=True)
+        (fresh / 'state').mkdir()
+        (fresh / 'state/bookmark').write_text('new')
+        (old / 'state/bookmark').write_text('old')
+        nonempty = subprocess.run(['/bin/sh', '-c',
+                                   'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                   'sh', str(BOOT), str(old), str(fresh)], capture_output=True, text=True)
+        self.assertIn('empty', nonempty.stderr)
+        self.assertEqual((fresh / 'state/bookmark').read_text(), 'new')
 
-    def test_upgrade_does_not_merge_into_existing_destination_data(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
-        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('old')
-        new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
-        (new / 'state').mkdir(); (new / 'state/bookmark').write_text('new')
-        with self.assertRaisesRegex(ValueError, 'empty'):
-            bootstrap.carry_over(old, new)
-        self.assertEqual((new / 'state/bookmark').read_text(), 'new')
-
-    def test_setup_migrates_before_building_and_does_not_recopy_on_retry(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
-        (old / 'knowledge/sources/entries').mkdir(parents=True)
-        (old / 'knowledge/sources/entries/note.md').write_text('kept')
-        new = self.root / 'new'
-        with patch.object(bootstrap, 'build_checks', return_value=[]), \
-                patch.object(bootstrap, 'require_disk_space'), \
-                patch.object(bootstrap, 'run', side_effect=RuntimeError('stop before build')):
-            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
-                bootstrap.setup(new, old)
-            self.assertEqual((new / 'knowledge/sources/entries/note.md').read_text(), 'kept')
-            with self.assertRaisesRegex(ValueError, 'empty'):
-                bootstrap.setup(new, old)
-            with self.assertRaisesRegex(RuntimeError, 'stop before build'):
-                bootstrap.setup(new)
+    def test_changed_source_error_points_at_the_upgrade_path(self):
+        target = self.root / 'old'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), '0' * 64], check=True, capture_output=True, text=True)
+        result = run_boot(['setup', '--prefix', str(target)])
+        self.assertIn('--from', result.stderr)
+        self.assertFalse((target / 'installation.json').exists())
 
     def test_interrupted_migration_cannot_be_certified_by_retrying_setup(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
-        (old / 'state').mkdir(); (old / 'state/bookmark').write_text('kept')
-        new = self.root / 'new'
-        with patch.object(bootstrap, 'build_checks', return_value=[]), \
-                patch.object(bootstrap, 'require_disk_space'), \
-                patch.object(bootstrap.shutil, 'copytree', side_effect=OSError('copy interrupted')):
-            with self.assertRaisesRegex(OSError, 'copy interrupted'):
-                bootstrap.setup(new, old)
-        with self.assertRaisesRegex(ValueError, 'migration was interrupted'):
-            bootstrap.setup(new)
-        self.assertFalse((new / 'installation.json').exists())
-        self.assertEqual((old / 'state/bookmark').read_text(), 'kept')
+        target = self.root / 'new'
+        fingerprint = subprocess.run(['/bin/sh', '-c',
+                                      'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                      'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), fingerprint], check=True, capture_output=True, text=True)
+        (target / '.migration-pending').write_text('old\n')
+        result = run_boot(['setup', '--prefix', str(target)])
+        self.assertIn('migration was interrupted', result.stderr)
+        self.assertFalse((target / 'installation.json').exists())
 
-    def test_upgrade_preserves_committed_wal_data_with_writers_paused(self):
-        old = self.root / 'old'; bootstrap.owned(old, 'a' * 64)
+    def test_upgrade_preserves_committed_wal_data(self):
+        old = self.root / 'old'
+        new = self.root / 'new'
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"; owned "$4" "$5"',
+                        'sh', str(BOOT), str(old), 'a' * 64, str(new), 'b' * 64], check=True, capture_output=True, text=True)
         (old / 'state').mkdir()
         database = old / 'state/session-search.sqlite'
-        db = sqlite3.connect(database)
+        connection = sqlite3.connect(database)
         try:
-            db.execute('PRAGMA journal_mode=WAL')
-            db.execute('CREATE TABLE sessions (body TEXT)')
-            db.execute("INSERT INTO sessions VALUES ('kept')")
-            db.commit()
+            connection.execute('PRAGMA journal_mode=WAL')
+            connection.execute('CREATE TABLE sessions (body TEXT)')
+            connection.execute("INSERT INTO sessions VALUES ('kept')")
+            connection.commit()
             self.assertTrue(Path(str(database) + '-wal').is_file())
-            new = self.root / 'new'; bootstrap.owned(new, 'b' * 64)
-            with contextlib.redirect_stdout(io.StringIO()):
-                bootstrap.carry_over(old, new)
-            copied = sqlite3.connect(new / 'state/session-search.sqlite')
+            copied = subprocess.run(['/bin/sh', '-c',
+                                     'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; carry_over "$2" "$3"',
+                                     'sh', str(BOOT), str(old), str(new)], capture_output=True, text=True)
+            self.assertEqual(copied.returncode, 0, copied.stderr)
+            restored = sqlite3.connect(new / 'state/session-search.sqlite')
             try:
-                self.assertEqual(copied.execute('SELECT body FROM sessions').fetchall(), [('kept',)])
-                self.assertEqual(copied.execute('PRAGMA integrity_check').fetchone(), ('ok',))
+                self.assertEqual(restored.execute('SELECT body FROM sessions').fetchall(), [('kept',)])
+                self.assertEqual(restored.execute('PRAGMA integrity_check').fetchone(), ('ok',))
             finally:
-                copied.close()
+                restored.close()
         finally:
-            db.close()
+            connection.close()
+
+    def test_stale_setup_lock_is_replaced_when_its_pid_is_gone(self):
+        target = self.root / 'locked'
+        fingerprint = subprocess.run(['/bin/sh', '-c',
+                                      'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                      'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), fingerprint], check=True, capture_output=True, text=True)
+        lock = target / '.setup.lock.d'
+        lock.mkdir()
+        (lock / 'pid').write_text('999999\n')
+        result = run_boot(['setup', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
+        self.assertIn('Missing build prerequisite: cargo', result.stderr)
+        self.assertNotIn('Resource temporarily unavailable', result.stderr)
+        self.assertFalse(lock.exists())
+
+    def test_doctor_names_the_prefix_it_checked(self):
+        home = self.root / 'agent home'
+        result = run_boot(['doctor'], env={'AGENT_KNOWLEDGE_HOME': str(home)})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Checking installation at ' + str(home.resolve()), result.stderr)
+        self.assertIn('No completed installation receipt at ' + str(home.resolve()), result.stderr)
+        self.assertFalse(home.exists())
+
+    def install_fake_commands(self, target):
+        launcher = target / 'libexec/launch.py'
+        launcher.parent.mkdir(parents=True, exist_ok=True)
+        launcher.write_text('#!/bin/sh\nexit 0\n')
+        launcher.chmod(0o755)
+        native = target / 'libexec/native/session-search'
+        native.parent.mkdir(parents=True, exist_ok=True)
+        native.write_text('#!/bin/sh\nexit 0\n')
+        native.chmod(0o755)
+        bindir = target / 'bin'
+        bindir.mkdir(exist_ok=True)
+        for name in COMMANDS:
+            link = bindir / name
+            if link.exists() or link.is_symlink():
+                link.unlink()
+            if name == 'session-search':
+                link.symlink_to('../libexec/native/session-search')
+            else:
+                link.symlink_to('../libexec/launch.py')
+
+    def test_completed_setup_restores_activation_without_rebuilding(self):
+        target = self.root / 'installed'
+        fingerprint = subprocess.run(['/bin/sh', '-c',
+                                      'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                      'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), fingerprint], check=True, capture_output=True, text=True)
+        self.install_fake_commands(target)
+        (target / 'installation.json').write_text(json.dumps({
+            'schema': 'knowledge-installation/v1',
+            'fingerprint': fingerprint,
+            'profile': 'keyword',
+            'artifacts': {'libexec/launch.py': hashlib.sha256((target / 'libexec/launch.py').read_bytes()).hexdigest()},
+            'created': 1,
+        }))
+        result = run_boot(['setup', '--prefix', str(target)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((target / 'env.sh').is_file())
+        self.assertIn('Activate explicitly: . ', result.stdout)
+        command = result.stdout.split('Activate explicitly: ', 1)[1].splitlines()[0]
+        activated = subprocess.run(['/bin/sh', '-c', command + '; printf "%s" "$AGENT_KNOWLEDGE_HOME"'],
+                                   capture_output=True, text=True)
+        self.assertEqual(activated.returncode, 0, activated.stderr)
+        self.assertEqual(activated.stdout, str(target))
+        (target / 'env.sh').write_text('custom activation\n')
+        refused = run_boot(['setup', '--prefix', str(target)])
+        self.assertIn('env.sh', refused.stderr)
+        self.assertEqual((target / 'env.sh').read_text(), 'custom activation\n')
 
 
-if __name__=='__main__': unittest.main()
+if __name__ == '__main__':
+    unittest.main()
