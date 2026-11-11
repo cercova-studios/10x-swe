@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::{self, Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
@@ -35,7 +35,7 @@ struct Cli {
     #[arg(long)]
     base_url: Option<String>,
 
-    /// Output file (default: webpage.md). Use "-" or omit with --stdout to print to stdout.
+    /// New output file (default: webpage.md; JSON: webpage.json). Use "-" or --stdout for pipes.
     #[arg(short, long)]
     output: Option<String>,
 
@@ -104,6 +104,32 @@ async fn main() -> Result<()> {
             "Base URL must be HTTP(S) without credentials"
         );
     }
+
+    let text_output = if mode != ParseMode::Epub
+        && !(args.stdout
+            || args.output.as_deref() == Some("-")
+            || (args.stdin && args.output.is_none()))
+    {
+        let target = PathBuf::from(args.output.as_deref().unwrap_or(match mode {
+            ParseMode::Json => "webpage.json",
+            _ => "webpage.md",
+        }));
+        match fs::symlink_metadata(&target) {
+            Ok(_) => anyhow::bail!(
+                "Output already exists: {}; choose a new --output path",
+                target.display()
+            ),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error).context("Inspect output destination"),
+        }
+        anyhow::ensure!(
+            output_parent(&target).is_dir(),
+            "Output directory does not exist"
+        );
+        Some(target)
+    } else {
+        None
+    };
 
     let kfx_output = if use_kfx {
         anyhow::ensure!(
@@ -230,29 +256,52 @@ async fn main() -> Result<()> {
         ParseMode::Epub => unreachable!(),
     };
 
-    let use_stdout =
-        args.stdout || args.output.as_deref() == Some("-") || (args.stdin && args.output.is_none());
-
-    if use_stdout {
+    if let Some(target) = text_output {
+        write_new_output(&target, output.as_bytes())?;
+        eprintln!("Wrote output to {}", target.display());
+    } else {
         io::stdout()
             .write_all(output.as_bytes())
             .context("Failed to write to stdout")?;
-    } else {
-        let target = if let Some(path) = args.output {
-            path
-        } else {
-            match mode {
-                ParseMode::Markdown => "webpage.md".to_string(),
-                ParseMode::Json => "webpage.json".to_string(),
-                ParseMode::Epub => unreachable!(),
-            }
-        };
-
-        fs::write(&target, &output).with_context(|| format!("Failed to write {target}"))?;
-        eprintln!("Wrote output to {target}");
     }
 
     Ok(())
+}
+
+fn output_parent(target: &Path) -> &Path {
+    target
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."))
+}
+
+fn write_new_output(target: &Path, bytes: &[u8]) -> Result<()> {
+    let mut temporary = tempfile::NamedTempFile::new_in(output_parent(target))?;
+    temporary.write_all(bytes)?;
+    temporary.as_file().sync_all()?;
+    temporary
+        .persist_noclobber(target)
+        .map_err(|error| error.error)
+        .with_context(|| {
+            format!(
+                "Cannot publish {}; choose a new --output path",
+                target.display()
+            )
+        })?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod output_tests {
+    #[test]
+    fn concurrent_destination_is_preserved_and_temporary_file_is_removed() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("output");
+        std::fs::write(&path, b"another writer").unwrap();
+        assert!(super::write_new_output(&path, b"replacement").is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), b"another writer");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
 }
 
 fn read_html(reader: impl Read) -> Result<String> {

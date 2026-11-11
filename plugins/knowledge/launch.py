@@ -18,7 +18,6 @@ env['PYTHONPATH'] = str(prefix / 'lib')
 python = str(prefix / 'runtimes/source-insights/bin/python')
 scripts = {
     'source-insights': prefix / 'skills/source-insights/scripts/sources.py',
-    'session-search': prefix / 'skills/session-search/scripts/session-search',
     'knowledge-intake': prefix / 'libexec/intake.py',
 }
 if command in scripts:

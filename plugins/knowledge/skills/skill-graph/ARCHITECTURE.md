@@ -30,6 +30,14 @@ Top-level quoted scoped Wikilink lists encode uses, generated used-by, related a
 
 ## Portable discovery export
 
+Mapping helper failures retain a private temporary diagnostic directory with the
+input graph, available stdout/stderr and `failure.txt`. The CLI keeps stderr JSON
+and exit 1, with `code=mapping_helper_failed` and the diagnostic path. A failed
+`path --semantic` also returns `recovery.argv` for an explicit lexical retry with
+the selected state, graph, query and limit. It performs no retry or method change.
+Inspect diagnostics before removing the directory; ordinary temporary-file cleanup
+may eventually remove it. Successful responses and snapshot pipes stay unchanged.
+
 `skill-search export` emits one complete `knowledge-snapshot/v2` JSONL record with typed skill/workflow nodes, revisions and labeled relationships. `--query 'TASK' --limit 5` adds independently ranked lexical hits. Inventory is checked before and after export. Paths and handoff commands are discovery metadata, never authority. Export invokes no consumer and does not load skill instructions. Consumers can combine this record with another producer's record through a pipe without reading private graph/catalog formats.
 
 ## Workflow layer
