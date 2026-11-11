@@ -168,8 +168,9 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn('No completed', missing.stderr)
         (target / 'artifact').write_text('changed')
         (target / 'installation.json').write_text(json.dumps({'artifacts': {'artifact': 'a' * 64}}))
-        tampered = run_boot(['doctor', '--prefix', str(target)])
+        tampered = run_boot(['doctor', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
         self.assertIn('artifacts changed', tampered.stderr)
+        self.assertNotIn('python3', tampered.stderr)
 
     def test_source_tree_install_is_rejected_before_write(self):
         target = REPO / 'never-create-this'
@@ -450,6 +451,22 @@ class BootstrapTests(unittest.TestCase):
                 restored.close()
         finally:
             connection.close()
+
+    def test_stale_setup_lock_is_replaced_when_its_pid_is_gone(self):
+        target = self.root / 'locked'
+        fingerprint = subprocess.run(['/bin/sh', '-c',
+                                      'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; source_fingerprint',
+                                      'sh', str(BOOT)], capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(['/bin/sh', '-c',
+                        'KNOWLEDGE_BOOTSTRAP_LIBRARY=1; KNOWLEDGE_BOOTSTRAP_PATH="$1"; . "$1"; owned "$2" "$3"',
+                        'sh', str(BOOT), str(target), fingerprint], check=True, capture_output=True, text=True)
+        lock = target / '.setup.lock.d'
+        lock.mkdir()
+        (lock / 'pid').write_text('999999\n')
+        result = run_boot(['setup', '--prefix', str(target)], env={'PATH': str(self.root / 'no-tools')})
+        self.assertIn('Missing build prerequisite: cargo', result.stderr)
+        self.assertNotIn('Resource temporarily unavailable', result.stderr)
+        self.assertFalse(lock.exists())
 
     def test_doctor_names_the_prefix_it_checked(self):
         home = self.root / 'agent home'
