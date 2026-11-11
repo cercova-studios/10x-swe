@@ -38,6 +38,7 @@ what each host supports. The skills need no build step.
 
 | You want to… | Use |
 |---|---|
+| Run a hard engineering task through the matching workflow | `10x-mode` |
 | Understand a codebase, library or API from source and primary docs | `code-research` (or `/research`) |
 | Find code by identifier, syntax or meaning in a local repo | `code-search` (routes to `ast-grep`, `rg`, `zg` or `codegraph`) |
 | Search the live web with citations (needs a search API key) | `web-research` |
@@ -66,9 +67,14 @@ Every other skill runs with only your agent and the tools your task already uses
 
 ## Skills
 
+Long domain references do not load on their own. Name the skill, or start from
+`10x-mode`, which reads the reference when the task needs it. Short workflow
+skills still load when the task matches their description.
+
 ### Workflow & Process
 | Skill | Description |
 |-------|-------------|
+| [10x-mode](skills/10x-mode/SKILL.md) | Route a hard task to the matching workflow skill |
 | [diagnose](skills/diagnose/SKILL.md) | Reproduce a bug, test hypotheses, and verify the smallest fix |
 | [deep-architecture-analysis](skills/deep-architecture-analysis/SKILL.md) | Inspect a codebase through parallel architecture perspectives |
 | [grill-me](skills/grill-me/SKILL.md) | Stress-test an idea through focused questions |

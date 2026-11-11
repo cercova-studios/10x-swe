@@ -54,6 +54,9 @@ def check_skill(folder, errors, names):
     metadata = data.get('metadata', {})
     if not isinstance(metadata, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in metadata.items()):
         errors.append(f'{rel}: metadata must map strings to strings')
+    flag = data.get('disable-model-invocation')
+    if flag is not None and not isinstance(flag, bool):
+        errors.append(f'{rel}: disable-model-invocation must be a boolean')
     if isinstance(name, str):
         if name in names:
             errors.append(f'{rel}: skill name {name!r} duplicates {names[name]}')

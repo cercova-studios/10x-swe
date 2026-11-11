@@ -11,8 +11,22 @@ Generated (never edit by hand; run `scripts/hosts.py sync`):
   plugins/<plugin>/.codex-plugin/plugin.json   Codex plugin overlay
   package.json                             pi package manifest (skills + prompts)
   plugins/10x-swe/{package.json,opencode-data.json}  OpenCode npm adapter (index.ts is hand-written)
+  plugins/<plugin>/skills/<skill>/agents/openai.yaml
+      Codex implicit-invocation policy, only for a skill with
+      `disable-model-invocation: true` and no hand-written openai.yaml
   the skill-requirements table in plugins/<plugin>/README.md (from each skill's
   `compatibility` field) and marketplace descriptions
+
+`disable-model-invocation: true` is a host extension, not an Agent Skills spec field.
+Claude Code, Grok Build, and pi skip automatic invocation and still accept an
+explicit slash command. OpenCode does the same, and this script copies the flag
+to `autoinvoke` for the npm adapter. Codex ignores the field on SKILL.md; the
+generated openai.yaml sets `allow_implicit_invocation: false`, which is the
+switch Codex reads. A hand-written openai.yaml is left as-is and must contain
+that policy itself when the skill is flagged. Copilot CLI recognizes the field;
+its skill tool has historically failed to resolve flagged skills, while the
+slash command and a direct file read still load them. Other Agent Skills hosts
+ignore the unknown key.
 
 The hand-written catalog in plugins/10x-swe/README.md stays the human index;
 tests/test_plugin_metadata.py checks that it links every skill, agent and command.
@@ -43,6 +57,9 @@ CODEX_CATEGORY = {'10x-swe': 'Coding', 'knowledge': 'Productivity'}
 # Claude Code agent colors -> opencode theme colors (opencode rejects other names).
 OPENCODE_COLORS = {'red': 'error', 'orange': 'warning', 'yellow': 'warning', 'green': 'success',
                    'blue': 'info', 'cyan': 'info', 'purple': 'secondary', 'pink': 'accent'}
+# Codex reads agents/openai.yaml, not disable-model-invocation. Write this stub
+# only when the skill does not already ship a hand-written policy file.
+CODEX_LAZY_POLICY = 'policy:\n  allow_implicit_invocation: false\n'
 
 
 # ---------------------------------------------------------------- frontmatter
@@ -188,6 +205,52 @@ def opencode_package(item):
     }
 
 
+def lazy_skill(data):
+    return data.get('disable-model-invocation') is True
+
+
+def codex_policy_files(item):
+    """Codex invocation policy for flagged skills that do not already have openai.yaml."""
+    files = {}
+    for folder in components(item['root'])[0]:
+        data, _ = parse_frontmatter(folder / 'SKILL.md')
+        path = folder / 'agents' / 'openai.yaml'
+        if not lazy_skill(data):
+            continue
+        if path.exists() and path.read_text(encoding='utf-8') != CODEX_LAZY_POLICY:
+            continue
+        files[path] = CODEX_LAZY_POLICY
+    return files
+
+
+def stray_codex_policies(item):
+    """Generated stubs left behind after a skill is no longer flagged."""
+    stray = []
+    for folder in components(item['root'])[0]:
+        data, _ = parse_frontmatter(folder / 'SKILL.md')
+        path = folder / 'agents' / 'openai.yaml'
+        if lazy_skill(data) or not path.is_file():
+            continue
+        if path.read_text(encoding='utf-8') == CODEX_LAZY_POLICY:
+            stray.append(path)
+    return stray
+
+
+def codex_policy_gaps(item):
+    """Hand-written Codex metadata that would still auto-invoke a flagged skill."""
+    gaps = []
+    for folder in components(item['root'])[0]:
+        data, _ = parse_frontmatter(folder / 'SKILL.md')
+        path = folder / 'agents' / 'openai.yaml'
+        if not lazy_skill(data) or not path.is_file():
+            continue
+        text = path.read_text(encoding='utf-8')
+        if text != CODEX_LAZY_POLICY and 'allow_implicit_invocation: false' not in text:
+            gaps.append(f'{path.relative_to(ROOT)}: set policy.allow_implicit_invocation: false '
+                        'so Codex does not auto-invoke this skill')
+    return gaps
+
+
 def opencode_data(item):
     skills, agents, commands = components(item['root'])
     result = {'skills': [], 'agents': [], 'commands': []}
@@ -196,7 +259,7 @@ def opencode_data(item):
         result['skills'].append({
             'id': data['name'], 'name': data['name'], 'description': data['description'],
             'path': (folder / 'SKILL.md').relative_to(item['root']).as_posix(),
-            'autoinvoke': data.get('disable-model-invocation') is not True,
+            'autoinvoke': not lazy_skill(data),
         })
     for kind, paths in [('agents', agents), ('commands', commands)]:
         for path in paths:
@@ -228,6 +291,7 @@ def expected():
         if item['entry']['name'] == '10x-swe':
             files[item['root'] / 'package.json'] = dump_json(opencode_package(item))
             files[item['root'] / 'opencode-data.json'] = dump_json(opencode_data(item))
+        files.update(codex_policy_files(item))
         readme = item['root'] / 'README.md'
         rendered = render_readme(readme, requirements(item))
         if rendered is not None:
@@ -237,8 +301,19 @@ def expected():
 
 # ---------------------------------------------------------------- checks
 def sync(check):
-    files, _ = expected()
+    files, items = expected()
     errors = []
+    for item in items:
+        errors.extend(codex_policy_gaps(item))
+        for path in stray_codex_policies(item):
+            if check:
+                errors.append(f'{path.relative_to(ROOT)} is a Codex policy stub for a skill '
+                              'that is not disable-model-invocation; run: python3 scripts/hosts.py sync')
+            else:
+                path.unlink()
+                print('removed', path.relative_to(ROOT))
+                if not any(path.parent.iterdir()):
+                    path.parent.rmdir()
     for path, content in files.items():
         current = path.read_text(encoding='utf-8') if path.exists() else None
         if current != content:

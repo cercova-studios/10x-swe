@@ -15,6 +15,10 @@ SPEC_PROPERTIES = {"name", "description", "license", "allowed-tools", "metadata"
 # Relationship fields read by the knowledge plugin's skill graph. Hosts that do
 # not understand them ignore unknown top-level keys, so they are accepted here.
 GRAPH_PROPERTIES = {"uses", "used-by", "related", "references", "related-inferred"}
+# Claude Code, Grok Build, pi, OpenCode, and Copilot CLI read this boolean.
+# Codex ignores it in SKILL.md (its switch is agents/openai.yaml). Hosts that
+# do not know the field ignore it. It is not part of the Agent Skills spec.
+HOST_PROPERTIES = {"disable-model-invocation"}
 
 
 def validate_skill(skill_path):
@@ -42,7 +46,7 @@ def validate_skill(skill_path):
     except yaml.YAMLError as e:
         return False, f"Invalid YAML in frontmatter: {e}"
 
-    allowed_properties = SPEC_PROPERTIES | GRAPH_PROPERTIES
+    allowed_properties = SPEC_PROPERTIES | GRAPH_PROPERTIES | HOST_PROPERTIES
 
     unexpected_keys = set(frontmatter.keys()) - allowed_properties
     if unexpected_keys:
@@ -111,6 +115,8 @@ def validate_skill(skill_path):
         value = frontmatter["compatibility"]
         if not isinstance(value, str) or not value.strip() or len(value) > 500:
             return False, "Compatibility must be a nonempty string of at most 500 characters"
+    if "disable-model-invocation" in frontmatter and not isinstance(frontmatter["disable-model-invocation"], bool):
+        return False, "disable-model-invocation must be a boolean"
 
     return True, "Skill is valid!"
 

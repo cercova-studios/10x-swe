@@ -1,6 +1,7 @@
 ---
 name: python-observability
 description: Python observability patterns including structured logging, metrics, and distributed tracing. Use when adding logging, implementing metrics collection, setting up tracing, or debugging production systems.
+disable-model-invocation: true
 ---
 
 # Python Observability

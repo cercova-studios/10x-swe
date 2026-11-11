@@ -53,6 +53,21 @@ class HostLinkTests(unittest.TestCase):
             self.link()
         self.assertEqual(list(external.iterdir()), [])
 
+    def test_lazy_skills_stay_manual_on_opencode_and_codex(self):
+        item = next(item for item in hosts.plugins()[1] if item['entry']['name'] == '10x-swe')
+        by_id = {skill['id']: skill for skill in hosts.opencode_data(item)['skills']}
+        self.assertTrue(by_id['10x-mode']['autoinvoke'])
+        self.assertTrue(by_id['diagnose']['autoinvoke'])
+        self.assertTrue(by_id['doppler-secrets']['autoinvoke'])
+        self.assertTrue(by_id['python-testing-patterns']['autoinvoke'])
+        self.assertFalse(by_id['uv-package-manager']['autoinvoke'])
+        self.assertFalse(by_id['python-anti-patterns']['autoinvoke'])
+        self.assertFalse(by_id['llm-evaluation']['autoinvoke'])
+        policy = ROOT / 'plugins/10x-swe/skills/uv-package-manager/agents/openai.yaml'
+        self.assertEqual(policy.read_text(encoding='utf-8'), hosts.CODEX_LAZY_POLICY)
+        docs = ROOT / 'plugins/10x-swe/skills/openai-docs/agents/openai.yaml'
+        self.assertNotIn('allow_implicit_invocation', docs.read_text(encoding='utf-8'))
+
     def test_link_repeat_dry_run_and_unlink(self):
         self.link(host='opencode', dry_run=True)
         self.assertFalse(self.dest.exists())

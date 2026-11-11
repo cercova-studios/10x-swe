@@ -1,6 +1,7 @@
 ---
 name: python-configuration
 description: Python configuration management via environment variables and typed settings. Use when externalizing config, setting up pydantic-settings, managing secrets, or implementing environment-specific behavior.
+disable-model-invocation: true
 ---
 
 # Python Configuration Management
