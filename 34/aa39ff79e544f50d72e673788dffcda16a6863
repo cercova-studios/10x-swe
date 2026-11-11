@@ -1,0 +1,31 @@
+plugins/knowledge/tools/session-search/src/main.rs
+  s_b391bbbf834046::t_927b413b6773c4 97-99
+plugins/knowledge/tools/session-search/tests/check.py
+  s_b391bbbf834046::t_4de338a2ed6c6d 108,112
+  s_b391bbbf834046::t_241881abcd15e6 102-104,107,109-111
+ARCHITECTURE.md
+  s_b391bbbf834046::t_9569f13558dbeb 67-68
+  s_b391bbbf834046::t_4423f028efd3b4 66
+plugins/knowledge/skills/skill-graph/scripts/search-core/src/topics.rs
+  s_b391bbbf834046::t_059d9b9e2b7107 163-165
+plugins/knowledge/provenance.json
+  s_b391bbbf834046::t_4bcebfa561958e 82
+  s_b391bbbf834046::t_0bc8190f7cb783 73
+  s_b391bbbf834046::t_9046ea35d1b589 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "34aa39ff79e544f50d72e673788dffcda16a6863",
+  "prompts": {},
+  "sessions": {
+    "s_b391bbbf834046": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e371e4690ffej6zTsDop3wKCi7",
+        "model": "unknown"
+      },
+      "human_author": "Rohit Nair <6954311+rnair98@users.noreply.github.com>"
+    }
+  }
+}
