@@ -229,6 +229,61 @@ class BootstrapTests(unittest.TestCase):
                               env=dict(os.environ, PATH=str(self.root / 'no-tools')), capture_output=True, text=True)
         self.assertTrue(json.loads(plan.stdout)['fix'])
 
+    def test_failed_build_repeats_disk_and_network_causes(self):
+        script = self.root / 'fail.py'
+        script.write_text(
+            'import sys\n'
+            'print("cargo:warning=ar: bcm.o: No space left on device")\n'
+            'print("noise")\n'
+            'print("error: failed to download crate: Could not resolve host: example.invalid")\n'
+            'sys.exit(101)\n')
+        with self.assertRaises(ValueError) as caught:
+            bootstrap.run([sys.executable, str(script)])
+        text = str(caught.exception)
+        self.assertIn('exit status 101', text)
+        self.assertIn('cause: cargo:warning=ar: bcm.o: No space left on device', text)
+        self.assertIn('Could not resolve host: example.invalid', text)
+        self.assertNotIn('noise', text)
+
+    def test_release_build_scratch_removes_only_the_build_tree(self):
+        target = self.root / 'prefix'
+        (target / 'build/rust/release').mkdir(parents=True)
+        (target / 'build/rust/release/skill-search').write_text('bin')
+        (target / 'libexec/native').mkdir(parents=True)
+        bootstrap.release_build_scratch(target)
+        self.assertFalse((target / 'build').exists())
+        self.assertTrue((target / 'libexec/native').is_dir())
+
+    def test_setup_points_temp_files_at_the_prefix_and_restores_the_environment(self):
+        target = self.root / 'installed'
+        previous = os.environ.get('TMPDIR')
+        seen = []
+
+        def stop(argv, **kwargs):
+            seen.append(os.environ.get('TMPDIR'))
+            raise RuntimeError('stop')
+
+        try:
+            with patch.object(bootstrap, 'build_checks', return_value=[]), \
+                    patch.object(bootstrap, 'require_disk_space'), \
+                    patch.object(bootstrap, 'run', side_effect=stop):
+                with self.assertRaisesRegex(RuntimeError, 'stop'):
+                    bootstrap.setup(target)
+            self.assertEqual(seen, [str(target / 'build/tmp')])
+            self.assertTrue((target / 'build/tmp').is_dir())
+            self.assertEqual(os.environ.get('TMPDIR'), previous)
+        finally:
+            if previous is None:
+                os.environ.pop('TMPDIR', None)
+            else:
+                os.environ['TMPDIR'] = previous
+
+    def test_require_disk_space_names_the_shortfall(self):
+        usage = shutil.disk_usage(self.root)._replace(free=1024 ** 3)
+        with patch.object(bootstrap.shutil, 'disk_usage', return_value=usage):
+            with self.assertRaisesRegex(ValueError, '1024 MiB available'):
+                bootstrap.require_disk_space(self.root)
+
     def test_old_rust_gets_the_rustup_fix_not_the_package_line(self):
         checks = [{'command': 'python', 'passed': True},
                   {'command': 'rustc', 'path': '/usr/bin/rustc', 'passed': False},

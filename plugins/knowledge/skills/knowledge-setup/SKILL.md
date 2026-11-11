@@ -11,8 +11,10 @@ metadata:
 # Bootstrap this clone
 
 Read the root README and ARCHITECTURE.md. Run `./knowledge plan --prefix NEW_DIR`
-and fix any failed `build_checks` (its `fix` field gives a one-line command),
-then `./knowledge setup --prefix NEW_DIR`. Builds use locked source dependencies.
+and fix any failed `build_checks` (its `fix` field gives a one-line command, including
+rustup and Go when those compilers are missing or too old), then `./knowledge setup
+--prefix NEW_DIR`. Setup needs at least 3 GiB free on that prefix. Builds use locked
+source dependencies. A failed build repeats disk-full and network lines as `cause:`.
 Source the printed env.sh explicitly; setup never edits shell profiles or global
 instructions. Run `./knowledge doctor` to verify installed artifacts; it checks
 `$AGENT_KNOWLEDGE_HOME` (or `--prefix DIR`) and prints the path it checked.

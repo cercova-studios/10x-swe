@@ -31,6 +31,15 @@ FIXES = {
 }
 # Minimum free disk space for a full source build (cargo target dirs dominate).
 MINIMUM_FREE_BYTES = 3 * 1024**3
+# Lines worth repeating when a compiler exits non-zero. The rest of the log stays
+# on the terminal; the final ERROR names these.
+BUILD_CAUSES = re.compile(
+    r'No space left on device|ENOSPC|Disk quota exceeded|'
+    r'Could not resolve host|Temporary failure in name resolution|'
+    r'Network is unreachable|Connection reset by peer|'
+    r'failed to download|error sending request for url|SSL connect error|'
+    r'Operation timed out',
+    re.IGNORECASE)
 
 
 def digest(path):
@@ -80,9 +89,52 @@ def atomic(path, value):
     temporary.replace(path)
 
 
+def cause_lines(lines):
+    found = []
+    for line in lines:
+        if not BUILD_CAUSES.search(line):
+            continue
+        text = ' '.join(line.split())
+        if text and text not in found:
+            found.append(text)
+        if len(found) == 8:
+            break
+    return found
+
+
+def failure_detail(argv, code, causes):
+    message = 'Command %s returned exit status %s' % (shlex.join(map(str, argv)), code)
+    return message + ''.join('\n  cause: ' + item for item in causes)
+
+
 def run(argv, **kwargs):
     print('+ ' + shlex.join(map(str, argv)), flush=True)
-    subprocess.run(list(map(str, argv)), check=True, **kwargs)
+    command = list(map(str, argv))
+    if kwargs.get('stdout') is not None:
+        subprocess.run(command, check=True, **kwargs)
+        return
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               text=True, errors='replace', **kwargs)
+    matched = []
+    try:
+        for line in process.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            if BUILD_CAUSES.search(line):
+                matched.append(line)
+    except Exception:
+        process.kill()
+        process.wait()
+        raise
+    finally:
+        process.stdout.close()
+    if process.wait() != 0:
+        raise ValueError(failure_detail(command, process.returncode, cause_lines(matched)))
+
+
+def release_build_scratch(prefix):
+    """Drop the cargo target dir and staged source after the binaries are installed."""
+    shutil.rmtree(prefix / 'build', ignore_errors=True)
 
 
 def command_check(command, arguments, *, input=None):
@@ -347,60 +399,70 @@ def setup(prefix, previous=None):
         require_disk_space(prefix)
         if previous is not None:
             carry_over(previous, prefix)
-        for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build'):
+        for folder in ('bin', 'libexec/native', 'knowledge/sources/entries', 'state', 'runtimes', 'build', 'build/tmp'):
             (prefix / folder).mkdir(parents=True, exist_ok=True)
-        included = {REPO / rel for rel in manifest}
-        included.update(parent for path in list(included) for parent in path.parents if parent.is_relative_to(REPO))
-        staged = prefix / 'build/source'
-        for source, dest in ((PACKAGE, staged),
-                             (REPO / 'plugins/10x-swe/skills', prefix / 'engineering-skills')):
-            shutil.copytree(source, dest, dirs_exist_ok=True,
-                            ignore=lambda directory, names: [name for name in names if Path(directory) / name not in included])
-        for folder in ('skills', 'lib'):
-            shutil.copytree(staged / folder, prefix / folder, dirs_exist_ok=True)
-        python = prefix / 'runtimes/source-insights/bin/python'
-        if not python.exists():
-            run([sys.executable, '-m', 'venv', prefix / 'runtimes/source-insights'])
-        run([python, '-m', 'pip', 'install', '--require-hashes', '-r', staged / 'requirements.lock'])
-        runtime = prefix / 'runtimes/skill-graph'
-        if not runtime.exists():
-            runtime.symlink_to('source-insights', target_is_directory=True)
-        env = environment(prefix)
-        for source, command in ((staged / 'skills/skill-graph/scripts/search-core', 'skill-search'),
-                                (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller'),
-                                (staged / 'tools/session-search', 'session-search')):
-            run(['cargo', 'build', '--locked', '--release', '--bin', command,
-                 '--manifest-path', source / 'Cargo.toml', '--target-dir', prefix / 'build/rust'], env=env)
-            shutil.copy2(prefix / 'build/rust/release' / command, prefix / 'libexec/native' / command)
-        run(['go', 'build', '-trimpath', '-o', prefix / 'libexec/native/insights', '.'],
-            cwd=staged / 'tools/insights', env=env)
-        for name in ('launch.py', 'intake.py'):
-            shutil.copy2(staged / name, prefix / 'libexec' / name)
-        (prefix / 'libexec/launch.py').chmod(0o755)
-        for command in COMMANDS:
-            target = prefix / 'bin' / command
-            if target.exists() or target.is_symlink():
-                target.unlink()
-            target.symlink_to('../libexec/native/session-search' if command == 'session-search' else '../libexec/launch.py')
-        graph(prefix, python, env)
-        run([prefix / 'bin/source-insights', 'reindex', '--rebuild'], env=env)
-        if inputs() != manifest:
-            raise ValueError('Source changed during setup; installation not certified')
-        ensure_activation(prefix)
-        artifacts = {str(p.relative_to(prefix)): digest(p) for base in ('libexec', 'lib', 'skills', 'engineering-skills')
-                     for p in sorted((prefix / base).rglob('*')) if p.is_file() and '__pycache__' not in p.parts}
-        artifacts['env.sh'] = digest(prefix / 'env.sh')
-        atomic(prefix / 'installation.json', {'schema': 'knowledge-installation/v1', 'fingerprint': fingerprint,
-                                             'profile': 'keyword', 'artifacts': artifacts, 'created': int(time.time())})
+        # Compilers and cmake honor TMPDIR. A small /tmp fills during native builds
+        # even when the prefix itself has room, so keep temps next to the target dir.
+        previous_tmp = os.environ.get('TMPDIR')
+        os.environ['TMPDIR'] = str(prefix / 'build/tmp')
         try:
-            doctor(prefix)
-        except Exception:
-            (prefix / 'installation.json').unlink()
-            raise
-        # Build scratch is no longer needed; installed binaries live in libexec/native.
-        # Pruning keeps the owned prefix small (a full cargo target dir is ~1.4 GiB).
-        shutil.rmtree(prefix / 'build', ignore_errors=True)
-        next_steps(prefix)
+            included = {REPO / rel for rel in manifest}
+            included.update(parent for path in list(included) for parent in path.parents if parent.is_relative_to(REPO))
+            staged = prefix / 'build/source'
+            for source, dest in ((PACKAGE, staged),
+                                 (REPO / 'plugins/10x-swe/skills', prefix / 'engineering-skills')):
+                shutil.copytree(source, dest, dirs_exist_ok=True,
+                                ignore=lambda directory, names: [name for name in names if Path(directory) / name not in included])
+            for folder in ('skills', 'lib'):
+                shutil.copytree(staged / folder, prefix / folder, dirs_exist_ok=True)
+            python = prefix / 'runtimes/source-insights/bin/python'
+            if not python.exists():
+                run([sys.executable, '-m', 'venv', prefix / 'runtimes/source-insights'])
+            run([python, '-m', 'pip', 'install', '--require-hashes', '-r', staged / 'requirements.lock'])
+            runtime = prefix / 'runtimes/skill-graph'
+            if not runtime.exists():
+                runtime.symlink_to('source-insights', target_is_directory=True)
+            env = environment(prefix)
+            for source, command in ((staged / 'skills/skill-graph/scripts/search-core', 'skill-search'),
+                                    (staged / 'tools/bkd', 'bkd'), (staged / 'tools/distiller', 'distiller'),
+                                    (staged / 'tools/session-search', 'session-search')):
+                run(['cargo', 'build', '--locked', '--release', '--bin', command,
+                     '--manifest-path', source / 'Cargo.toml', '--target-dir', prefix / 'build/rust'], env=env)
+                shutil.copy2(prefix / 'build/rust/release' / command, prefix / 'libexec/native' / command)
+            run(['go', 'build', '-trimpath', '-o', prefix / 'libexec/native/insights', '.'],
+                cwd=staged / 'tools/insights', env=env)
+            for name in ('launch.py', 'intake.py'):
+                shutil.copy2(staged / name, prefix / 'libexec' / name)
+            (prefix / 'libexec/launch.py').chmod(0o755)
+            for command in COMMANDS:
+                target = prefix / 'bin' / command
+                if target.exists() or target.is_symlink():
+                    target.unlink()
+                target.symlink_to('../libexec/native/session-search' if command == 'session-search' else '../libexec/launch.py')
+            graph(prefix, python, env)
+            run([prefix / 'bin/source-insights', 'reindex', '--rebuild'], env=env)
+            if inputs() != manifest:
+                raise ValueError('Source changed during setup; installation not certified')
+            ensure_activation(prefix)
+            artifacts = {str(p.relative_to(prefix)): digest(p) for base in ('libexec', 'lib', 'skills', 'engineering-skills')
+                         for p in sorted((prefix / base).rglob('*')) if p.is_file() and '__pycache__' not in p.parts}
+            artifacts['env.sh'] = digest(prefix / 'env.sh')
+            atomic(prefix / 'installation.json', {'schema': 'knowledge-installation/v1', 'fingerprint': fingerprint,
+                                                 'profile': 'keyword', 'artifacts': artifacts, 'created': int(time.time())})
+            try:
+                doctor(prefix)
+            except Exception:
+                (prefix / 'installation.json').unlink()
+                raise
+            # Installed binaries live in libexec/native. Dropping build/ removes the
+            # cargo target dir (~1.4 GiB) from the owned prefix.
+            release_build_scratch(prefix)
+            next_steps(prefix)
+        finally:
+            if previous_tmp is None:
+                os.environ.pop('TMPDIR', None)
+            else:
+                os.environ['TMPDIR'] = previous_tmp
 
 
 def main():

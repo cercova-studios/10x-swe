@@ -1,6 +1,6 @@
 {
   "name": "knowledge",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Independent knowledge tools, skill/workflow discovery and reviewed evidence pipelines. Build the CLIs once with ./knowledge setup (Rust 1.88+, Go 1.22+).",
   "author": {"name": "Rohit Nair"},
   "repository": "https://github.com/cercova-studios/10x-swe",
