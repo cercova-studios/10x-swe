@@ -258,11 +258,14 @@ class BootstrapTests(unittest.TestCase):
         seen = self.root / 'seen-tmp'
         wrapper = tools / 'python3'
         wrapper.write_text('#!/bin/sh\n'
+                           'if [ "$1" = "-c" ]; then\n'
+                           '  exit 0\n'
+                           'fi\n'
                            'if [ "$1" = "-m" ] && [ "$2" = "venv" ]; then\n'
                            '  printf "%s\\n" "$TMPDIR" > "$SEEN"\n'
                            '  exit 1\n'
                            'fi\n'
-                           'exec /usr/bin/python3 "$@"\n')
+                           'exit 1\n')
         wrapper.chmod(0o755)
         for name, body in {
             'cargo': '#!/bin/sh\necho "cargo 1.99.0"\n',
@@ -283,13 +286,17 @@ class BootstrapTests(unittest.TestCase):
     def test_old_pkg_config_miss_uses_the_os_line(self):
         tools = self.root / 'tools'
         tools.mkdir()
-        for name, body in {
+        bodies = {
             'cargo': '#!/bin/sh\necho "cargo 1.99.0"\n',
             'rustc': '#!/bin/sh\necho "rustc 1.99.0"\n',
             'go': '#!/bin/sh\necho "go version go1.22.0 linux/amd64"\n',
             'cc': '#!/bin/sh\nexit 0\n',
-            'python3': '#!/bin/sh\nexec /usr/bin/python3 "$@"\n',
-        }.items():
+        }
+        # pkg-config is checked only on Linux. Elsewhere, drop cc so a missing
+        # tool still selects the OS install line.
+        if os.uname().sysname != 'Linux':
+            del bodies['cc']
+        for name, body in bodies.items():
             path = tools / name
             path.write_text(body)
             path.chmod(0o755)
