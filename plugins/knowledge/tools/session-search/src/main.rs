@@ -94,7 +94,9 @@ fn db_path() -> Result<PathBuf> {
     if let Some(prefix) = std::env::var_os("AGENT_KNOWLEDGE_HOME") {
         return Ok(PathBuf::from(prefix).join("state/session-search.sqlite"));
     }
-    if let Ok(exe) = std::env::current_exe()
+    // The installed command is a bin/ symlink to libexec/native; resolve it so
+    // platforms that keep the symlink in current_exe (macOS) still find the prefix.
+    if let Ok(exe) = std::env::current_exe().and_then(std::fs::canonicalize)
         && let Some(prefix) = exe
             .parent()
             .filter(|p| p.file_name().is_some_and(|n| n == "native"))

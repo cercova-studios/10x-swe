@@ -160,7 +160,9 @@ pub fn helper(python: &Path, helper: &Path, graph: &Value, args: &[&str]) -> Res
     match result {
         Ok(value) => Ok(value),
         Err(error) => {
-            fs::write(temp.path().join("failure.txt"), format!("{error:#}\n"))?;
+            // Best effort: a failed diagnostics write must not replace the
+            // HelperFailure contract, or the caller loses code/recovery hints.
+            let _ = fs::write(temp.path().join("failure.txt"), format!("{error:#}\n"));
             Err(HelperFailure {
                 diagnostics: temp.keep(),
             }

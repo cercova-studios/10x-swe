@@ -30,7 +30,7 @@
         "scripts/search-core/src/scanner.rs": "5ce0d7e8b62477f94c29f67adf5dfce0ea27c21d76e93483b945d0e845e3cbd6",
         "scripts/search-core/src/jev.rs": "eb24e9d2cbcea736e11f48d9618b23710cc8f1df28f7d17fd7f4d2f8f508077e",
         "scripts/search-core/src/main.rs": "53676f07d37678319b7e17b911f23e40d311ad6040335b50a73078bbaa798bce",
-        "scripts/search-core/src/topics.rs": "614a2e63d1bb015126f7ebeccde13fb798afaf46ae018d576467e2b5dcc2947b"
+        "scripts/search-core/src/topics.rs": "1a38d43d14d1272e28a56f04bafafff8f57e0fd78d7191186901a19bcd5679c4"
       }
     },
     {
@@ -70,7 +70,7 @@
         "tools/session-search/Cargo.toml": "48f9a87e878147cb47c83a4f4bd4ecf6b54e7c872f724e83f81d401d37e3dfd0",
         "tools/session-search/src/adapters.rs": "a2756b6eaabf0216c63ec64c5308cde591ce062c936b3cc4287315b9e7d61682",
         "tools/session-search/src/embed.rs": "9b07bd63ac543bab34c4da01ffc12c58b983a626091f1bdff160c842b4e64e42",
-        "tools/session-search/src/main.rs": "b82341171c77984ad7ac2b0607c76eadd9945ee48d2af54e825a4089ac9d855f",
+        "tools/session-search/src/main.rs": "733767ec33a7cba6370bde8abc6f054bdf2f9f458ee3d57aa17d644323b66609",
         "tools/session-search/src/model.rs": "3efc198d8efc67b018bc778fc417cfb545dac255ae19c583d4748da5274f4310",
         "tools/session-search/src/records.rs": "edf55082667f8e68b1161c6098f073080511e152d8a1b8531f687b7283ce5542",
         "tools/session-search/src/schema.sql": "5e5c16d2eae340b72b9194eb46a7373ff277cbace32129bc7b93f9f8ac900c16",
@@ -79,7 +79,7 @@
         "tools/session-search/src/text.rs": "108d6c76f220fde91eac68a7c80187293212209f1a9c0d5beb29bb72a7274e23",
         "tools/session-search/src/turns.rs": "c5c5192edf1e9b085d6b0fe9b5f0faca4e3ccd729cd66f4dce24633c8c8781eb",
         "tools/session-search/tests/adapters.py": "0da0375e94420603ddd77840458a5074af7958c14f5217aebaf126561b26cc18",
-        "tools/session-search/tests/check.py": "eaf6db0bde0cbedcf3f5c56190a8ac798b261dec2c0f32295c8477ca90aad252",
+        "tools/session-search/tests/check.py": "2667cf7d834a45fcb026d0c21a1acb4ec9661604095596978d866e6fb5ee6917",
         "tools/session-search/tests/cli.rs": "7320ede4f394c6c338737d874e2c4658f4a1806e305b094a3e8d36ed7839f6be"
       }
     },

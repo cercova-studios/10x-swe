@@ -63,7 +63,9 @@ executable, all adapters and the existing SQLite/record contracts; its installed
 command links directly to the native binary. Mapping-helper failures retain private diagnostics;
 semantic path failures provide explicit lexical retry arguments without running them.
 Distiller rejects existing text/JSON outputs before extraction and atomically
-publishes complete files without replacement, including concurrent destinations.
+publishes complete files without replacement, including concurrent destinations;
+published text/JSON files are private (0600), and EPUB/KFX destinations keep
+their own existing-output refusals.
 Source-insights exposes read-only evidence/analysis validation. Session review
 checks citations and prepared hashes before issuing a digest, and stops without
 creating a destination library or granting publication approval.

@@ -99,10 +99,15 @@ with tempfile.TemporaryDirectory(prefix='native-session-check-') as tmp:
     with closing(sqlite3.connect(database)) as db:
         limits,turns=db.execute("SELECT limitations_json,turns_json FROM sessions WHERE native_id='oversized'").fetchone()
     assert 'line 1 omitted' in json.loads(limits)[0] and json.loads(turns)[0]['line']==2
-    # Owned installation commands work with no Python or shell available on PATH.
+    # Owned installation commands work with no Python or shell available on PATH,
+    # invoked directly and through the installed bin/ symlink (current_exe keeps
+    # the symlink path on macOS, so prefix resolution must read through it).
     prefix=root/'installed';native=prefix/'libexec/native/session-search';native.parent.mkdir(parents=True)
     shutil.copy2(binary,native);(prefix/'.knowledge-owner.json').write_text('{}')
-    p=subprocess.run([str(native),'status','--json'],env={'HOME':str(home),'PATH':str(root/'empty-path')},capture_output=True,timeout=10)
-    assert p.returncode==0,p.stderr
-    assert json.loads(p.stdout)['db']==str(prefix/'state/session-search.sqlite') and not (prefix/'state').exists()
+    launcher=prefix/'bin'/'session-search';launcher.parent.mkdir();launcher.symlink_to('../libexec/native/session-search')
+    expected=str(prefix.resolve()/'state/session-search.sqlite')  # canonicalize resolves macOS /var -> /private/var
+    for invoked in (native,launcher):
+        p=subprocess.run([str(invoked),'status','--json'],env={'HOME':str(home),'PATH':str(root/'empty-path')},capture_output=True,timeout=10)
+        assert p.returncode==0,p.stderr
+        assert json.loads(p.stdout)['db']==expected and not (prefix/'state').exists()
 print('PASS: native recall, hidden reasoning exclusion, exact citation hashes/roles/Unicode, read-only queries, failed refresh rollback, bounded JSONL, schema upgrade authority and Python-free installation')
